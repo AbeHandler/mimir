@@ -97,6 +97,8 @@ def get_mia_scores(
     if AllAttacks.NEIGHBOR in attackers_dict.keys() and neigh_config.load_from_cache:
         neighbors = data[f"neighbors"]
         print("Loaded neighbors from cache!")
+    else:
+        print("Building neighbors on the fly")
 
     if neigh_config and neigh_config.dump_cache:
         collected_neighbors = {

@@ -96,11 +96,16 @@ class Data:
 
         # Load from numpy file storing pretokenized sample in a 2d array of shape (num_samples, num_tokens_per_sample)
         if self.config.pretokenized:
+
+            assert "we will not use this" == "setting"  # AH 3/29 we wont use this branch
+
+            '''
             assert self.presampled
             # TODO: Pretokenized full documents (split into substrs) is not currently supported
             assert not self.config.full_doc
             data = np.load(self.presampled)
             return data
+            '''
         elif (self.config.load_from_cache or self.config.load_from_hf):
             # Load from cache, if requested
             filename = self._get_name_to_save()
@@ -116,6 +121,8 @@ class Data:
             )
             return data
         else:
+            assert "we will not use this" == "setting"  # AH 3/29 we wont use this branch
+            '''
             if self.presampled or self.config.full_doc:
                 print("using presampled data")
                 data = datasets.load_dataset(
@@ -157,8 +164,11 @@ class Data:
                 data = datasets.load_dataset(
                     self.name, split=f"train", cache_dir=self.cache_dir
                 )[self.key]
+            '''
 
         if not self.config.full_doc:
+            assert "not" == "used"  # AH 3/29/25
+            '''
             # get unique examples
             # then take just the long examples, shuffle, take the first 5,000 to tokenize to save time
             # then take just the examples that are <= 512 tokens (for the mask model)
@@ -239,6 +249,7 @@ class Data:
 
             if n_samples > len(data):
                 print(f"WARNING: n_samples ({n_samples}) > len(data) ({len(data)})")
+            '''
 
         # Sample 'n_samples' examples
         data = data[:n_samples]

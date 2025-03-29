@@ -18,7 +18,7 @@
         ]
     },
     "neighborhood_config": {
-        "model": "t5-small",
+        "model": "distillbert",
         "n_perturbation_list": [
             25
         ],

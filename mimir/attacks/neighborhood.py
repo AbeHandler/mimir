@@ -8,6 +8,7 @@ import re
 import numpy as np
 from tqdm import tqdm
 import random
+import socket
 import transformers
 from typing import List
 
@@ -144,6 +145,10 @@ class MaskFillingModel(Model):
         super(MaskFillingModel, self).__init__(config, **kwargs)
         self.device = self.config.env_config.device_aux
         self.name = self.config.neighborhood_config.model
+        if socket.gethostname() == 'BUS-WYCXY33-L.local':
+            print("Sending neighbors model to mps on Leeds")
+            self.device = "mps"
+
 
     def generate_neighbors(self, texts, **kwargs) -> List[str]:
         raise NotImplementedError("generate_neighbors not implemented")
@@ -229,9 +234,15 @@ class T5Model(MaskFillingModel):
         mask_top_p = self.config.neighborhood_config.top_p
         n_expected = count_masks(texts)
         stop_id = self.tokenizer.encode(f"<extra_id_{max(n_expected)}>")[0]
-        tokens = self.tokenizer(texts, return_tensors="pt", padding=True).to(
-            self.device
-        )
+
+        if socket.gethostname() == 'BUS-WYCXY33-L.local':
+            print("Running t5 on cpu on local laptop. slowww")
+            tokens = self.tokenizer(texts, return_tensors="pt", padding=True).to("cpu")
+            self.model.to("cpu")
+        else:
+            tokens = self.tokenizer(texts, return_tensors="pt", padding=True).to(
+                self.device
+            )
         outputs = self.model.generate(
             **tokens,
             max_length=150,
@@ -240,6 +251,8 @@ class T5Model(MaskFillingModel):
             num_return_sequences=1,
             eos_token_id=stop_id,
         )
+        if socket.gethostname() == 'BUS-WYCXY33-L.local':
+            self.model.to(self.device)
         return self.tokenizer.batch_decode(outputs, skip_special_tokens=False)
 
     def generate_neighbors_(self, texts: List[str], **kwargs):
