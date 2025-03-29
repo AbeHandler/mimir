@@ -35,7 +35,8 @@ class Model(nn.Module):
         self.kwargs = kwargs
         self.cache_dir = self.config.env_config.cache_dir
 
-        if socket.socket.gethostname() == 'BUS-WYCXY33-L.local':
+        if socket.gethostname() == 'BUS-WYCXY33-L.local':
+            print("Leeds laptop")
             self.device = "mps"
 
     def to(self, device):
