@@ -17,6 +17,7 @@ from hf_olmo import *
 from mimir.config import ExperimentConfig
 from mimir.custom_datasets import SEPARATOR
 from mimir.data_utils import drop_last_word
+import socket
 
 
 class Model(nn.Module):
@@ -34,15 +35,19 @@ class Model(nn.Module):
         self.kwargs = kwargs
         self.cache_dir = self.config.env_config.cache_dir
 
+        if socket.socket.gethostname() == 'BUS-WYCXY33-L.local':
+            self.device = "mps"
+
     def to(self, device):
         """
             Shift model to a particular device.
         """
         self.model.to(device, non_blocking=True)
 
+    # AH this has to get fixed
     def load(self):
         """
-            Load model onto GPU (and compile, if requested) if not already loaded with device map.
+        Load model onto GPU (and compile, if requested) if not already loaded with device map.
         """
         if not self.device_map:
             start = time.time()
@@ -51,9 +56,20 @@ class Model(nn.Module):
             except NameError:
                 pass
             if self.config.openai_config is None:
-                self.model.to(self.device, non_blocking=True)
+                # Set device correctly (MPS if available, else CPU)
+                if torch.backends.mps.is_available():
+                    self.device = torch.device("mps")
+                    print("Using MPS backend")
+                else:
+                    self.device = torch.device("cpu")
+                    print("Using CPU backend")
+
+                self.model.to(self.device)  # Don't use non_blocking=True unless CUDA
             if self.config.env_config.compile:
-                torch.compile(self.model)
+                if self.device.type == "cuda":
+                    self.model = torch.compile(self.model)
+                else:
+                    print(f"Skipping torch.compile() for device: {self.device}")
             print(f'DONE ({time.time() - start:.2f}s)')
 
     def unload(self):
