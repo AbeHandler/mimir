@@ -116,7 +116,7 @@ def get_mia_scores(
         texts = data["records"][batch * batch_size : (batch + 1) * batch_size]
 
         # For each entry in batch
-        for idx in range(len(texts)):
+        for idx in tqdm(range(len(texts)), total=len(texts), desc='inner loop'):
             sample_information = defaultdict(list)
             sample = (
                 texts[idx][: config.max_substrs]
