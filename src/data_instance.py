@@ -2,7 +2,9 @@ import datasets
 from dataclasses import dataclass, field, asdict
 from typing import List
 from datasets import load_dataset
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
+from sklearn.model_selection import train_test_split
+
 
 @dataclass(frozen=True)  # Making the class immutable (strict)
 class DatasetInstance:
@@ -59,7 +61,9 @@ class DatasetInstance:
             raise ValueError(f"Invalid data format: {e}")
 
     @classmethod
-    def to_hf_dataset(cls, instances: List['DatasetInstance']):
+    def to_hf_dataset(cls,
+                      train_instances: List['DatasetInstance'], 
+                      test_instances: List['DatasetInstance']):
         """
         Convert a list of DatasetInstance objects to a Hugging Face Dataset.
 
@@ -69,8 +73,11 @@ class DatasetInstance:
         Returns:
             Dataset: A Hugging Face Dataset object.
         """
-        data = [asdict(instance) for instance in instances]
-        return Dataset.from_list(data)
+        train_instances = Dataset.from_list([asdict(instance) for instance in train_instances])
+        test_instances = Dataset.from_list([asdict(instance) for instance in test_instances])
+        
+        return DatasetDict({"train": train_instances, 
+                            "test":  test_instances})
 
 
 if __name__ == "__main__":
@@ -86,12 +93,14 @@ if __name__ == "__main__":
     for i, row in enumerate(ds):
         instance = DatasetInstance.from_row(row)
         instances.append(instance)
-        if i >= 2:  # Limit to 3 instances for demonstration
+        if i >= 10:  # Limit to 3 instances for demonstration
             break
 
     # Step 3: Convert the list of instances to a Hugging Face Dataset
-    hf_dataset = DatasetInstance.to_hf_dataset(instances)
+    hf_dataset = DatasetInstance.to_hf_dataset(train_instances=instances[0:5],
+                                               test_instances=instances[5:])
 
-    # Display the HF dataset
+    repo_id = "abehandler/tmpdata"  # Replace with your username
+    hf_dataset.push_to_hub(repo_id)
     print("\nHugging Face Dataset:")
     print(hf_dataset)
