@@ -8,6 +8,7 @@
     "max_tokens": 512,
     "max_data": 100000,
     "load_from_hf": true,
+    "ourdataset": "abehandler/tmpdata",
     "output_name": "unified_mia",
     "specific_source": "Github_ngram_13_<0.8_truncated",
     "n_samples": 1000,

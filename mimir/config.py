@@ -210,6 +210,8 @@ class ExperimentConfig(Serializable):
     openai_config: Optional[OpenAIConfig] = None
     """OpenAI config"""
 
+    ourdataset: str = None
+
     def __post_init__(self):
         if self.dump_cache and (self.load_from_cache or self.load_from_hf):
             raise ValueError("Cannot dump and load cache at the same time")

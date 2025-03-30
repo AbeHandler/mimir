@@ -5,6 +5,7 @@ import random
 import datasets
 import os
 import json
+from copy import copy
 from typing import List
 
 
@@ -70,12 +71,20 @@ def load_cached(cache_dir,
                     # Remove "_truncated" from the end, if present
                     split = split.rsplit("_truncated", 1)[0]
 
+                # Original code here
                 ds = datasets.load_dataset("iamgroot42/mimir", name=source, split=split)
                 data = ds[data_split]
-                # Check if the number of samples is correct
                 if len(data) != n_samples:
                     raise ValueError(f"Requested {n_samples} samples, but only {len(data)} samples available. Potential mismatch in HuggingFace data and requested data.")
+                
+                # Revised code here.
+                # AH. train and test are exactly the same for this dataset.
+                # the key thing is member or nonmenber which is stored in 
+                # data_split
+                ds2 = datasets.load_dataset("abehandler/tmpdata")["train"]
+                data = ds2[data_split]
                 return data
+
         # If got here, matching source was not found
         raise ValueError(f"Requested source {filename} not found in HuggingFace data.")
     else:
