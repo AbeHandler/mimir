@@ -34,6 +34,6 @@ export HF_HOME='/scratch/alpine/abha4861/RobotEconomist/transformers'
 
 export MIMIR_CACHE_PATH='/scratch/alpine/abha4861/dolma2/dolma/mimr/cache'
 export MIMIR_DATA_SOURCE='/scratch/alpine/abha4861/dolma2/dolma/mimr/data'
-huggingface-cli login --token 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
+huggingface-cli login --token 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
 
 python run.py --config configs/mi.json
