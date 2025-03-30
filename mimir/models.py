@@ -58,12 +58,15 @@ class Model(nn.Module):
                 pass
             if self.config.openai_config is None:
                 # Set device correctly (MPS if available, else CPU)
-                if torch.backends.mps.is_available():
-                    self.device = torch.device("mps")
+                if torch.cuda.is_available():
+                    device = torch.device("cuda")
+                    print("Using CUDA backend")
+                elif torch.backends.mps.is_available():
+                    device = torch.device("mps")
                     print("Using MPS backend")
                 else:
-                    self.device = torch.device("cpu")
-                    print("Using CPU backend")
+                    device = torch.device("cpu")
+                    assert "dont allow on CPU"
 
                 self.model.to(self.device)  # Don't use non_blocking=True unless CUDA
             if self.config.env_config.compile:
