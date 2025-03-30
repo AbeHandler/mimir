@@ -2,6 +2,7 @@
     Definitions for configurations.
 """
 
+import socket
 from dataclasses import dataclass
 from typing import Optional, List
 from simple_parsing.helpers import Serializable, field
@@ -215,6 +216,10 @@ class ExperimentConfig(Serializable):
     def __post_init__(self):
         if self.dump_cache and (self.load_from_cache or self.load_from_hf):
             raise ValueError("Cannot dump and load cache at the same time")
+
+        if socket.gethostname() == 'BUS-WYCXY33-L.local' and "ne" in self.blackbox_attacks:
+            print("cant run neighborhood attack locally too much gpu even for small model")
+            self.blackbox_attacks.remove("ne")
 
         if self.neighborhood_config:
             if (

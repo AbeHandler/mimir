@@ -487,8 +487,6 @@ def main(config: ExperimentConfig):
 
     SAVE_FOLDER = os.path.join(env_config.tmp_results, sf)
 
-    print(f"Saving to {SAVE_FOLDER}")
-
     new_folder = os.path.join(env_config.results, sf)
 
     # AH. This is original code commented out. We will just run in clobber mode
@@ -776,7 +774,7 @@ def main(config: ExperimentConfig):
         api_calls = openai_config.api_calls
         print(f"Used an *estimated* {api_calls} API tokens (may be inaccurate)")
     '''
-
+    print(f"Saving to {SAVE_FOLDER}")
 
 if __name__ == "__main__":
     # Extract relevant configurations from config file
