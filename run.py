@@ -8,6 +8,7 @@ import datetime
 import os
 import json
 import math
+import shutil
 from collections import defaultdict
 from typing import List, Dict
 
@@ -474,17 +475,33 @@ def main(config: ExperimentConfig):
     # TODO: Shift dataset-specific processing to their corresponding classes
     # Results go under target model
     sf = os.path.join(exp_name, config.base_model.replace("/", "_"))
-    if config.specific_source is not None:
+    
+    # the original code is the first branch of the if statement 3/30/25
+    if config.specific_source is not None and config.ourdataset is None:
         processed_source = data_utils.sourcename_process(config.specific_source)
         sf = os.path.join(sf, processed_source)
+    elif config.ourdataset is not None:
+        sf = os.path.join(sf, config.ourdataset)
+    else:
+        assert "this should not fire" == "thing"
+
     SAVE_FOLDER = os.path.join(env_config.tmp_results, sf)
 
+    print(f"Saving to {SAVE_FOLDER}")
+
     new_folder = os.path.join(env_config.results, sf)
+
+    # AH. This is original code commented out. We will just run in clobber mode
     ##don't run if exists!!!
-    print(f"{new_folder}")
-    if os.path.isdir((new_folder)):
-        print(f"HERE folder exists, not running this exp {new_folder}")
-        exit(0)
+    #print(f"{new_folder}")
+    #if os.path.isdir((new_folder)):
+    #    print(f"HERE folder exists, not running this exp {new_folder}")
+    #    exit(0)
+
+    # I changed it to this
+    if os.path.isdir(new_folder):
+        print(f"Results directory exists, deleting: {new_folder}")
+        shutil.rmtree(new_folder)  # Recursively delete the directory and its contents
 
     if not (os.path.exists(SAVE_FOLDER) or config.dump_cache):
         os.makedirs(SAVE_FOLDER)
@@ -691,6 +708,9 @@ def main(config: ExperimentConfig):
         n_samples=n_samples,
     )
 
+    '''
+    AH: Original code from the mimir package which we are not using. 3/30/25
+
     # TODO: For now, AUCs for other sources of non-members are only printed (not saved)
     # Will fix later!
     if config.dataset_nonmember_other_sources is not None:
@@ -721,7 +741,9 @@ def main(config: ExperimentConfig):
                 print(
                     f"AUC using thresholds of original split on {other_name} using {attack}: {auc}"
                 )
+        print("ending early")
         exit(0)
+    '''
 
     # Dump main config into SAVE_FOLDER
     config.save_json(os.path.join(SAVE_FOLDER, 'config.json'), indent=4)
@@ -730,6 +752,9 @@ def main(config: ExperimentConfig):
         outputs.append(output)
         with open(os.path.join(SAVE_FOLDER, f"{attack}_results.json"), "w") as f:
             json.dump(output, f)
+
+    '''
+    AH: Code from the original mimir package that we are not using 3/30/25
 
     neighbor_model_name = neigh_config.model if neigh_config else None
     plot_utils.save_roc_curves(
@@ -750,6 +775,7 @@ def main(config: ExperimentConfig):
     if openai_config:
         api_calls = openai_config.api_calls
         print(f"Used an *estimated* {api_calls} API tokens (may be inaccurate)")
+    '''
 
 
 if __name__ == "__main__":
