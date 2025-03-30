@@ -70,7 +70,7 @@ class Model(nn.Module):
 
                 self.model.to(self.device)  # Don't use non_blocking=True unless CUDA
             if self.config.env_config.compile:
-                if self.device.type == "cuda":
+                if self.device == "cuda":
                     self.model = torch.compile(self.model)
                 else:
                     print(f"Skipping torch.compile() for device: {self.device}")
