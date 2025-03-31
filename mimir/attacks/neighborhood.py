@@ -147,7 +147,7 @@ class MaskFillingModel(Model):
         self.name = self.config.neighborhood_config.model
 
         if torch.cuda.is_available():
-            self.device = torch.device("cuda")
+            self.device = torch.device("cuda:1")
             print("Using CUDA for the model")
         elif torch.backends.mps.is_available():
             self.device = torch.device("mps")
