@@ -227,7 +227,29 @@ class T5Model(MaskFillingModel):
 
         return extracted_fills
 
+
     def replace_masks(self, texts: List[str]):
+        """
+        Replace each masked span with a sample from T5 mask_model
+        This is the original method from the code
+        """
+        mask_top_p = self.config.neighborhood_config.top_p
+        n_expected = count_masks(texts)
+        stop_id = self.tokenizer.encode(f"<extra_id_{max(n_expected)}>")[0]
+        tokens = self.tokenizer(texts, return_tensors="pt", padding=True).to(
+            self.device
+        )
+        outputs = self.model.generate(
+            **tokens,
+            max_length=150,
+            do_sample=True,
+            top_p=mask_top_p,
+            num_return_sequences=1,
+            eos_token_id=stop_id,
+        )
+        return self.tokenizer.batch_decode(outputs, skip_special_tokens=False)
+
+    def replace_masks_mod(self, texts: List[str]):
         """
         Replace each masked span with a sample from T5 mask_model
         """
