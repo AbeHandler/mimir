@@ -208,6 +208,9 @@ class Model(nn.Module):
                 model = transformers.AutoModelForCausalLM.from_pretrained(
                     self.name, **model_kwargs, trust_remote_code=True, cache_dir=self.cache_dir)
             else:
+                print("[DEBUG] Loading AutoModelForCausalLM...")
+                print(f"[DEBUG] Device map: {device_map}")
+                print(f"[DEBUG] Model kwargs: {model_kwargs}")
                 model = transformers.AutoModelForCausalLM.from_pretrained(
                     self.name, **model_kwargs, device_map=device_map, cache_dir=self.cache_dir)
         else:
@@ -218,24 +221,37 @@ class Model(nn.Module):
             print("Using non-fast tokenizer for OPT")
             optional_tok_kwargs['fast'] = False
         if self.config.dataset_member in ['pubmed'] or self.config.dataset_nonmember in ['pubmed']:
+            print("[DEBUG] Setting left padding for PubMed dataset")
             optional_tok_kwargs['padding_side'] = 'left'
             self.pad_token = self.tokenizer.eos_token_id
         if "silo" in self.name or "balanced" in self.name:
+            print("[DEBUG] Using GPTNeoXTokenizerFast for silo or balanced models...")
             tokenizer = transformers.GPTNeoXTokenizerFast.from_pretrained(
                 "EleutherAI/gpt-neox-20b", **optional_tok_kwargs, cache_dir=self.cache_dir)
         elif "datablations" in self.name:
+            print("[DEBUG] Using GPT-2 tokenizer for datablations...")
             tokenizer = transformers.AutoTokenizer.from_pretrained(
                 "gpt2", **optional_tok_kwargs, cache_dir=self.cache_dir)
         elif "llama" in self.name or "alpaca" in self.name:
+            print("[DEBUG] Using LlamaTokenizer for LLaMA/Alpaca models...")
             tokenizer = transformers.LlamaTokenizer.from_pretrained(
                 self.name, **optional_tok_kwargs, cache_dir=self.cache_dir)
         elif "pubmedgpt" in self.name:
+            print("[DEBUG] Using BioMedLM tokenizer for PubMedGPT...")
             tokenizer = transformers.AutoTokenizer.from_pretrained(
                 "stanford-crfm/BioMedLM", **optional_tok_kwargs, cache_dir=self.cache_dir)
         else:
+            print("[DEBUG] Using AutoTokenizer with remote code support if required...")
+            print(f"[DEBUG] Tokenizer name: {self.name}")
+            print(f"[DEBUG] Tokenizer kwargs: {optional_tok_kwargs}")
             tokenizer = transformers.AutoTokenizer.from_pretrained(
                 self.name, **optional_tok_kwargs, cache_dir=self.cache_dir,
                 trust_remote_code=True if "olmo" in self.name.lower() else False)
+            print(f"[DEBUG] Tokenizer loaded successfully: {type(tokenizer).__name__}")
+            print(f"[DEBUG] Special tokens map: {tokenizer.special_tokens_map}")
+            print(f"[DEBUG] Padding token: {tokenizer.pad_token} (ID: {tokenizer.pad_token_id})")
+            print(f"[DEBUG] EOS token: {tokenizer.eos_token} (ID: {tokenizer.eos_token_id})")
+            print(f"[DEBUG] Tokenizer vocabulary size: {tokenizer.vocab_size}")
         tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
         return model, tokenizer
@@ -387,6 +403,12 @@ class LanguageModel(Model):
             # Delegate batches and tokenize
             batch = texts[i:i+batch_size]
             tokenized = self.tokenizer(batch, return_tensors="pt", padding=True, return_attention_mask=True)
+
+            vocab_size = self.tokenizer.vocab_size
+            if torch.any(tokenized.input_ids >= vocab_size):
+                print(f"Warning: Found token IDs exceeding vocab size: {vocab_size}")
+                tokenized.input_ids = torch.clamp(tokenized.input_ids, 0, vocab_size - 1)
+
             label_batch = tokenized.input_ids
             
             # # mask out padding tokens
