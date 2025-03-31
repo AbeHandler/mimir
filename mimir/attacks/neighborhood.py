@@ -239,6 +239,9 @@ class T5Model(MaskFillingModel):
         tokens = self.tokenizer(texts, return_tensors="pt", padding=True).to(
             self.device
         )
+        print(f"Model device: {next(self.model.parameters()).device}")
+        for key, value in tokens.items():
+            print(f"Token '{key}' is on device: {value.device}")
         outputs = self.model.generate(
             **tokens,
             max_length=150,
