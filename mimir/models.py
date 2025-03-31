@@ -426,6 +426,7 @@ class LanguageModel(Model):
                 print(f"Input IDs min: {input_ids.min()}, max: {input_ids.max()}")
                 print(f"Target IDs min: {target_ids.min()}, max: {target_ids.max()}")
                 print(f"Unique values in attention mask: {torch.unique(mask)}")
+                print(f"Model vocab size: {self.model.config.vocab_size}")
 
 
                 logits = self.model(input_ids, labels=target_ids, attention_mask=mask).logits.cpu()
