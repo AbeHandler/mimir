@@ -415,6 +415,19 @@ class LanguageModel(Model):
                 target_ids[:, :-trg_len] = -100
                 # target_ids[attention_mask == 0] = -100
                 
+
+                print(f"Model device: {next(self.model.parameters()).device}")
+                print(f"Input IDs device: {input_ids.device}")
+                print(f"Target IDs device: {target_ids.device}")
+                print(f"Attention mask device: {mask.device}")
+                print(f"Input IDs shape: {input_ids.shape}")
+                print(f"Target IDs shape: {target_ids.shape}")
+                print(f"Attention Mask shape: {mask.shape}")
+                print(f"Input IDs min: {input_ids.min()}, max: {input_ids.max()}")
+                print(f"Target IDs min: {target_ids.min()}, max: {target_ids.max()}")
+                print(f"Unique values in attention mask: {torch.unique(mask)}")
+
+
                 logits = self.model(input_ids, labels=target_ids, attention_mask=mask).logits.cpu()
                 target_ids = target_ids.cpu()
                 shift_logits = logits[..., :-1, :].contiguous()
