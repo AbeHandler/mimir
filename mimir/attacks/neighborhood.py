@@ -145,9 +145,16 @@ class MaskFillingModel(Model):
         super(MaskFillingModel, self).__init__(config, **kwargs)
         self.device = self.config.env_config.device_aux
         self.name = self.config.neighborhood_config.model
-        if socket.gethostname() == 'BUS-WYCXY33-L.local':
-            print("Sending neighbors model to mps on Leeds")
-            self.device = "mps"
+
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+            print("Using CUDA for the model")
+        elif torch.backends.mps.is_available():
+            self.device = torch.device("mps")
+            print("Using MPS for the model")
+        else:
+            self.device = torch.device("cpu")
+            print("Using CPU for the model")
 
 
     def generate_neighbors(self, texts, **kwargs) -> List[str]:
@@ -163,6 +170,8 @@ class T5Model(MaskFillingModel):
         self.model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
             self.name, **model_kwargs, cache_dir=self.cache_dir
         )
+        self.model = self.model.to(self.device)
+
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             self.name, **tokenizer_kwargs, cache_dir=self.cache_dir
         )
