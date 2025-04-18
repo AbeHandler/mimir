@@ -72,7 +72,7 @@ def load_cached(cache_dir,
                     split = split.rsplit("_truncated", 1)[0]
 
                 # Original code here
-                ds = datasets.load_dataset("iamgroot42/mimir", name=source, split=split)
+                ds = datasets.load_dataset("iamgroot42/mimir", name=source, split=split, trust_remote_code=True)
                 data = ds[data_split]
                 if len(data) != n_samples:
                     raise ValueError(f"Requested {n_samples} samples, but only {len(data)} samples available. Potential mismatch in HuggingFace data and requested data.")
