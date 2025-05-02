@@ -1,5 +1,5 @@
 {
-    "base_model": "dobolyilab/MISQSIPressPublic-bl1-124M",
+    "base_model": "allenai/OLMo-7B",
     "dataset_member": "the_pile",
     "experiment_name": "tmp",
     "dataset_nonmember": "the_pile",
