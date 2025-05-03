@@ -561,6 +561,9 @@ def main(config: ExperimentConfig):
         mask_model_tokenizer=mask_model.tokenizer if mask_model else None,
     )
 
+    # 👀 data_obj_mem is something like mimir.data_utils.Data object
+    # 👀 data_member is a list of strings
+
     #* ReCaLL Specific
     if AllAttacks.RECALL in config.blackbox_attacks:
         assert recall_config, "Must provide a recall_config"
