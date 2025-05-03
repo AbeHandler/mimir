@@ -11,20 +11,10 @@
     "ourdataset": "abehandlerorg/olmobypublisherdev",
     "output_name": "unified_mia",
     "specific_source": "Github_ngram_13_<0.8_truncated",
-    "n_samples": 1000,
+    "n_samples": 25000,
     "blackbox_attacks": ["loss", "min_k"],
     "ref_config": {
         "models": []
-    },
-    "neighborhood_config": {
-        "model": "t5-small",
-        "n_perturbation_list": [
-            25
-        ],
-        "pct_words_masked": 0.3,
-        "span_length": 2,
-        "dump_cache": false,
-        "load_from_cache": false
     },
     "env_config": {
         "results": "results_new",

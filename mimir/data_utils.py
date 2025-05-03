@@ -111,7 +111,7 @@ class Data:
             filename = self._get_name_to_save()
             
             #  👀 simplify here for our setting
-            return datasets.load_dataset(self.name)["train"]
+            return datasets.load_dataset(self.name)["train"].shuffle(seed=42).select(range(n_samples))
             
             #data = custom_datasets.load_cached(
             #    self.cache_dir,

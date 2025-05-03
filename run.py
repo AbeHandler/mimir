@@ -135,6 +135,7 @@ def get_mia_scores(
 
             if neigh_config and neigh_config.dump_cache:
                 neighbors_within = {n_perturbation: [] for n_perturbation in n_perturbation_list}
+
             # For each substring
             for i, substr in enumerate(sample):
                 # compute token probabilities for sample
