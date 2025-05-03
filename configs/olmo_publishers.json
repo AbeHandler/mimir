@@ -1,8 +1,8 @@
 {
     "base_model": "allenai/OLMo-2-0425-1B",
-    "dataset_member": "the_pile",
+    "dataset_member": "abehandlerorg/olmobypublisherdev",
     "experiment_name": "tmp",
-    "dataset_nonmember": "the_pile",
+    "dataset_nonmember": "abehandlerorg/olmobypublisherdev",
     "min_words": 100,
     "max_words": 200,
     "max_tokens": 512,

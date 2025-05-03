@@ -432,13 +432,14 @@ def generate_data(
     specific_source: str = None,
     mask_model_tokenizer = None
 ):
+
     data_obj = data_utils.Data(dataset, config=config, presampled=presampled)
     data = data_obj.load(
         train=train,
         mask_tokenizer=mask_model_tokenizer,
         specific_source=specific_source,
     )
-    return data_obj, data
+    return data_obj, data["text"]
     # return generate_samples(data[:n_samples], batch_size=batch_size)
 
 
@@ -561,7 +562,7 @@ def main(config: ExperimentConfig):
         mask_model_tokenizer=mask_model.tokenizer if mask_model else None,
     )
 
-    # 👀 data_obj_mem is something like mimir.data_utils.Data object
+    # 👀 data_obj_mem is a mimir.data_utils.Data object
     # 👀 data_member is a list of strings
 
     #* ReCaLL Specific

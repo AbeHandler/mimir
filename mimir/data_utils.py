@@ -16,7 +16,7 @@ class Data:
     def __init__(self, name,
                  config: ExperimentConfig,
                  presampled: str = None,
-                 name_key_mapping: dict = {"the_pile": "text", "xsum": "document"}):
+                 name_key_mapping: dict = {"the_pile": "text", "xsum": "document", "abehandlerorg/olmobypublisherdev": "text"}):
         self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
@@ -109,16 +109,20 @@ class Data:
         elif (self.config.load_from_cache or self.config.load_from_hf):
             # Load from cache, if requested
             filename = self._get_name_to_save()
-            data = custom_datasets.load_cached(
-                self.cache_dir,
-                data_split,
-                filename,
-                min_length=self.config.min_words,
-                max_length=self.config.max_words,
-                n_samples=self.config.n_samples,
-                max_tokens=self.config.max_tokens,
-                load_from_hf=self.config.load_from_hf
-            )
+            
+            #  👀 simplify here for our setting
+            return datasets.load_dataset(self.name)["train"]
+            
+            #data = custom_datasets.load_cached(
+            #    self.cache_dir,
+            #    data_split,
+            #    filename,
+            #    min_length=self.config.min_words,
+            #    max_length=self.config.max_words,
+            #    n_samples=self.config.n_samples,
+            #    max_tokens=self.config.max_tokens,
+            #    load_from_hf=self.config.load_from_hf
+            #)
             return data
         else:
             assert "we will not use this" == "setting"  # AH 3/29 we wont use this branch
