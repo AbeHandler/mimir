@@ -62,7 +62,7 @@ class Model(nn.Module):
                     device = torch.device("cuda")
                     print("Using CUDA backend")
                 elif torch.backends.mps.is_available():
-                    device = torch.device("mps")
+                    self.device = torch.device("mps")
                     print("Using MPS backend")
                 else:
                     device = torch.device("cpu")
