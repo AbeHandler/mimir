@@ -241,7 +241,9 @@ def get_mia_scores(
             # attack into to respective list for its classification
             results.append(sample_information)
 
+    print("A")
     if neigh_config and neigh_config.dump_cache:
+        print("Starting neighbor models")
         # Save p_member_text and p_nonmember_text (Lists of strings) to cache
         # For each perturbation
         for n_perturbation in n_perturbation_list:
@@ -253,14 +255,17 @@ def get_mia_scores(
                 in_place_swap=in_place_swap,
             )
 
+    print("B")
     if neigh_config and neigh_config.dump_cache:
         print(
             "Data dumped! Please re-run with load_from_cache set to True in neigh_config"
         )
         exit(0)
 
+    print("C")
     # Perform reference-based attacks
     if ref_models is not None:
+        print("Starting ref models")
         for name, ref_model in ref_models.items():
             ref_key = f"{AllAttacks.REFERENCE_BASED}-{name.split('/')[-1]}"
             attacker = attackers_dict.get(ref_key, None)
@@ -286,6 +291,7 @@ def get_mia_scores(
     # attack -> member/nonmember -> list of scores
     samples = []
     predictions = defaultdict(lambda: [])
+    print("Z")
     for r in results:
         samples.append(r["sample"])
         for attack, scores in r.items():
