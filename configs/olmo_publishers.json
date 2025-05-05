@@ -1,5 +1,5 @@
 {
-    "base_model": "allenai/OLMo-2-0425-1B",
+    "base_model": "allenai/OLMo-7B",
     "dataset_member": "abehandlerorg/olmobypublisherdev",
     "experiment_name": "tmp",
     "dataset_nonmember": "abehandlerorg/olmobypublisherdev",
