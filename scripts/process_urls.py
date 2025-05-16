@@ -29,4 +29,4 @@ for url, score in id_to_score.items():
 # Create DataFrame and display
 df = pd.DataFrame(rows)
 
-df.to_csv('a.csv')
+df.to_csv('mink.csv')
