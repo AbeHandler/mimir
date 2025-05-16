@@ -11,6 +11,9 @@ from urllib.parse import urlparse
 
 
 def normalize_domain(url):
+    if not url:
+        print("warning no url")
+        return ""
     url = url.strip('"')
     netloc = urlparse(url).netloc.lower()
     return netloc[4:] if netloc.startswith("www.") else netloc
