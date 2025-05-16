@@ -121,6 +121,13 @@ class Data:
 
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
 
+            #some of these examples do not have urls. why?
+            orig_len = ds.num_rows
+            ds = ds.filter(lambda ex: ex.get("url") is not None, batched=False)
+            dropped = orig_len - ds.num_rows
+            if dropped > 0:
+                print(f"Warning: {dropped} examples had no URL and were dropped")
+
             if self.name == "abehandlerorg/olmobypublisherdev":
                 # these publishers were chosen randomly in the process
                 # described in dolma/Snakefile
