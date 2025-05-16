@@ -12,3 +12,9 @@ rule run_mimir:
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/olmo_by_publisher_dev.json && echo done > {output}"
 
+
+rule init_analysis:
+    output:
+        ".snake.initanalysis"
+    shell:
+        "conda create --name analysis python=3.9 && conda activate analysis && pip install -r configs/analysis_requirements.txt && touch .snake.initanalysis"
