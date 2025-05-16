@@ -111,6 +111,16 @@ class Data:
             filename = self._get_name_to_save()
             
             #  👀 simplify here for our setting
+            if self.name == "abehandlerorg/olmobypublisherdev":
+                with open("configs/ten_publishers.txt", "r") as inf:
+                    # these publishers were chosen randomly in the process
+                    # described in dolma/Snakefile
+                    # here we filter the dataset when running mimir for the olmobypublisherdev
+                    # to avoid running GPU on samples we don't actually need for the ten publisher 
+                    # analysis
+                    publishers = [o.strip("\n") for o in open(inf)]
+                    assert "to" == "do"
+
             return datasets.load_dataset(self.name)["train"].shuffle(seed=42).select(range(n_samples))
             
             #data = custom_datasets.load_cached(
