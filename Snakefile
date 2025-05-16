@@ -5,6 +5,7 @@ os.environ["MIMIR_CACHE_PATH"] = "mimrcache"
 rule all:
     input:
         ".snake.mimrran"
+        ".snake.initanalysis"
 
 rule run_mimir:
     output:
