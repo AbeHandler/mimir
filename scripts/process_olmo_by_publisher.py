@@ -55,6 +55,10 @@ def analyze_results(pathto = "tmp_results/olmobypublisher/allenai_OLMo-7B/abehan
     # scale features between 0 and 1 becuase each will have a different range. For instance, mink are big and zlib are small, by absolute size
     scaler = MinMaxScaler(feature_range=(0,1))
 
+
+    with open("configs/ten_publishers.txt", "r") as inf:
+        targets = [o.strip("\n") for o in inf]
+
     results = pd.read_csv(f"{pathto}/results.csv")
     methods = results["method"].unique()
     results = results[results["domain"].apply(lambda x: x in targets)].copy()
