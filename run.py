@@ -29,11 +29,6 @@ from mimir.utils import fix_seed
 from mimir.models import LanguageModel, ReferenceModel, OpenAI_APIModel
 from mimir.attacks.all_attacks import AllAttacks, Attack
 from mimir.attacks.utils import get_attacker
-from mimir.attacks.attack_utils import (
-    get_roc_metrics,
-    get_precision_recall_metrics,
-    get_auc_from_thresholds,
-)
 
 
 def get_attackers(
@@ -79,6 +74,7 @@ def get_mia_scores(
     is_train: bool,
     n_samples: int = None,
     batch_size: int = 50,
+    ids: List[str] = None,  # 👈 add this
     **kwargs
 ):
     # Fix randomness
@@ -126,6 +122,7 @@ def get_mia_scores(
                 if config.full_doc
                 else [texts[idx]]
             )
+            sample_information["id"] = ids[batch * batch_size + idx] if ids else None
 
             # This will be a list of integers if pretokenized
             sample_information["sample"] = sample
@@ -290,16 +287,18 @@ def get_mia_scores(
     # Rearrange the nesting of the results dict and calculated aggregated score for sample
     # attack -> member/nonmember -> list of scores
     samples = []
+    ids_out = [] #  👈 new
     predictions = defaultdict(lambda: [])
     print("Z")
     for r in results:
         samples.append(r["sample"])
+        ids_out.append(r.get("id"))  # 👈 attach id here
         for attack, scores in r.items():
-            if attack != "sample" and attack != "detokenized":
+            if attack != "sample" and attack != "detokenized" and attack !="id":  # 👈 adjusted
                 # TODO: Is there a reason for the np.min here?
                 predictions[attack].append(np.min(scores))
 
-    return predictions, samples
+    return predictions, samples, ids_out
 
 
 def compute_metrics_from_scores(
@@ -307,6 +306,8 @@ def compute_metrics_from_scores(
         preds_nonmember: dict,
         samples_member: List,
         samples_nonmember: List,
+        ids_members: List[str],        # ← new
+        ids_nonmembers: List[str],     # ← new
         n_samples: int):
 
     attack_keys = list(preds_member.keys())
@@ -319,53 +320,27 @@ def compute_metrics_from_scores(
         preds_member_ = preds_member[attack]
         preds_nonmember_ = preds_nonmember[attack]
 
-        fpr, tpr, roc_auc, roc_auc_res, thresholds = get_roc_metrics(
-            preds_member=preds_member_,
-            preds_nonmember=preds_nonmember_,
-            perform_bootstrap=True,
-            return_thresholds=True,
-        )
-        tpr_at_low_fpr = {
-            upper_bound: tpr[np.where(np.array(fpr) < upper_bound)[0][-1]]
-            for upper_bound in config.fpr_list
-        }
-        p, r, pr_auc = get_precision_recall_metrics(
-            preds_member=preds_member_,
-            preds_nonmember=preds_nonmember_
-        )
-
-        print(
-            f"{attack}_threshold ROC AUC: {roc_auc}, PR AUC: {pr_auc}, tpr_at_low_fpr: {tpr_at_low_fpr}"
-        )
+        id_score_member    = dict(zip(ids_members,    preds_member_))
+        id_score_nonmember = dict(zip(ids_nonmembers, preds_nonmember_))
+        id_text_member    = dict(zip(ids_members,    samples_member))
+        id_text_nonmember = dict(zip(ids_nonmembers, samples_nonmember))
         blackbox_attack_outputs[attack] = {
             "name": f"{attack}_threshold",
             "predictions": {
                 "member": preds_member_,
                 "nonmember": preds_nonmember_,
             },
+            "id_to_score": {                    # ← new field
+                "member":    id_score_member,
+                "nonmember": id_score_nonmember,
+            },
+            "id_to_text": {
+                "member":    id_text_member,
+                "nonmember": id_text_nonmember,
+            },
             "info": {
                 "n_samples": n_samples,
-            },
-            "raw_results": (
-                {"member": samples_member, "nonmember": samples_nonmember}
-                if not config.pretokenized
-                else []
-            ),
-            "metrics": {
-                "roc_auc": roc_auc,
-                "fpr": fpr,
-                "tpr": tpr,
-                "bootstrap_roc_auc_mean": np.mean(roc_auc_res.bootstrap_distribution),
-                "bootstrap_roc_auc_std": roc_auc_res.standard_error,
-                "tpr_at_low_fpr": tpr_at_low_fpr,
-                "thresholds": thresholds,
-            },
-            "pr_metrics": {
-                "pr_auc": pr_auc,
-                "precision": p,
-                "recall": r,
-            },
-            "loss": 1 - pr_auc,
+            }
         }
 
     return blackbox_attack_outputs
@@ -686,7 +661,7 @@ def main(config: ExperimentConfig):
         raise ValueError("No blackbox attacks specified in config!")
 
     # Collect scores for members
-    member_preds, member_samples = get_mia_scores(
+    member_preds, member_samples, ids_members = get_mia_scores(
         data_members,
         attackers_dict,
         data_obj_mem,
@@ -695,10 +670,11 @@ def main(config: ExperimentConfig):
         config=config,
         is_train=True,
         n_samples=n_samples,
-        nonmember_prefix = nonmember_prefix
+        nonmember_prefix = nonmember_prefix,
+        ids=ids_member  # 👈 add this
     )
     # Collect scores for non-members
-    nonmember_preds, nonmember_samples = get_mia_scores(
+    nonmember_preds, nonmember_samples, ids_nonmembers = get_mia_scores(
         data_nonmembers,
         attackers_dict,
         data_obj_nonmem,
@@ -707,7 +683,8 @@ def main(config: ExperimentConfig):
         config=config,
         is_train=False,
         n_samples=n_samples,
-        nonmember_prefix = nonmember_prefix
+        nonmember_prefix = nonmember_prefix,
+        ids=ids_nonmember  # 👈 add this
     )
     blackbox_outputs = compute_metrics_from_scores(
         member_preds,
@@ -715,6 +692,8 @@ def main(config: ExperimentConfig):
         member_samples,
         nonmember_samples,
         n_samples=n_samples,
+        ids_members=ids_members,
+        ids_nonmembers=ids_nonmembers,
     )
 
     '''
