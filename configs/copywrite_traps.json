@@ -11,7 +11,7 @@
     "ourdataset": "abehandlerorg/copywritetraps",
     "output_name": "unified_mia",
     "n_samples": 500,
-    "blackbox_attacks": ["loss","min_k", "zlib", "ne"],
+    "blackbox_attacks": ["loss","min_k", "zlib"],
     "ref_config": {
         "models": []
     },
