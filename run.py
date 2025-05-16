@@ -446,7 +446,7 @@ def generate_data(
         mask_tokenizer=mask_model_tokenizer,
         specific_source=specific_source,
     )
-    return data_obj, data["text"]
+    return data_obj, data["text"], data["id"]
     # return generate_samples(data[:n_samples], batch_size=batch_size)
 
 
@@ -556,14 +556,14 @@ def main(config: ExperimentConfig):
 
     print(f"Loading dataset {config.dataset_nonmember}...")
     # data, seq_lens, n_samples = generate_data(config.dataset_member)
-    data_obj_nonmem, data_nonmember = generate_data(
+    data_obj_nonmem, data_nonmember, ids_nonmember = generate_data(
         config.dataset_nonmember,
         train=False,
         presampled=config.presampled_dataset_nonmember,
         mask_model_tokenizer=mask_model.tokenizer if mask_model else None,
     )
     print(f"Loading dataset {config.dataset_member}...")
-    data_obj_mem, data_member = generate_data(
+    data_obj_mem, data_member, ids_member = generate_data(
         config.dataset_member,
         presampled=config.presampled_dataset_member,
         mask_model_tokenizer=mask_model.tokenizer if mask_model else None,
