@@ -4,13 +4,20 @@ os.environ["MIMIR_CACHE_PATH"] = "mimrcache"
 
 rule all:
     input:
-        [".snake.analysis"]
+        [".snake.analysis", ".snake.copywrite_traps"]
 
 rule run_mimir:
     output:
         ".snake.mimrran"
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/olmo_by_publisher_dev.json && echo 'done' > {output}"
+
+
+rule copywrite_traps:
+    output:
+        ".snake.copywrite_traps"
+    shell:
+        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/copywrite_traps.json && echo 'done' > {output}"
 
 
 rule analysis:
