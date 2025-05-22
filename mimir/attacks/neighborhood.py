@@ -407,7 +407,7 @@ class T5Model(MaskFillingModel):
 
         outputs = []
         for i in tqdm(
-            range(0, len(texts_use), chunk_size), desc="Applying perturbations"
+            range(0, len(texts_use), chunk_size), desc=f"Applying perturbations with chunk size {chunk_size}"
         ):
             outputs.extend(
                 self.generate_neighbors_(texts_use[i : i + chunk_size], **kwargs)
