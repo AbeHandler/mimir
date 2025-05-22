@@ -12,6 +12,7 @@
     "output_name": "unified_mia",
     "specific_source": "Github_ngram_13_<0.8_truncated",
     "n_samples": 5000,
+    "chunk_size": 10,
     "blackbox_attacks": ["loss","min_k", "zlib", "ne", "ref"],
     "ref_config": {
         "models": [
