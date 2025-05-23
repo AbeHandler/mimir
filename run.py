@@ -31,6 +31,7 @@ from mimir.attacks.all_attacks import AllAttacks, Attack
 from mimir.attacks.utils import get_attacker
 from urllib.parse import urlparse
 
+from logger_setup import logger
 
 def normalize_domain(url):
     url = url.strip('"')
@@ -118,7 +119,11 @@ def get_mia_scores(
 
     # For each batch of data
     # TODO: Batch-size isn't really "batching" data - change later
-    for batch in tqdm(range(math.ceil(n_samples / batch_size)), desc=f"Computing criterion"):
+
+    total_batches = math.ceil(n_samples / batch_size)
+
+    for batch in tqdm(range(total_batches), desc=f"Computing criterion"):
+        logger.info(f"batch {batch} of {total_batches}")
         texts = data["records"][batch * batch_size : (batch + 1) * batch_size]
 
         # For each entry in batch
@@ -245,12 +250,13 @@ def get_mia_scores(
             # attack into to respective list for its classification
             results.append(sample_information)
 
-    print("A")
+    logger.info("A")
     if neigh_config and neigh_config.dump_cache:
         print("Starting neighbor models")
         # Save p_member_text and p_nonmember_text (Lists of strings) to cache
         # For each perturbation
         for n_perturbation in n_perturbation_list:
+            logger.info(f"Peturbation {n_perturbation} of {len(n_perturbation_list)}")
             ds_object.dump_neighbors(
                 collected_neighbors[n_perturbation],
                 train=is_train,
@@ -259,18 +265,19 @@ def get_mia_scores(
                 in_place_swap=in_place_swap,
             )
 
-    print("B")
+    logger.info("B")
     if neigh_config and neigh_config.dump_cache:
         print(
             "Data dumped! Please re-run with load_from_cache set to True in neigh_config"
         )
         exit(0)
 
-    print("C")
+    logger.info("C")
     # Perform reference-based attacks
     if ref_models is not None:
         print("Starting ref models")
         for name, ref_model in ref_models.items():
+            logger.info(f"Ref model {name}")
             ref_key = f"{AllAttacks.REFERENCE_BASED}-{name.split('/')[-1]}"
             attacker = attackers_dict.get(ref_key, None)
             if attacker is None:
@@ -296,7 +303,7 @@ def get_mia_scores(
     samples = []
     ids_out = [] #  👈 new
     predictions = defaultdict(lambda: [])
-    print("Z")
+    logger.info("D")
     for r in results:
         samples.append(r["sample"])
         ids_out.append(r.get("id"))  # 👈 attach id here
