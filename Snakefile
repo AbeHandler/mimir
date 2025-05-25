@@ -4,13 +4,19 @@ os.environ["MIMIR_CACHE_PATH"] = "mimrcache"
 
 rule all:
     input:
-        [".snake.analysis", ".snake.copywrite_traps"]
+        [".snake.analysis", ".snake.copywrite_traps", ".snake.blocked_docs"]
 
-rule run_mimir:
+rule by_publisher:
     output:
-        ".snake.mimrran"
+        ".snake.by_publisher"
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_by_publisher_real.json && echo 'done' > {output}"
+
+rule blocked_docs:
+    output:
+        proof=".snake.blocked_docs"
+    shell:
+        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs.json && echo 'done' > {output.proof}"
 
 
 rule copywrite_traps:
@@ -22,7 +28,7 @@ rule copywrite_traps:
 
 rule analysis:
     input:
-        ".snake.mimrran"
+        ".snake.by_publisher"
     output:
         ".snake.analysis"
     shell:
