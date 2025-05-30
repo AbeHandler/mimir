@@ -59,7 +59,7 @@ rule reset_cache:
         ".snake.reset_cache"
     shell:
         """
-        ./wipe.sh
+        ./wipe.sh && touch .snake.reset_cache
         """
 
 rule init_conda:
