@@ -4,18 +4,6 @@ from pathlib import Path
 import json
 
 def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
-    """
-    Predicts the directory structure and file paths that MIMIR will create
-    based on the experiment configuration.
-    
-    Args:
-        config: Dictionary containing MIMIR experiment configuration
-        
-    Returns:
-        Tuple of (base_directory, list_of_expected_files)
-    """
-    
-    # Extract config values with defaults
     experiment_name = config.get("experiment_name", "default_experiment")
     base_model = config.get("base_model", "default_model")
     ourdataset = config.get("ourdataset")
@@ -35,7 +23,7 @@ def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
     
     # Add dataset-specific path
     if ourdataset is not None:
-        path_parts.append(ourdataset.replace("/", ""))  # Remove any slashes
+        path_parts.append(ourdataset)  # Keep slashes intact
     elif specific_source is not None:
         # Process specific source name (simplified version)
         processed_source = specific_source.replace("<", "").replace(">", "").replace("_", "-")
@@ -43,15 +31,8 @@ def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
     
     base_directory = os.path.join(*path_parts)
     
-    # Predict expected files
+    # Predict expected result files (only _results.json files)
     expected_files = []
-    
-    # Always generated files
-    expected_files.extend([
-        "config.json",
-        "raw_data.json", 
-        "raw_data_lens.json"
-    ])
     
     # Attack-specific result files
     for attack in blackbox_attacks:
@@ -76,12 +57,6 @@ def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
     return base_directory, full_file_paths
 
 def load_config_and_predict(config_path: str) -> None:
-    """
-    Load config from file and print predicted paths.
-    
-    Args:
-        config_path: Path to JSON config file
-    """
     with open(config_path, 'r') as f:
         config = json.load(f)
     
@@ -89,7 +64,7 @@ def load_config_and_predict(config_path: str) -> None:
     
     print(f"Expected base directory:")
     print(f"  {base_dir}")
-    print(f"\nExpected files:")
+    print(f"\nExpected result files:")
     for path in sorted(file_paths):
         print(f"  {path}")
 
