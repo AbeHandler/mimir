@@ -2,6 +2,7 @@ import os
 from typing import Dict, List, Tuple
 from pathlib import Path
 import json
+import csv
 
 def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
     experiment_name = config.get("experiment_name", "default_experiment")
@@ -77,7 +78,67 @@ def validate_paths(base_directory: str, file_paths: List[str]) -> None:
             error_msg += f"  - {missing_file}\n"
         raise FileNotFoundError(error_msg.rstrip())
 
-def load_config_and_predict(config_path: str) -> None:
+def flatten_results_to_csv(file_paths: List[str], output_csv: str = "mimir_results.csv") -> None:
+    """
+    Flatten MIMIR result files to CSV format.
+    Each file should have an 'id_to_score' field with 'member' and 'nonmember' keys.
+    """
+    csv_rows = []
+    
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            print(f"Warning: Skipping missing file: {file_path}")
+            continue
+            
+        # Extract method name from filename (remove _results.json)
+        filename = os.path.basename(file_path)
+        method_name = filename.replace("_results.json", "")
+        
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            id_to_score = data.get('id_to_score', {})
+            
+            # Process member scores
+            member_scores = id_to_score.get('member', {})
+            for doc_id, score in member_scores.items():
+                csv_rows.append({
+                    'method': method_name,
+                    'membership': 'member',
+                    'doc_id': doc_id,
+                    'score': score
+                })
+            
+            # Process nonmember scores
+            nonmember_scores = id_to_score.get('nonmember', {})
+            for doc_id, score in nonmember_scores.items():
+                csv_rows.append({
+                    'method': method_name,
+                    'membership': 'nonmember',
+                    'doc_id': doc_id,
+                    'score': score
+                })
+                
+            print(f"Processed {len(member_scores)} member and {len(nonmember_scores)} nonmember scores from {filename}")
+            
+        except (json.JSONDecodeError, KeyError) as e:
+            print(f"Error processing {file_path}: {e}")
+            continue
+    
+    # Write to CSV
+    if csv_rows:
+        with open(output_csv, 'w', newline='') as csvfile:
+            fieldnames = ['method', 'membership', 'doc_id', 'score']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(csv_rows)
+        
+        print(f"\n✅ Successfully wrote {len(csv_rows)} rows to {output_csv}")
+    else:
+        print(f"\n❌ No data to write to CSV")
+
+def load_config_and_predict(config_path: str, flatten_to_csv: bool = False, csv_output: str = "mimir_results.csv") -> None:
     # Check if config file exists first
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file does not exist: {config_path}")
@@ -97,9 +158,21 @@ def load_config_and_predict(config_path: str) -> None:
     try:
         validate_paths(base_dir, file_paths)
         print(f"\n✅ All paths exist successfully!")
+        
+        # Optionally flatten results to CSV
+        if flatten_to_csv:
+            print(f"\nFlattening results to CSV...")
+            flatten_results_to_csv(file_paths, csv_output)
+            
     except (FileNotFoundError, NotADirectoryError) as e:
         print(f"\n❌ Path validation failed:")
         print(f"  {str(e)}")
+        
+        # Still try to flatten existing files if requested
+        if flatten_to_csv:
+            print(f"\nAttempting to flatten existing files to CSV...")
+            flatten_results_to_csv(file_paths, csv_output)
+        
         raise
 
 # Example usage
@@ -108,7 +181,8 @@ if __name__ == "__main__":
     config_file = "configs/olmo_blocked_docs.json"
     
     try:
-        load_config_and_predict(config_file)
+        # Set flatten_to_csv=True to automatically create CSV output
+        load_config_and_predict(config_file, flatten_to_csv=True, csv_output="mimir_results.csv")
     except (FileNotFoundError, NotADirectoryError, json.JSONDecodeError) as e:
         print(f"Error: {e}")
         exit(1)
