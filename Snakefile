@@ -2,9 +2,9 @@ import os
 os.environ["MIMIR_DATA_SOURCE"] = "mimirdata"
 os.environ["MIMIR_CACHE_PATH"] = "mimrcache"
 
-rule all:
+rule fin:
     input:
-        [".snake.analysis", ".snake.copywrite_traps", "olmo_blocked_docs.csv"]
+        [".snake.analysis", ".snake.copywrite_traps", "olmo_blocked_docs_m1.csv", "olmo_blocked_docs_m2.csv"]
 
 rule by_publisher:
     output:
@@ -12,19 +12,29 @@ rule by_publisher:
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_by_publisher_real.json && echo 'done' > {output}"
 
-rule blocked_docs:
+rule blocked_docs_m1:
     output:
-        proof=".snake.blocked_docs"
+        proof=".snake.blocked_docs.m1"
     shell:
-        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs.json && echo 'done' > {output.proof}"
+        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs_m1.json && echo 'done' > {output.proof}"
+
+rule blocked_docs_m0:
+    output:
+        proof=".snake.blocked_docs.m0"
+    shell:
+        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs_m0.json && echo 'done' > {output.proof}"
 
 rule post_process_blocked_docs:
     input:
-        proof=".snake.blocked_docs"
+        proof=[".snake.blocked_docs.m0", ".snake.blocked_docs.m1"]
     output:
-        "olmo_blocked_docs.csv"
+        "olmo_blocked_docs_m1.csv",
+        "olmo_blocked_docs_m2.csv",
     shell:
-        "python predict_paths.py --config olmo_blocked_docs"
+        """
+        python predict_paths.py --config olmo_blocked_docs_m1
+        python predict_paths.py --config olmo_blocked_docs_m2
+        """
 
 rule copywrite_traps:
     output:
