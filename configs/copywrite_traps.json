@@ -10,7 +10,7 @@
     "load_from_hf": true,
     "ourdataset": "abehandlerorg/copywritetraps",
     "output_name": "unified_mia",
-    "n_samples": 500,
+    "n_samples": 250,
     "blackbox_attacks": ["loss","min_k", "zlib"],
     "ref_config": {
         "models": []
