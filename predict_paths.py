@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 from pathlib import Path
 import json
 import csv
+import argparse
 
 def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
     experiment_name = config.get("experiment_name", "default_experiment")
@@ -175,14 +176,18 @@ def load_config_and_predict(config_path: str, flatten_to_csv: bool = False, csv_
         
         raise
 
-# Example usage
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, help="e.g. olmo_blocked_docs.json")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    # Load from config file
-    config_file = "configs/olmo_blocked_docs.json"
+    args = parse_args()
+    config_file = f"configs/{args.config}.json"
     
     try:
-        # Set flatten_to_csv=True to automatically create CSV output
-        load_config_and_predict(config_file, flatten_to_csv=True, csv_output="mimir_results.csv")
+        load_config_and_predict(config_file, flatten_to_csv=True, csv_output=f"{args.config}.csv")
     except (FileNotFoundError, NotADirectoryError, json.JSONDecodeError) as e:
         print(f"Error: {e}")
         exit(1)

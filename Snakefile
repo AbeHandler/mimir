@@ -4,7 +4,7 @@ os.environ["MIMIR_CACHE_PATH"] = "mimrcache"
 
 rule all:
     input:
-        [".snake.analysis", ".snake.copywrite_traps", ".snake.blocked_docs"]
+        [".snake.analysis", ".snake.copywrite_traps", "olmo_blocked_docs.csv"]
 
 rule by_publisher:
     output:
@@ -18,6 +18,13 @@ rule blocked_docs:
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs.json && echo 'done' > {output.proof}"
 
+rule post_process_blocked_docs:
+    input:
+        proof=".snake.blocked_docs"
+    output:
+        "olmo_blocked_docs.csv"
+    shell:
+        "python predict_paths.py --config olmo_blocked_docs"
 
 rule copywrite_traps:
     output:
