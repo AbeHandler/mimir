@@ -59,7 +59,7 @@ rule reset_cache:
         ".snake.reset_cache"
     shell:
         """
-        ./wipe.sh
+        ./wipe.sh && touch .snake.reset_cache
         """
 
 rule init_conda:
@@ -80,16 +80,10 @@ rule init_conda:
         fi
 
         conda create --name analysis python=3.9 -y
-
-        eval "$(conda shell.bash hook)"
-
         conda activate analysis
-
         pip install -r configs/analysis_requirements.txt
-
         conda deactivate
 
-        conda remove --name mimir --all
         conda create --name mimir python=3.9 -y
         conda activate mimir
         pip install -r configs/requirements_w_versions.txt
