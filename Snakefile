@@ -71,7 +71,14 @@ rule init_conda:
         """
         eval "$(conda shell.bash hook)"
 
-        conda remove --name analysis --all
+        if conda env list | grep -qE '^analysis\s'; then
+            conda remove --name analysis --all -y
+        fi
+
+        if conda env list | grep -qE '^mimir\s'; then
+            conda remove --name mimir --all -y
+        fi
+
         conda create --name analysis python=3.9 -y
 
         eval "$(conda shell.bash hook)"
