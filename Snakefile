@@ -4,7 +4,9 @@ os.environ["MIMIR_CACHE_PATH"] = "mimrcache"
 
 rule fin:
     input:
-        [".snake.analysis", ".snake.copywrite_traps", "olmo_blocked_docs_m1.csv", "olmo_blocked_docs_m2.csv"]
+        [".snake.analysis", ".snake.copywrite_traps", "olmo_blocked_docs_m1.csv", "olmo_blocked_docs_m0.csv"]
+    shell:
+        "rm -f gurobi.log"
 
 rule by_publisher:
     output:
@@ -29,11 +31,11 @@ rule post_process_blocked_docs:
         proof=[".snake.blocked_docs.m0", ".snake.blocked_docs.m1"]
     output:
         "olmo_blocked_docs_m1.csv",
-        "olmo_blocked_docs_m2.csv",
+        "olmo_blocked_docs_m0.csv",
     shell:
         """
         python predict_paths.py --config olmo_blocked_docs_m1
-        python predict_paths.py --config olmo_blocked_docs_m2
+        python predict_paths.py --config olmo_blocked_docs_m0
         """
 
 rule copywrite_traps:
