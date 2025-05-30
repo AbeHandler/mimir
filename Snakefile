@@ -35,9 +35,9 @@ rule post_process_blocked_docs:
         "mimir.E1.csv"
     shell:
         """
-        python build_output.py --config olmo_blocked_docs_m1
-        python build_output.py --config olmo_blocked_docs_m0
-        python merge_output.py
+        conda run --live-stream -n analysis python build_output.py --config olmo_blocked_docs_m0
+        conda run --live-stream -n analysis python build_output.py --config olmo_blocked_docs_m1
+        conda run --live-stream -n analysis python merge_output.py
         """
 
 rule copywrite_traps:
