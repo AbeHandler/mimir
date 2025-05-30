@@ -4,6 +4,8 @@ from pathlib import Path
 import json
 import csv
 import argparse
+import pandas as pd
+
 
 def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
     experiment_name = config.get("experiment_name", "default_experiment")
@@ -139,7 +141,7 @@ def flatten_results_to_csv(file_paths: List[str], output_csv: str = "mimir_resul
     else:
         print(f"\n❌ No data to write to CSV")
 
-def load_config_and_predict(config_path: str, flatten_to_csv: bool = False, csv_output: str = "mimir_results.csv") -> None:
+def load_config_and_flatten(config_path: str, flatten_to_csv: bool = False, csv_output: str = "mimir_results.csv") -> None:
     # Check if config file exists first
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file does not exist: {config_path}")
@@ -155,26 +157,9 @@ def load_config_and_predict(config_path: str, flatten_to_csv: bool = False, csv_
     for path in sorted(file_paths):
         print(f"  {path}")
     
-    # Validate that all paths exist
-    try:
-        validate_paths(base_dir, file_paths)
-        print(f"\n✅ All paths exist successfully!")
-        
-        # Optionally flatten results to CSV
-        if flatten_to_csv:
-            print(f"\nFlattening results to CSV...")
-            flatten_results_to_csv(file_paths, csv_output)
-            
-    except (FileNotFoundError, NotADirectoryError) as e:
-        print(f"\n❌ Path validation failed:")
-        print(f"  {str(e)}")
-        
-        # Still try to flatten existing files if requested
-        if flatten_to_csv:
-            print(f"\nAttempting to flatten existing files to CSV...")
-            flatten_results_to_csv(file_paths, csv_output)
-        
-        raise
+    validate_paths(base_dir, file_paths)
+    flatten_results_to_csv(file_paths, csv_output)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -186,8 +171,4 @@ if __name__ == "__main__":
     args = parse_args()
     config_file = f"configs/{args.config}.json"
     
-    try:
-        load_config_and_predict(config_file, flatten_to_csv=True, csv_output=f"{args.config}.csv")
-    except (FileNotFoundError, NotADirectoryError, json.JSONDecodeError) as e:
-        print(f"Error: {e}")
-        exit(1)
+    load_config_and_flatten(config_file, flatten_to_csv=True, csv_output=f"{args.config}.csv")

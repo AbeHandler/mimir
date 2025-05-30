@@ -32,10 +32,12 @@ rule post_process_blocked_docs:
     output:
         "olmo_blocked_docs_m1.csv",
         "olmo_blocked_docs_m0.csv",
+        "mimir.E1.csv"
     shell:
         """
-        python predict_paths.py --config olmo_blocked_docs_m1
-        python predict_paths.py --config olmo_blocked_docs_m0
+        python build_output.py --config olmo_blocked_docs_m1
+        python build_output.py --config olmo_blocked_docs_m0
+        python merge_output.py
         """
 
 rule copywrite_traps:
