@@ -87,6 +87,7 @@ rule init_conda:
         conda create --name mimir python=3.10 -y
         conda activate mimir
         pip install -r configs/requirements_w_versions.txt
+	touch .snake.conda
         """
 
 
