@@ -8,7 +8,7 @@ rule fin:
     shell:
         "rm -f gurobi.log"
 
-rule by_publisher:
+rule run_olmo_by_publisher_real:
     input:
         ".snake.conda"
     output:
@@ -54,8 +54,17 @@ rule copywrite_traps:
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/copywrite_traps.json && echo 'done' > {output}"
 
+rule reset_cache:
+    output:
+        ".snake.reset_cache"
+    shell:
+        """
+        ./wipe.sh
+        """
 
 rule init_conda:
+    input:
+        ".snake.reset_cache"
     output:
         proof=".snake.conda"
     shell:
@@ -80,7 +89,7 @@ rule init_conda:
         """
 
 
-rule analysis:
+rule in_sample_by_publisher_analysis:
     input:
         ".snake.by_publisher"
     output:
