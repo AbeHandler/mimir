@@ -84,7 +84,7 @@ rule init_conda:
         pip install -r configs/analysis_requirements.txt
         conda deactivate
 
-        conda create --name mimir python=3.9 -y
+        conda create --name mimir python=3.10 -y
         conda activate mimir
         pip install -r configs/requirements_w_versions.txt
         """
