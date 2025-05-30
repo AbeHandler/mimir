@@ -29,6 +29,7 @@ patsy==1.0.1
 pillow==11.2.1
 propcache==0.3.1
 pyarrow==20.0.0
+pydantic==2.11.5
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 pytz==2025.2
