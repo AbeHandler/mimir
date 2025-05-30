@@ -56,7 +56,32 @@ def predict_mimir_paths(config: Dict) -> Tuple[str, List[str]]:
     
     return base_directory, full_file_paths
 
+def validate_paths(base_directory: str, file_paths: List[str]) -> None:
+    """Validate that the predicted paths exist, throw errors if not."""
+    # Check if base directory exists
+    if not os.path.exists(base_directory):
+        raise FileNotFoundError(f"Base directory does not exist: {base_directory}")
+    
+    if not os.path.isdir(base_directory):
+        raise NotADirectoryError(f"Path exists but is not a directory: {base_directory}")
+    
+    # Check each expected file
+    missing_files = []
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            missing_files.append(file_path)
+    
+    if missing_files:
+        error_msg = f"Expected result files do not exist:\n"
+        for missing_file in missing_files:
+            error_msg += f"  - {missing_file}\n"
+        raise FileNotFoundError(error_msg.rstrip())
+
 def load_config_and_predict(config_path: str) -> None:
+    # Check if config file exists first
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Config file does not exist: {config_path}")
+    
     with open(config_path, 'r') as f:
         config = json.load(f)
     
@@ -67,10 +92,23 @@ def load_config_and_predict(config_path: str) -> None:
     print(f"\nExpected result files:")
     for path in sorted(file_paths):
         print(f"  {path}")
+    
+    # Validate that all paths exist
+    try:
+        validate_paths(base_dir, file_paths)
+        print(f"\n✅ All paths exist successfully!")
+    except (FileNotFoundError, NotADirectoryError) as e:
+        print(f"\n❌ Path validation failed:")
+        print(f"  {str(e)}")
+        raise
 
 # Example usage
 if __name__ == "__main__":
     # Load from config file
     config_file = "configs/olmo_blocked_docs.json"
     
-    load_config_and_predict(config_file)
+    try:
+        load_config_and_predict(config_file)
+    except (FileNotFoundError, NotADirectoryError, json.JSONDecodeError) as e:
+        print(f"Error: {e}")
+        exit(1)
