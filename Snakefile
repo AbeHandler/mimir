@@ -71,7 +71,7 @@ rule init_conda:
         """
         eval "$(conda shell.bash hook)"
 
-        conda remove --name analysis --all
+        conda remove --name analysis --all -y
         conda create --name analysis python=3.9 -y
 
         eval "$(conda shell.bash hook)"
@@ -82,7 +82,7 @@ rule init_conda:
 
         conda deactivate
 
-        conda remove --name mimir --all
+        conda remove --name mimir --all -y
         conda create --name mimir python=3.9 -y
         conda activate mimir
         pip install -r configs/requirements_w_versions.txt
