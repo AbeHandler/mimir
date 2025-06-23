@@ -4,7 +4,7 @@ os.environ["MIMIR_CACHE_PATH"] = "mimrcache"
 
 rule fin:
     input:
-        [".snake.analysis", ".snake.copywrite_traps", "olmo_blocked_docs_m1.csv", "olmo_blocked_docs_m0.csv"]
+        [".snake.analysis", ".snake.copywrite_traps", "olmo_blocked_docs_blocks.csv", "olmo_blocked_docs_noblocks.csv"]
     shell:
         "rm -f gurobi.log"
 
@@ -36,8 +36,8 @@ rule post_process_blocked_docs:
     input:
         proof=[".snake.blocked_docs.m0", ".snake.blocked_docs.m1"]
     output:
-        "olmo_blocked_docs_m1.csv",
-        "olmo_blocked_docs_m0.csv",
+        "olmo_blocked_docs_blocks.csv",
+        "olmo_blocked_docs_noblocks.csv",
         "mimir.E1.csv"
     shell:
         """
@@ -52,7 +52,10 @@ rule copywrite_traps:
     output:
         ".snake.copywrite_traps"
     shell:
-        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/copywrite_traps.json && echo 'done' > {output}"
+        """
+        MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/copywrite_traps_blocksbin.json
+        MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/copywrite_traps_noblocksbin.json && echo 'done' > {output}
+        """
 
 rule reset_cache:
     output:

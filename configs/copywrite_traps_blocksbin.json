@@ -1,5 +1,5 @@
 {
-    "base_model": "allenai/OLMo-7B",
+    "base_model": "dobolyilab/blockbench-blocksbin",
     "dataset_member": "abehandlerorg/copywritetraps",
     "experiment_name": "olmobypublisher",
     "dataset_nonmember": "abehandlerorg/copywritetraps",
