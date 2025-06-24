@@ -69,6 +69,7 @@ class Model(nn.Module):
                     assert "dont allow on CPU"
 
                 self.model.to(self.device)  # Don't use non_blocking=True unless CUDA
+                self.model.eval() # why does the package not call eval? huh?
             if self.config.env_config.compile:
                 if self.device == "cuda":
                     self.model = torch.compile(self.model)
