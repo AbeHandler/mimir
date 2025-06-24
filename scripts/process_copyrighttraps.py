@@ -16,4 +16,4 @@ print(R)
 
 
 
-print(noblocksbin["score_in_sample"].mean(), zeros["score_zero"].mean())
+print(noblocksbin["score_in_sample"].mean(), blocksbin["score_out_of_sample"].mean(), zeros["score_zero"].mean())
