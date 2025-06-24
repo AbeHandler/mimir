@@ -1,0 +1,35 @@
+{
+    "base_model": "dobolyilab/blockbench-noblocksbin",
+    "dataset_member": "abehandlerorg/copywritetrapszeros",
+    "experiment_name": "olmobypublisher",
+    "dataset_nonmember": "abehandlerorg/copywritetrapszeros",
+    "min_words": 100,
+    "max_words": 200,
+    "max_tokens": 512,
+    "max_data": 500,
+    "load_from_hf": true,
+    "ourdataset": "abehandlerorg/copywritetrapszeros",
+    "output_name": "unified_mia",
+    "n_samples": 250,
+    "blackbox_attacks": ["loss","min_k", "zlib"],
+    "ref_config": {
+        "models": []
+    },
+    "neighborhood_config": {
+        "model": "t5-small",
+        "n_perturbation_list": [
+            25
+        ],
+        "pct_words_masked": 0.3,
+        "span_length": 2,
+        "dump_cache": false,
+        "load_from_cache": false
+    },
+    "env_config": {
+        "results": "results_new",
+        "device": "cuda",
+        "device_aux": "cuda"
+    },
+    "dump_cache": false,
+    "load_from_cache": true
+}
