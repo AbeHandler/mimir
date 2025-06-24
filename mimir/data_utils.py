@@ -126,6 +126,10 @@ class Data:
                 ds = ds.map(lambda x: {"text": x["text"].strip('"')})
                 return ds
 
+            if self.name == "abehandlerorg/copywritetrapszeros":
+                ds = ds.map(lambda x: {"text": x["text"].strip('"')})
+                return ds
+
             #some of these examples do not have urls. why?
             orig_len = ds.num_rows
             ds = ds.filter(lambda ex: ex.get("url") is not None, batched=False)
