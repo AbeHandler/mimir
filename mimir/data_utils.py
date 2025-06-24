@@ -122,6 +122,8 @@ class Data:
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
 
             if self.name == "abehandlerorg/copywritetraps":
+                # strip the " at start and end
+                ds = ds.map(lambda x: {"text": x["text"].strip('"')})
                 return ds
 
             #some of these examples do not have urls. why?
