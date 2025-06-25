@@ -16,25 +16,25 @@ rule run_olmo_by_publisher_real:
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_by_publisher_real.json && echo 'done' > {output}"
 
-rule blocked_docs_m1:
+rule blocked_docs_blocks_lite:
     input:
         ".snake.conda"
     output:
-        proof=".snake.blocked_docs.m1"
+        proof=".snake.blocked_docs.blocks"
     shell:
-        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs_m1.json && echo 'done' > {output.proof}"
+        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs_blocks_lite.json && echo 'done' > {output.proof}"
 
-rule blocked_docs_m0:
+rule blocked_docs_noblocks_lite:
     input:
         ".snake.conda"
     output:
-        proof=".snake.blocked_docs.m0"
+        proof=".snake.blocked_docs.noblocks"
     shell:
-        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0,1 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs_m0.json && echo 'done' > {output.proof}"
+        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs_noblocks_lite.json && echo 'done' > {output.proof}"
 
 rule post_process_blocked_docs:
     input:
-        proof=[".snake.blocked_docs.m0", ".snake.blocked_docs.m1"]
+        proof=[".snake.blocked_docs.noblocks", ".snake.blocked_docs.blocks"]
     output:
         "olmo_blocked_docs_blocks.csv",
         "olmo_blocked_docs_noblocks.csv",
