@@ -8,7 +8,7 @@ stats = pd.read_csv("stats.csv")
 blocks = pd.read_csv("minhashblocksample_blocks.lite.csv").rename(columns={"score": "blocks_score"})
 blocks = stats.merge(blocks, left_on='url', right_on="doc_id")
 
-method = "min_k"
+method = "zlib"
 D = blocks.merge(noblocks, on=["doc_id", "method"])[["blocks_score", "size", "noblocks_score", "doc_id", "method"]].drop_duplicates()
 D["delta"] = D["blocks_score"] - D["noblocks_score"]
 D = D[D["size"] <= 30].copy()
