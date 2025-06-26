@@ -173,5 +173,5 @@ if __name__ == "__main__":
         config_file = f"configs/{args.config}.json"
         load_config_and_flatten(config_file, flatten_to_csv=True, csv_output=f"{args.config}.csv")
     else:
-        for config_file in Path("configs/*json"):
+        for config_file in Path("configs").glob("*.json"):
             load_config_and_flatten(config_file.as_posix(), flatten_to_csv=True, csv_output=f"{config_file.stem}.csv")
