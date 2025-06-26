@@ -19,3 +19,5 @@ parts2domains = {k: set(v) for k, v in parts2domains.items()}
 parts2size = [(k, pd.Series(v).mode().iloc[0]) for k, v in parts2size.items() if len(v) > 1000]
 parts2size = [o for o in parts2size if len(parts2domains[o[0]]) > 250]
 parts2size.sort(key=lambda x:x[1])
+
+print(parts2size)
