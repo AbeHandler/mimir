@@ -163,12 +163,15 @@ def load_config_and_flatten(config_path: str, flatten_to_csv: bool = False, csv_
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, help="e.g. olmo_blocked_docs.json")
+    parser.add_argument("--config", type=str, default=None, help="e.g. olmo_blocked_docs.json")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    config_file = f"configs/{args.config}.json"
-    
-    load_config_and_flatten(config_file, flatten_to_csv=True, csv_output=f"{args.config}.csv")
+    if args.config is not None:
+        config_file = f"configs/{args.config}.json"
+        load_config_and_flatten(config_file, flatten_to_csv=True, csv_output=f"{args.config}.csv")
+    else:
+        for config_file in Path("configs/*json"):
+            load_config_and_flatten(config_file.as_posix(), flatten_to_csv=True, csv_output=f"{config_file.stem}.csv")
