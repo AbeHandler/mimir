@@ -32,6 +32,15 @@ rule blocked_docs_noblocks_lite:
     shell:
         "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0 conda run --live-stream -n mimir python run.py --config configs/olmo_blocked_docs_noblocks_lite.json && echo 'done' > {output.proof}"
 
+rule process_minhash_sample:
+    input:
+        ".snake.conda"
+    output:
+        proof=".snake.blocked_docs.minhash"
+    shell:
+        "MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=1 conda run --live-stream -n mimir python run.py --config configs/minhashblocksample_blocks.lite.json && echo 'done' > {output.proof}"
+
+
 rule post_process_blocked_docs:
     input:
         proof=[".snake.blocked_docs.noblocks", ".snake.blocked_docs.blocks"]
