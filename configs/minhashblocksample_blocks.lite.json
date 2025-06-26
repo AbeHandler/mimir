@@ -13,7 +13,7 @@
     "specific_source": "Github_ngram_13_<0.8_truncated",
     "n_samples": 10000,
     "chunk_size": 1,
-    "blackbox_attacks": ["loss","min_k", "zlib"],
+    "blackbox_attacks": ["loss","min_k"],
     "ref_config": {
         "models": [
             "stabilityai/stablelm-base-alpha-3b-v2"
