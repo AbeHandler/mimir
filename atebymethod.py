@@ -1,10 +1,10 @@
 import pandas as pd
 import altair as alt
 
-stats = pd.read_csv("stats.csv")
+stats = pd.read_csv("stats.csv.gz")
 noblocks = pd.read_csv("minhashblocksample_noblocks.lite.csv").rename(columns={"score": "noblocks_score"})
 noblocks = stats.merge(noblocks, left_on='url', right_on="doc_id").drop(columns=['size'])
-stats = pd.read_csv("stats.csv")
+
 blocks = pd.read_csv("minhashblocksample_blocks.lite.csv").rename(columns={"score": "blocks_score"})
 blocks = stats.merge(blocks, left_on='url', right_on="doc_id")
 
