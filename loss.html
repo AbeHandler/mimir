@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
   <style>
     #vis.vega-embed {
       width: 100%;
@@ -14,14 +13,14 @@
     }
   </style>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5.20.1"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@5.17.0"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
 </head>
 <body>
   <div id="vis"></div>
   <script>
     (function(vegaEmbed) {
-      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "data": {"name": "data-c1913f77b5c5b19fe9d65ee1faf667f9"}, "mark": {"type": "bar"}, "encoding": {"tooltip": [{"field": "size_bin", "type": "nominal"}, {"field": "delta_mean", "type": "quantitative"}, {"field": "count", "type": "quantitative"}], "x": {"field": "size_bin", "sort": null, "title": "Count of similar documents in BlockBench", "type": "nominal"}, "y": {"field": "delta_mean", "title": "Mean ATE", "type": "quantitative"}}, "height": 300, "title": "Mean ATE by Repetition: loss", "width": 400, "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-c1913f77b5c5b19fe9d65ee1faf667f9": [{"size_bin": "(0, 10]", "delta_mean": 0.024791615524741645, "count": 65}, {"size_bin": "(10, 20]", "delta_mean": -0.058673843624041815, "count": 11}, {"size_bin": "(20, 30]", "delta_mean": 0.16761647377956912, "count": 5}]}};
+      var spec = {"config": {"view": {"continuousWidth": 300, "continuousHeight": 300}}, "data": {"name": "data-60bcb376b57c8079fdacb02a2191fb00"}, "mark": {"type": "bar"}, "encoding": {"tooltip": [{"field": "size_bin", "type": "nominal"}, {"field": "delta_mean", "type": "quantitative"}, {"field": "count", "type": "quantitative"}], "x": {"field": "size_bin", "sort": null, "title": "Count of similar documents in BlockBench", "type": "nominal"}, "y": {"field": "delta_mean", "title": "Mean ATE", "type": "quantitative"}}, "height": 300, "title": "Mean ATE by Repetition: loss", "width": 400, "$schema": "https://vega.github.io/schema/vega-lite/v5.17.0.json", "datasets": {"data-60bcb376b57c8079fdacb02a2191fb00": [{"size_bin": "(0, 5]", "delta_mean": 0.03134273601592847, "count": 1800}, {"size_bin": "(5, 10]", "delta_mean": 0.0038981309305270544, "count": 523}, {"size_bin": "(10, 15]", "delta_mean": -0.05148775930630026, "count": 2457}, {"size_bin": "(15, 20]", "delta_mean": -0.08274918749925106, "count": 574}, {"size_bin": "(20, 25]", "delta_mean": -0.04093428580590883, "count": 929}, {"size_bin": "(25, 30]", "delta_mean": -0.09513996896369686, "count": 417}]}};
       var embedOpt = {"mode": "vega-lite"};
 
       function showError(el, error){
