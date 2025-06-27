@@ -2,24 +2,22 @@ import pandas as pd
 import altair as alt
 
 stats = pd.read_csv("stats.csv.gz")
-noblocks = pd.read_csv("minhashblocksample_noblocks.lite.csv").rename(columns={"score": "noblocks_score"})
+noblocks = pd.read_csv("csvs/minhashblocksample_noblocks.lite.csv").rename(columns={"score": "noblocks_score"})
 noblocks = stats.merge(noblocks, left_on='url', right_on="doc_id").drop(columns=['size'])
 
-print(len(noblocks))
-
-blocks = pd.read_csv("minhashblocksample_blocks.lite.csv").rename(columns={"score": "blocks_score"})
+blocks = pd.read_csv("csvs/minhashblocksample_blocks.lite.csv").rename(columns={"score": "blocks_score"})
 blocks = stats.merge(blocks, left_on='url', right_on="doc_id")
 
-print(len(blocks))
 
-print(len(blocks), len(noblocks))
+print(len(noblocks))
+print(len(blocks))
 
 for method in ["loss", "min_k"]:
     D = blocks.merge(noblocks, on=["doc_id", "method"])[["blocks_score", "size", "noblocks_score", "doc_id", "method"]].drop_duplicates()
 
     D["delta"] = D["blocks_score"] - D["noblocks_score"]
     D = D[D["size"] <= 30].copy()
-    D["size_bin"] = pd.cut(D["size"], bins=range(0, 31, 10), right=True)
+    D["size_bin"] = pd.cut(D["size"], bins=range(0, 31, 5), right=True)
     D = D[D['method'] == method].copy()
 
     df = D.groupby("size_bin", observed=True).agg(
