@@ -123,6 +123,8 @@ class Data:
 
             if self.name == "abehandlerorg/twfecontrols":
                 ds = ds.map(lambda example: {"id": example["url"]})
+                # some of these short texts cause mimir errors
+                ds = ds.filter(lambda example: len(example["text"]) > 100)
 
             if self.name == "abehandlerorg/copywritetraps":
                 # strip the " at start and end
