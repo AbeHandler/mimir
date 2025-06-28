@@ -262,8 +262,14 @@ class Model(nn.Module):
             Load model properties, such as max length and stride.
         """
         # TODO: getting max_length of input could be more generic
+        import pdb; pdb.set_trace()
+
+
         if "silo" in self.name or "balanced" in self.name:
             self.max_length = self.model.model.seq_len
+        # added to avoid errors
+        elif isinstance(self, OpenAI_APIModel):
+            self.max_length = 1024
         elif hasattr(self.model.config, 'max_position_embeddings'):
             self.max_length = self.model.config.max_position_embeddings
         elif hasattr(self.model.config, 'n_positions'):
