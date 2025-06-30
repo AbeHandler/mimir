@@ -126,7 +126,7 @@ class Data:
                 # some of these short texts cause mimir errors
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
 
-            if self.name == "abehandlerorg/suffixesnoblocksbin"
+            if self.name == "abehandlerorg/suffixesnoblocksbin":
                 ds = ds.map(lambda example: {"id": example["sequence"]})
                 # because we are filtering to shard _0_ we need to ensure that noblocks > blocks
                 # this is often true but is not when (1) the sequence only appears outside shard 0
