@@ -132,7 +132,9 @@ class Data:
                 # this is often true but is not when (1) the sequence only appears outside shard 0
                 # (2) the sequence may appear more in shard_0 in blocks bin which is rare
                 # see debugging emails Jun 30, 2025 w/ team
+                ds = ds.map(lambda x: {"text": x["sequence"].strip('"')})
                 ds = ds.filter(lambda example: example["noblocksbin"] > example["blocksbin"])
+                return ds
 
             if self.name == "abehandlerorg/copywritetraps":
                 # strip the " at start and end
