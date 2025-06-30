@@ -1,0 +1,17 @@
+method,membership,doc_id,score
+loss,member,https://www.kttc.com/sports/betting/2023/04/05/bucks-bulls-nba-odds-spread-over-under/,3.2751855452842125
+loss,member,https://www.seattlepi.com/weather/article/TX-WFO-BROWNSVILLE-Warnings-Watches-and-17207449.php,3.4763716928159387
+loss,member,https://www.seattlepi.com/sports/article/Thomas-helps-No-13-Utah-rout-Stanford-42-7-17580899.php,3.9703893244417596
+loss,member,https://www.knau.org/npr-news/npr-news/2023-03-11/kiska-the-loneliest-whale-in-the-world-dies-at-canada-amusement-park,2.8335927273880586
+loss,nonmember,https://www.kttc.com/sports/betting/2023/04/05/bucks-bulls-nba-odds-spread-over-under/,3.2751855452842125
+loss,nonmember,https://www.seattlepi.com/weather/article/TX-WFO-BROWNSVILLE-Warnings-Watches-and-17207449.php,3.4763716928159387
+loss,nonmember,https://www.seattlepi.com/sports/article/Thomas-helps-No-13-Utah-rout-Stanford-42-7-17580899.php,3.9703893244417596
+loss,nonmember,https://www.knau.org/npr-news/npr-news/2023-03-11/kiska-the-loneliest-whale-in-the-world-dies-at-canada-amusement-park,2.8335927273880586
+min_k,member,https://www.kttc.com/sports/betting/2023/04/05/bucks-bulls-nba-odds-spread-over-under/,8.518823310307093
+min_k,member,https://www.seattlepi.com/weather/article/TX-WFO-BROWNSVILLE-Warnings-Watches-and-17207449.php,8.484783079566025
+min_k,member,https://www.seattlepi.com/sports/article/Thomas-helps-No-13-Utah-rout-Stanford-42-7-17580899.php,9.113220873333159
+min_k,member,https://www.knau.org/npr-news/npr-news/2023-03-11/kiska-the-loneliest-whale-in-the-world-dies-at-canada-amusement-park,7.661020914713542
+min_k,nonmember,https://www.kttc.com/sports/betting/2023/04/05/bucks-bulls-nba-odds-spread-over-under/,8.518823310307093
+min_k,nonmember,https://www.seattlepi.com/weather/article/TX-WFO-BROWNSVILLE-Warnings-Watches-and-17207449.php,8.484783079566025
+min_k,nonmember,https://www.seattlepi.com/sports/article/Thomas-helps-No-13-Utah-rout-Stanford-42-7-17580899.php,9.113220873333159
+min_k,nonmember,https://www.knau.org/npr-news/npr-news/2023-03-11/kiska-the-loneliest-whale-in-the-world-dies-at-canada-amusement-park,7.661020914713542
