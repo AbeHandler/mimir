@@ -25,7 +25,7 @@ class Data:
     def __init__(self, name,
                  config: ExperimentConfig,
                  presampled: str = None,
-                 name_key_mapping: dict = {"legacy-datasets/banking77": "text",  "abehandlerorg/twfecontrols": "text", "abehandlerorg/minhashblocksample": "text", "abehandlerorg/localblockeddocs": "text", "abehandlerorg/blockeddocs": "text",  "abehandlerorg/copyrighttrapszeros": "text", "the_pile": "text", "xsum": "document", "abehandlerorg/olmobypublisherdev": "text", "abehandlerorg/copywritetraps": "text"}):
+                 name_key_mapping: dict = {"legacy-datasets/banking77": "text",  "abehandlerorg/suffixesnoblocksbin": "text", "abehandlerorg/twfecontrols": "text", "abehandlerorg/minhashblocksample": "text", "abehandlerorg/localblockeddocs": "text", "abehandlerorg/blockeddocs": "text",  "abehandlerorg/copyrighttrapszeros": "text", "the_pile": "text", "xsum": "document", "abehandlerorg/olmobypublisherdev": "text", "abehandlerorg/copywritetraps": "text"}):
         self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
@@ -125,6 +125,14 @@ class Data:
                 ds = ds.map(lambda example: {"id": example["url"]})
                 # some of these short texts cause mimir errors
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
+
+            if self.name == "abehandlerorg/suffixesnoblocksbin"
+                ds = ds.map(lambda example: {"id": example["sequence"]})
+                # because we are filtering to shard _0_ we need to ensure that noblocks > blocks
+                # this is often true but is not when (1) the sequence only appears outside shard 0
+                # (2) the sequence may appear more in shard_0 in blocks bin which is rare
+                # see debugging emails Jun 30, 2025 w/ team
+                ds = ds.filter(lambda example: example["noblocksbin"] > example["blocksbin"])
 
             if self.name == "abehandlerorg/copywritetraps":
                 # strip the " at start and end
