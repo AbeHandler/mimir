@@ -2,7 +2,8 @@ import pandas as pd
 import altair as alt
 
 stats = pd.read_csv("stats.csv.gz")
-noblocks = pd.read_csv("csvs/minhashblocksample_noblocks.lite.csv").rename(columns={"score": "noblocks_score"})
+noblocks = pd.read_csv("csvs/tmp.csv").rename(columns={"score": "noblocks_score"})
+print(len(noblocks))
 noblocks = stats.merge(noblocks, left_on='url', right_on="doc_id").drop(columns=['size'])
 
 blocks = pd.read_csv("csvs/minhashblocksample_blocks.lite.csv").rename(columns={"score": "blocks_score"})
@@ -14,6 +15,7 @@ print(len(blocks))
 
 for method in ["loss", "min_k"]:
     D = blocks.merge(noblocks, on=["doc_id", "method"])[["blocks_score", "size", "noblocks_score", "doc_id", "method"]].drop_duplicates()
+    print(len(D))
 
     D["delta"] = D["blocks_score"] - D["noblocks_score"]
     D = D[D["size"] <= 30].copy()
