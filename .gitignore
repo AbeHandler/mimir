@@ -68,3 +68,5 @@ DEBUG/*
 
 # Ignore resources for edited members
 edit_distance_members
+
+*html
