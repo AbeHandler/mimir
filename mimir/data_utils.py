@@ -134,6 +134,7 @@ class Data:
                 # see debugging emails Jun 30, 2025 w/ team
                 ds = ds.map(lambda x: {"text": x["sequence"].strip('"')})
                 ds = ds.filter(lambda example: example["noblocksbin"] > example["blocksbin"])
+                ds = ds.filter(lambda example: example["blocksbin"] == 0)
                 return ds
 
             if self.name == "abehandlerorg/copywritetraps":
