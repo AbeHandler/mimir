@@ -54,6 +54,13 @@ for method in ["loss", "min_k", "dcpdd"]:
 
     print(method, len(Dp))
 
+    # for loss, we expect blocks score - noblocks score to be > 0
+    # same for min-k% 
+    # but for dcpdd we expect higher scores mean more likely included
+    # so we expect noblocs > blocks, hence flip sign
+    if method == "dcpdd":
+        Dp['delta'] *= -1
+
     df = Dp.groupby("size_bin", observed=True).agg(
         delta_mean=("delta", "mean"),
         count=("delta", "count")
