@@ -25,7 +25,7 @@ class Data:
     def __init__(self, name,
                  config: ExperimentConfig,
                  presampled: str = None,
-                 name_key_mapping: dict = {"legacy-datasets/banking77": "text",  "abehandlerorg/suffixesnoblocksbin": "text", "abehandlerorg/twfecontrols": "text", "abehandlerorg/minhashblocksample": "text", "abehandlerorg/localblockeddocs": "text", "abehandlerorg/blockeddocs": "text",  "abehandlerorg/copyrighttrapszeros": "text", "the_pile": "text", "xsum": "document", "abehandlerorg/olmobypublisherdev": "text", "abehandlerorg/copywritetraps": "text"}):
+                 name_key_mapping: dict = {"abehandlerorg/bloxbypublisher": "text",  "abehandlerorg/suffixesnoblocksbin": "text", "abehandlerorg/twfecontrols": "text", "abehandlerorg/minhashblocksample": "text", "abehandlerorg/localblockeddocs": "text", "abehandlerorg/blockeddocs": "text",  "abehandlerorg/copyrighttrapszeros": "text", "the_pile": "text", "xsum": "document", "abehandlerorg/olmobypublisherdev": "text", "abehandlerorg/copywritetraps": "text"}):
         self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
