@@ -146,6 +146,11 @@ class Data:
                 ds = ds.map(lambda x: {"text": x["text"].strip('"')})
                 return ds
 
+            if self.name == "abehandlerorg/minhashblocksample":
+                urls = set(o.strip("\n") for o in open("targets.txt"))
+                ds = ds.filter(lambda ex: ex.get("url") in urls)
+                return ds
+
             #some of these examples do not have urls. why?
             orig_len = ds.num_rows
             ds = ds.filter(lambda ex: ex.get("url") is not None, batched=False)
