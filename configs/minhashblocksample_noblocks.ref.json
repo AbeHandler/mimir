@@ -16,7 +16,7 @@
     "blackbox_attacks": ["ref"],
     "ref_config": {
         "models": [
-            "stabilityai/stablelm-base-alpha-3b-v2"
+            "gpt2-xl"
         ]
     },
     "env_config": {
