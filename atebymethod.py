@@ -13,6 +13,17 @@ stats = pd.read_csv("stats.csv.gz")
 noblocks = pd.read_csv("csvs/minhashblocksample_noblocks.lite.csv").rename(columns={"score": "noblocks_score"})
 blocks = pd.read_csv("csvs/minhashblocksample_blocks.lite.csv").rename(columns={"score": "blocks_score"})
 
+refbloc = pd.read_csv("csvs/minhashblocksample_blocks.ref.csv").rename(columns={"score": "blocks_score"})
+refnobloc = pd.read_csv("csvs/minhashblocksample_noblocks.ref.csv").rename(columns={"score": "noblocks_score"})
+refbloc["method"] = "ref"
+refnobloc["method"] = "ref"
+
+assert refbloc.columns.to_list() == blocks.columns.to_list()
+assert refnobloc.columns.to_list() == noblocks.columns.to_list()
+
+blocks = pd.concat([blocks, refbloc])
+noblocks = pd.concat([noblocks, refnobloc])
+
 doc_ids = set(noblocks['doc_id'].to_list())
 
 def load_dcpdd():
@@ -47,17 +58,24 @@ D["delta"] = D["blocks_score"] - D["noblocks_score"]
 D = D[D['doc_id'].apply(lambda x: x in doc_ids)]
 D = D[D["size"] <= 51].copy()
 
-for method in ["loss", "min_k", "dcpdd"]:
+for method in ["loss", "min_k", "dcpdd", "ref"]:
 
     D["size_bin"] = pd.cut(D["size"], bins=range(0, 50, 3), right=True)
     Dp = D[D['method'] == method].copy()
 
-    print(method, len(Dp))
+    with open("targets.txt", "w") as of:
+        for _ in set(Dp["doc_id"]):
+            of.write(_ + '\n')        
+    print(method, len(Dp), len(set(Dp["doc_id"])))
 
     # for loss, we expect blocks score - noblocks score to be > 0
     # same for min-k% 
     # but for dcpdd we expect higher scores mean more likely included
     # so we expect noblocs > blocks, hence flip sign
+    if method == "dcpdd":
+        Dp['delta'] *= -1
+
+    # for ref, we expect blocks score - noblocks score to be > 0
     if method == "dcpdd":
         Dp['delta'] *= -1
 
