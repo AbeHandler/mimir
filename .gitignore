@@ -1,6 +1,8 @@
 # Ignore snakemake stuff
 .snake*
 
+*__pycache__/*
+
 # Ignore all caching folders
 *cache/
 */__pycache__/
