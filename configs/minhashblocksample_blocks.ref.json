@@ -16,7 +16,7 @@
     "blackbox_attacks": ["ref"],
     "ref_config": {
         "models": [
-            "gpt2-xl"
+            "gpt2"
         ]
     },
     "env_config": {
