@@ -75,10 +75,6 @@ for method in ["loss", "min_k", "dcpdd", "ref"]:
     if method == "dcpdd":
         Dp['delta'] *= -1
 
-    # for ref, we expect blocks score - noblocks score to be > 0
-    if method == "dcpdd":
-        Dp['delta'] *= -1
-
     df = Dp.groupby("size_bin", observed=True).agg(
         delta_mean=("delta", "mean"),
         count=("delta", "count")
