@@ -123,6 +123,7 @@ class Data:
 
             if self.name == "abehandlerorg/twfe":
                 # strip the " at start and end
+                ds = ds.map(lambda example: {"id": example["url"]})
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/twfecontrols":
