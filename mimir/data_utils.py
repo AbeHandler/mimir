@@ -25,7 +25,7 @@ class Data:
     def __init__(self, name,
                  config: ExperimentConfig,
                  presampled: str = None,
-                 name_key_mapping: dict = {"abehandlerorg/bloxbypublisher": "text",  "abehandlerorg/suffixesnoblocksbin": "text", "abehandlerorg/twfecontrols": "text", "abehandlerorg/minhashblocksample": "text", "abehandlerorg/localblockeddocs": "text", "abehandlerorg/blockeddocs": "text",  "abehandlerorg/copyrighttrapszeros": "text", "the_pile": "text", "xsum": "document", "abehandlerorg/olmobypublisherdev": "text", "abehandlerorg/copywritetraps": "text"}):
+                 name_key_mapping: dict = {"abehandlerorg/bloxbypublisher": "text", "abehandlerorg/twfe": "text", "abehandlerorg/suffixesnoblocksbin": "text", "abehandlerorg/twfecontrols": "text", "abehandlerorg/minhashblocksample": "text", "abehandlerorg/localblockeddocs": "text", "abehandlerorg/blockeddocs": "text",  "abehandlerorg/copyrighttrapszeros": "text", "the_pile": "text", "xsum": "document", "abehandlerorg/olmobypublisherdev": "text", "abehandlerorg/copywritetraps": "text"}):
         self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
@@ -120,6 +120,10 @@ class Data:
             #  👀 simplify here for our setting
 
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
+
+            if self.name == "abehandlerorg/twfe":
+                # strip the " at start and end
+                return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/twfecontrols":
                 ds = ds.map(lambda example: {"id": example["url"]})
