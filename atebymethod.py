@@ -1,5 +1,6 @@
 import pandas as pd
 import altair as alt
+from scipy.stats import wilcoxon
 import os
 
 # cp ~/dolma/textreuse/minhash/stats.csv .
@@ -60,8 +61,16 @@ D = D[D["size"] <= 51].copy()
 
 for method in ["loss", "min_k", "dcpdd", "ref"]:
 
-    D["size_bin"] = pd.cut(D["size"], bins=range(0, 50, 3), right=True)
+    D["size_bin"] = pd.cut(D["size"], bins=range(0, 50, 10), right=True)
     Dp = D[D['method'] == method].copy()
+
+    if method == "dcpdd":
+        Dp['delta'] *= -1
+
+    mean_ = Dp["delta"].mean()
+
+    stat, p = wilcoxon(Dp["delta"].to_list(), alternative="greater")
+    print(f"{Dp['delta'].mean():.3g}", method, p)
 
     with open("targets.txt", "w") as of:
         for _ in set(Dp["doc_id"]):
@@ -72,14 +81,15 @@ for method in ["loss", "min_k", "dcpdd", "ref"]:
     # same for min-k% 
     # but for dcpdd we expect higher scores mean more likely included
     # so we expect noblocs > blocks, hence flip sign
-    if method == "dcpdd":
-        Dp['delta'] *= -1
+
 
     df = Dp.groupby("size_bin", observed=True).agg(
         delta_mean=("delta", "mean"),
         count=("delta", "count")
     ).reset_index()
 
+    df["method"] = method
+    df.to_csv(method + ".csv", index=False)
 
     df["size_bin"] = df["size_bin"].astype(str)
     chart = alt.Chart(df).mark_line(point=True).encode(
