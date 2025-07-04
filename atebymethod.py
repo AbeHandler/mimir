@@ -16,6 +16,7 @@ blocks = pd.read_csv("csvs/minhashblocksample_blocks.lite.csv").rename(columns={
 
 refbloc = pd.read_csv("csvs/minhashblocksample_blocks.ref.csv").rename(columns={"score": "blocks_score"})
 refnobloc = pd.read_csv("csvs/minhashblocksample_noblocks.ref.csv").rename(columns={"score": "noblocks_score"})
+
 refbloc["method"] = "ref"
 refnobloc["method"] = "ref"
 
