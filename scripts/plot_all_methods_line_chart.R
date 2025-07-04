@@ -1,7 +1,7 @@
 library(tidyverse)
 
 # Read both files
-loss <- read_csv("loss.csv")
+loss <- read_csv("loss.csv") %>% mutate(method = if_else(method == "loss", "loss/ref", method))
 min_k <- read_csv("min_k.csv")
 dcpdd <- read_csv("dcpdd.csv")
 
