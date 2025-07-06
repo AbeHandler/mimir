@@ -142,6 +142,7 @@ class Data:
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/twfecontrols":
+                ds = datasets.load_dataset(self.name, download_mode="force_redownload")["train"].shuffle(seed=42)
                 ds = ds.map(lambda example: {"id": example["url"]})
                 # some of these short texts cause mimir errors
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
