@@ -145,7 +145,7 @@ class Data:
                 ds = datasets.load_dataset(self.name, download_mode="force_redownload")["train"].shuffle(seed=42)
                 ds = ds.map(lambda example: {"id": example["url"]})
                 # some of these short texts cause mimir errors
-                ds = ds.filter(lambda example: len(example["text"]) > 100)
+                return ds.filter(lambda example: len(example["text"]) > 100)
 
             if self.name == "abehandlerorg/suffixesnoblocksbin":
                 ds = ds.map(lambda example: {"id": example["sequence"]})
