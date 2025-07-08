@@ -64,7 +64,7 @@ for method in ["loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"]:
         method = 'ref'
     
     df['method'] = method
-    #df.to_csv(method + ".csv", index=False)
+    df.to_csv(method + ".csv", index=False)
     stat, p = wilcoxon(D["delta"].to_list(), alternative="greater")
 
     print(f"{D['delta'].mean():.3g}", method, p)
