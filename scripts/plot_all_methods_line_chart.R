@@ -4,9 +4,10 @@ library(tidyverse)
 loss <- read_csv("loss.csv") %>% mutate(method = if_else(method == "loss", "loss/ref", method))
 min_k <- read_csv("min_k.csv")
 dcpdd <- read_csv("dcpdd.csv")
+neighborhood <- read_csv("neighborhood.csv")
 
 # Combine
-combined <- bind_rows(loss, min_k, dcpdd)
+combined <- bind_rows(loss, min_k, dcpdd, neighborhood)
 
 # Extract numeric lower bounds for ordering
 combined <- combined %>%
@@ -26,4 +27,4 @@ ggplot(combined, aes(x = size_bin, y = delta_mean, color = method, group = metho
   ) +
   theme_minimal()
 
-ggsave("tmp.pdf")
+ggsave("plots/bymethod.pdf")
