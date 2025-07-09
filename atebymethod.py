@@ -1,5 +1,5 @@
 import pandas as pd
-
+import os
 from scipy.stats import wilcoxon
 
 from string import Template
@@ -20,12 +20,13 @@ def load_dcpdd():
 
     return dcpddblocks, dcpddnoblocks
 
-for method in ["loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"]:
+for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"]: 
 
     stats = pd.read_csv("stats.csv.gz")
 
     if method != "dcpdd":
-        method2pattern = {"loss": Template(f"csvs/minhashblocksample_$kind.lite.csv"),
+        method2pattern = {"ne-5": Template(f"csvs/minhashblocksample_$kind.heavy.csv"),
+                          "loss": Template(f"csvs/minhashblocksample_$kind.lite.csv"),
                           "min_k": Template(f"csvs/minhashblocksample_$kind.lite.csv"),
                           "ref-stablelm-base-alpha-3b-v2": Template(f"csvs/minhashblocksample_$kind.ref.csv")}
 
@@ -50,7 +51,13 @@ for method in ["loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"]:
     D["delta"] = D["delta"].round(4)
 
     D = D[D["method"] == method].copy()
+
+    if method == "ne-5":
+        method = 'neighborhood'
+
     if method == "dcpdd":
+        D["delta"] *= -1
+    if method == "neighborhood":
         D["delta"] *= -1
 
     D["size_bin"] = pd.cut(D["size"], bins=range(0, 50, 5), right=True)
@@ -62,12 +69,13 @@ for method in ["loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"]:
 
     if method == "ref-stablelm-base-alpha-3b-v2":
         method = 'ref'
-    
+
+
     df['method'] = method
     df.to_csv(method + ".csv", index=False)
     stat, p = wilcoxon(D["delta"].to_list(), alternative="greater")
 
-    print(f"{D['delta'].mean():.3g}", method, p)
+    print(f"{D['delta'].mean():.3g}", method, p/7)
     print(len(D))
     
     #import os
@@ -78,3 +86,6 @@ for method in ["loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"]:
     if method in ["loss", "ref"]:
         print(D.sort_values("doc_id")["delta"].head())
         D.sort_values("doc_id")[["doc_id", "delta"]].to_csv(f"debug.{method}.csv", index=False)
+
+    cmd = 'Rscript --vanilla scripts/plot_all_methods_line_chart.R > /dev/null 2>&1'
+    os.system(cmd)
