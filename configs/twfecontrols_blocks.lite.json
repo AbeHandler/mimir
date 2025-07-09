@@ -1,5 +1,5 @@
 {
-    "base_model": "dobolyilab/blockbench-noblocksbin",
+    "base_model": "dobolyilab/blockbench-blocksbin",
     "dataset_member": "abehandlerorg/twfecontrols",
     "experiment_name": "olmoblockeddocs",
     "dataset_nonmember": "abehandlerorg/twfecontrols",
