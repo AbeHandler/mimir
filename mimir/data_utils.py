@@ -170,6 +170,7 @@ class Data:
             if self.name == "abehandlerorg/minhashblocksample":
                 urls = set(o.strip("\n") for o in open("targets.txt"))
                 ds = ds.filter(lambda ex: ex.get("url") in urls)
+                # the ne method does not use the full targets
                 return ds.select(range(n_samples))
 
             #some of these examples do not have urls. why?
