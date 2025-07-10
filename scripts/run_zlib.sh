@@ -1,6 +1,11 @@
 set -e
 export CUDA_VISIBLE_DEVICES=0 && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/minhashblocksample_blocks.zlib.json
-export CUDA_VISIBLE_DEVICES=1 && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/minhashblocksample_noblocks.heavy.json
+export CUDA_VISIBLE_DEVICES=1 && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config configs/minhashblocksample_noblocks.zlib.json
 
 time conda run --live-stream -n analysis python build_output.py --config minhashblocksample_noblocks.heavy
 time conda run --live-stream -n analysis python build_output.py --config minhashblocksample_blocks.heavy
+
+python build_output.py --config minhashblocksample_noblocks.zlib
+python build_output.py --config minhashblocksample_blocks.zlib
+
+mv minhashblocksample_blocks.zlib.csv minhashblocksample_noblocks.zlib.csv csvs

@@ -10,8 +10,6 @@ zlib <- read_csv("zlib.csv")
 # Combine
 combined <- bind_rows(loss, min_k, dcpdd, neighborhood, zlib)
 
-# combined <- bind_rows(zlib)
-
 # Extract numeric lower bounds for ordering
 combined <- combined %>%
   mutate(size_bin = factor(size_bin, levels = combined %>%
@@ -20,14 +18,20 @@ combined <- combined %>%
                              arrange(bin_order) %>%
                              pull(size_bin)))
 
-# Plot
+# Plot with 5 columns, 1 row
 ggplot(combined, aes(x = size_bin, y = delta_mean, color = method, group = method)) +
   geom_line() +
   geom_point() +
+  facet_wrap(~ method, nrow = 1, scales = "free_y") +
   labs(
-    x = "Number of similar documents in news ecosystem", y = "ATE",
-    title = "ATE vs. Text Reuse by Method"
+    x = "Number of similar documents in news ecosystem", 
+    y = "ATE",
+    title = "ATE by Number of Similar Documents by Method"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"  # Remove legend since method is shown in facet titles
+  )
 
-ggsave("plots/bymethod.pdf")
+ggsave("plots/bymethod_5col.pdf", width = 15, height = 4)  # Adjust width/height as needed

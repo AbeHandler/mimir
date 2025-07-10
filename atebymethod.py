@@ -1,8 +1,10 @@
+
 import pandas as pd
 import os
 from scipy.stats import wilcoxon
-
+from scipy import stats as sp
 from string import Template
+from sklearn.preprocessing import MinMaxScaler
 
 def load_dcpdd():
     dcpddblocks = pd.read_json("/Users/abha4861/dolma/dcpdd/output/metrics/minhashblocksample/dobolyilab/blockbench-blocksbin.jsonl", lines=True)
@@ -20,7 +22,7 @@ def load_dcpdd():
 
     return dcpddblocks, dcpddnoblocks
 
-for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"]: 
+for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2", "zlib"]: 
 
     stats = pd.read_csv("stats.csv.gz")
 
@@ -28,6 +30,7 @@ for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"
         method2pattern = {"ne-5": Template(f"csvs/minhashblocksample_$kind.heavy.csv"),
                           "loss": Template(f"csvs/minhashblocksample_$kind.lite.csv"),
                           "min_k": Template(f"csvs/minhashblocksample_$kind.lite.csv"),
+                          "zlib": Template(f"csvs/minhashblocksample_$kind.zlib.csv"),
                           "ref-stablelm-base-alpha-3b-v2": Template(f"csvs/minhashblocksample_$kind.ref.csv")}
 
         noblocks = pd.read_csv(method2pattern[method].substitute({'kind': "noblocks"})).rename(columns={"score": "noblocks_score"})
@@ -46,11 +49,17 @@ for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"
 
     doc_ids = set(o.strip("\n") for o in open("targets.txt"))
     D = D[D["doc_id"].apply(lambda x: x in doc_ids)].copy()
+    D = D[D["method"] == method].copy()
 
     D["delta"] = D["blocks_score"] - D["noblocks_score"]
     D["delta"] = D["delta"].round(4)
 
-    D = D[D["method"] == method].copy()
+    # we need to zscale for zlib. the scale is way different
+
+    
+
+    # D['delta'] = sp.zscore(D["delta"])
+
 
     if method == "ne-5":
         method = 'neighborhood'
@@ -77,15 +86,6 @@ for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"
 
     print(f"{D['delta'].mean():.3g}", method, p/7)
     print(len(D))
-    
-    #import os
-    #os.system(f"cat {method}.csv")
-    #print(df)
-    #print(df)
 
-    if method in ["loss", "ref"]:
-        print(D.sort_values("doc_id")["delta"].head())
-        D.sort_values("doc_id")[["doc_id", "delta"]].to_csv(f"debug.{method}.csv", index=False)
-
-    cmd = 'Rscript --vanilla scripts/plot_all_methods_line_chart.R > /dev/null 2>&1'
+    cmd = 'Rscript --vanilla scripts/plot_all_methods_line_chart_grid.R > /dev/null 2>&1'
     os.system(cmd)
