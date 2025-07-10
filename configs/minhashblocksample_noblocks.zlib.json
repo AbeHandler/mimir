@@ -11,7 +11,7 @@
     "ourdataset": "abehandlerorg/minhashblocksample",
     "output_name": "unified_mia",
     "specific_source": "Github_ngram_13_<0.8_truncated",
-    "n_samples": 1000,
+    "n_samples": 2506,
     "chunk_size": 1,
     "blackbox_attacks": ["loss", "zlib"],
     "ref_config": {
