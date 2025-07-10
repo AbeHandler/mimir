@@ -6,6 +6,10 @@ from scipy import stats as sp
 from string import Template
 from sklearn.preprocessing import MinMaxScaler
 
+# this runs in a different repo forekd from author
+cmd = "cp /tmp/document-level-membership-inference/doc.csv ."
+os.system(cmd)
+
 def load_dcpdd():
     dcpddblocks = pd.read_json("/Users/abha4861/dolma/dcpdd/output/metrics/minhashblocksample/dobolyilab/blockbench-blocksbin.jsonl", lines=True)
     dcpddblocks = dcpddblocks.rename(columns={"pred": "blocks_score", "id": "doc_id"})

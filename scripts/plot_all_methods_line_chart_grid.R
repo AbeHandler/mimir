@@ -6,9 +6,13 @@ min_k <- read_csv("min_k.csv")
 dcpdd <- read_csv("dcpdd.csv")
 neighborhood <- read_csv("neighborhood.csv")
 zlib <- read_csv("zlib.csv")
+doc <- read_csv("doc.csv")
 
 # Combine
-combined <- bind_rows(loss, min_k, dcpdd, neighborhood, zlib)
+combined <- bind_rows(loss, min_k, dcpdd, neighborhood, zlib, doc)
+
+combined <- combined %>%
+  mutate(method = str_to_upper(str_replace_all(method, "_", " ")))
 
 # Extract numeric lower bounds for ordering
 combined <- combined %>%
@@ -19,9 +23,9 @@ combined <- combined %>%
                              pull(size_bin)))
 
 # Plot with 5 columns, 1 row
-ggplot(combined, aes(x = size_bin, y = delta_mean, color = method, group = method)) +
-  geom_line() +
-  geom_point() +
+ggplot(combined, aes(x = size_bin, y = delta_mean, group = method)) +
+  geom_line(color = "grey40", size = 1.2) +
+  geom_point(color = "grey40", size = 2) +
   facet_wrap(~ method, nrow = 1, scales = "free_y") +
   labs(
     x = "Number of similar documents in news ecosystem", 
@@ -31,7 +35,11 @@ ggplot(combined, aes(x = size_bin, y = delta_mean, color = method, group = metho
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "none"  # Remove legend since method is shown in facet titles
+    strip.text = element_text(face = "bold"), 
+    legend.position = "none",  # Remove legend since method is shown in facet titles
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    plot.margin = margin(0, 0, 0, 0, "mm")
   )
 
-ggsave("plots/bymethod_5col.pdf", width = 15, height = 4)  # Adjust width/height as needed
+ggsave("plots/bymethod_5col.png", width = 15, height = 4)  # Adjust width/height as needed
