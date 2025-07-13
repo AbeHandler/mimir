@@ -156,6 +156,10 @@ class Data:
                 ds = ds.map(lambda x: {"text": x["sequence"].strip('"')})
                 ds = ds.filter(lambda example: example["noblocksbin"] > example["blocksbin"])
                 ds = ds.filter(lambda example: example["blocksbin"] == 0)
+
+                # this line ony ran for ne which has to run on a 50% samlpe.
+                return ds.select(range(n_samples)) #  iadded this line for the ne method on Jul 13 after everything else ran
+
                 return ds
 
             if self.name == "abehandlerorg/copywritetraps":
