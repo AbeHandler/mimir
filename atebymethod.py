@@ -70,8 +70,16 @@ for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"
 
     if method == "dcpdd":
         D["delta"] *= -1
-    if method == "neighborhood":
-        D["delta"] *= -1
+
+    # This is wrong! I fixed it July 14th.
+    # NE says ... lower is more likely to be a member. So member should come in as - (big number) and non member should come in as \approx 0. 
+    # ATT = blocks - no blocks 
+    # ATT = nonmember - member
+    # ATT = 0 - - big number => positive ATT
+    # Thus NE should NOT be multiplied by -1. I think the diff w/ DCPDD is number is high
+
+    # if method == "neighborhood":
+    #    D["delta"] *= -1
 
     D["size_bin"] = pd.cut(D["size"], bins=range(0, 50, 5), right=True)
 
