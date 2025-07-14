@@ -4,7 +4,7 @@ library(tidyverse)
 loss <- read_csv("loss.csv") %>% mutate(method = if_else(method == "loss", "loss/ref", method))
 min_k <- read_csv("min_k.csv")
 dcpdd <- read_csv("dcpdd.csv")
-neighborhood <- read_csv("neighborhood.csv")
+neighborhood <- read_csv("NE.csv")
 zlib <- read_csv("zlib.csv")
 doc <- read_csv("doc.csv")
 

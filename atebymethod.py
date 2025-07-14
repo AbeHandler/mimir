@@ -26,7 +26,7 @@ def load_dcpdd():
 
     return dcpddblocks, dcpddnoblocks
 
-for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2", "zlib"]: 
+for method in ["ne-5"]: #, "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2", "zlib"]: 
 
     stats = pd.read_csv("stats.csv.gz")
 
@@ -60,16 +60,16 @@ for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"
 
     # we need to zscale for zlib. the scale is way different
 
-    
-
     # D['delta'] = sp.zscore(D["delta"])
 
 
-    if method == "ne-5":
-        method = 'neighborhood'
+    if method == "ne-5" or method == "neighborhood":
+        method = 'NE'
 
     if method == "dcpdd":
         D["delta"] *= -1
+
+    print(method)
 
     # This is wrong! I fixed it July 14th.
     # NE says ... lower is more likely to be a member. So member should come in as - (big number) and non member should come in as \approx 0. 
