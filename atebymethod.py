@@ -26,7 +26,7 @@ def load_dcpdd():
 
     return dcpddblocks, dcpddnoblocks
 
-for method in ["ne-5"]: #, "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2", "zlib"]: 
+for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2", "zlib"]: 
 
     stats = pd.read_csv("stats.csv.gz")
 
