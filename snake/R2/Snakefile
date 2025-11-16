@@ -1,0 +1,29 @@
+"""
+Snakefile for running MIMIR analysis pipeline on multiple configs
+
+Usage:
+    snakemake -s snake/R2/Snakefile --cores 1
+"""
+
+# List of config files to process (without .json extension)
+CONFIGS = [
+    "bothbins.blocks.lite",
+]
+
+# Rule to run all configs
+rule all:
+    input:
+        expand("{config}.csv", config=CONFIGS)
+
+# Rule to run analysis on a single config
+rule run_config:
+    input:
+        config="configs/{config}.json"
+    output:
+        csv="{config}.csv"
+    log:
+        "logs/{config}.log"
+    shell:
+        """
+        ./scripts/run_config.sh {wildcards.config}.json > {log} 2>&1
+        """
