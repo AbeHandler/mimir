@@ -8,6 +8,7 @@ Usage:
 # List of config files to process (without .json extension)
 CONFIGS = [
     "bothbins.blocks.lite",
+    "bothbins.noblocks.lite",
 ]
 
 # Rule to run all configs
