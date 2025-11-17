@@ -34,6 +34,7 @@ class Data:
                                            "abehandlerorg/blockeddocs": "text",
                                            "abehandlerorg/copyrighttrapszeros": "text",
                                            "abehandlerorg/nobloxbypublisher": "text",
+                                           "abehandlerorg/bothbins": "text",
                                            "the_pile": "text",
                                            "xsum": "document",
                                            "abehandlerorg/olmobypublisherdev": "text",
