@@ -134,6 +134,10 @@ class Data:
 
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
 
+            if self.name == "abehandlerorg/bothbins":
+                ds = ds.filter(lambda example: len(example["text"]) > 100)
+                return ds.select(range(n_samples))
+
             if self.name == "abehandlerorg/nobloxbypublisher":
                 return ds.select(range(n_samples))
 
