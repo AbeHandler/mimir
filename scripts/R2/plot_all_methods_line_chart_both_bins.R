@@ -47,8 +47,7 @@ ggplot(combined, aes(x = size_bin, y = delta_mean, group = method)) +
   facet_wrap(~ method, nrow = 1, scales = "free_y") +
   labs(
     x = "Number of similar documents in news ecosystem",
-    y = "ATT",
-    title = "ATT by Number of Similar Documents by Method"
+    y = "ATU"
   ) +
   theme_minimal() +
   theme(

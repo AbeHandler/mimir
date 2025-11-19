@@ -62,7 +62,6 @@ for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"
 
     # D['delta'] = sp.zscore(D["delta"])
 
-
     if method == "ne-5" or method == "neighborhood":
         method = 'NE'
 
@@ -70,6 +69,8 @@ for method in ["ne-5", "loss", "min_k", "dcpdd", "ref-stablelm-base-alpha-3b-v2"
         D["delta"] *= -1
 
     print(method)
+
+    D.to_csv(f"data/interim/bothbins/ATTsfromR1/{method}.csv", index=False)
 
     # This is wrong! I fixed it July 14th.
     # NE says ... lower is more likely to be a member. So member should come in as - (big number) and non member should come in as \approx 0. 
