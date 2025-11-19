@@ -59,6 +59,8 @@ D = D[D["membership"] == "member"].copy()
 
 D = D.sample(n=2500, random_state=42)
 
+assert len(D) == 2500
+
 D["delta"] = D["blocks_score"] - D["noblocks_score"]
 
 D["size_bin"] = pd.cut(D["size"], bins=range(0, 50, 5), right=True)
