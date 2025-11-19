@@ -57,17 +57,22 @@ D["size"] = D["size"].astype(int)
 
 D = D[D["membership"] == "member"].copy()
 
-D = D.sample(n=2500, random_state=42)
-
-assert len(D) == 2500
 
 D["delta"] = D["blocks_score"] - D["noblocks_score"]
 
 D["size_bin"] = pd.cut(D["size"], bins=range(0, 50, 5), right=True)
 
+D.to_csv("data/interim/bothbins/granular.csv", index=False)
 
 for method in D["method"].unique():
-    method_data = D[D["method"] == method]
+
+    method_data = D[D["method"] == method].copy()
+
+    D2 = method_data.sample(n=2500, random_state=42)
+
+    assert len(D2) == 2500
+
+    D2.to_csv(f"data/interim/bothbins/{method}.granular.csv", index=False)
 
     df = method_data.groupby("size_bin", observed=True).agg(
             delta_mean=("delta", "mean"),
