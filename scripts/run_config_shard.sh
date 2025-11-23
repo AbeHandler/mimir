@@ -22,7 +22,7 @@ if [ ! -f "$OUTPUT_CSV" ]; then
     exit 1
 fi
 
-FILE_AGE=$(( $(date +%s) - $(stat -f %m "$OUTPUT_CSV") ))
+FILE_AGE=$(( $(date +%s) - $(stat -c %Y "$OUTPUT_CSV") ))
 if [ "$FILE_AGE" -gt 60 ]; then
     echo "ERROR: Output file is older than 60 seconds (age: ${FILE_AGE}s): $OUTPUT_CSV"
     exit 1
