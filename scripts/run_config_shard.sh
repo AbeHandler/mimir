@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-if [ -z "$1" ] || [ -z "$2" ]; then
-    echo "Usage: $0 <SHARD_ID> <config_filename>"
-    echo "Example: $0 0 confounddataset.blocks.lite.json"
+if [ -z "$1" ]; then
+    echo "Usage: $0 <SHARD_ID>"
+    echo "Example: $0 0"
     exit 1
 fi
 
-CONFIG_FILENAME="$2"
+CONFIG_FILENAME="confounddataset.blocks.lite.json"
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 OUTPUT_CSV="${CONFIG_BASENAME}.csv"
 
