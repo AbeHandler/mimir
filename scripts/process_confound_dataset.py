@@ -30,6 +30,13 @@ def load_local_csvs(csv_dir: Path) -> pd.DataFrame:
     combined_df = pd.concat(dfs, ignore_index=True)
     print(f"Combined DataFrame: {len(combined_df)} rows")
 
+    # Drop membership column and deduplicate
+    if "membership" in combined_df.columns:
+        combined_df = combined_df.drop(columns=["membership"])
+        print("Dropped 'membership' column")
+    combined_df = combined_df.drop_duplicates()
+    print(f"After deduplication: {len(combined_df)} rows")
+
     return combined_df
 
 
