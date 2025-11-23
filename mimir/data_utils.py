@@ -33,6 +33,7 @@ class Data:
                                            "abehandlerorg/localblockeddocs": "text",
                                            "abehandlerorg/blockeddocs": "text",
                                            "abehandlerorg/copyrighttrapszeros": "text",
+                                           "abehandlerorg/confounddataset": "text",
                                            "abehandlerorg/nobloxbypublisher": "text",
                                            "abehandlerorg/bothbins": "text",
                                            "the_pile": "text",
@@ -140,6 +141,14 @@ class Data:
 
             if self.name == "abehandlerorg/nobloxbypublisher":
                 return ds.select(range(n_samples))
+
+            if self.name == "abehandlerorg/confounddataset":
+                if "SHARD_ID" not in os.environ:
+                    raise ValueError("SHARD_ID not set in environment")
+                shard_id = int(os.environ["SHARD_ID"])
+                start = shard_id * 1000
+                end = (shard_id + 1) * 1000
+                return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/twfe":
                 # strip the " at start and end
