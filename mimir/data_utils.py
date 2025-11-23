@@ -146,8 +146,9 @@ class Data:
                 if "SHARD_ID" not in os.environ:
                     raise ValueError("SHARD_ID not set in environment")
                 shard_id = int(os.environ["SHARD_ID"])
-                start = shard_id * 1000
-                end = (shard_id + 1) * 1000
+                SHARD_SIZE = 5000
+                start = shard_id * SHARD_SIZE
+                end = (shard_id + 1) * SHARD_SIZE
                 return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/twfe":
