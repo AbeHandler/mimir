@@ -10,6 +10,13 @@ fi
 CONFIG_FILENAME="confounddataset.blocks.lite.json"
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 OUTPUT_CSV="${CONFIG_BASENAME}.csv"
+OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.shard_${1}.csv"
+
+# Early exit if output shard already exists
+if [ -f "$OUTPUT_CSV_SHARD" ]; then
+    echo "Output shard already exists, skipping: $OUTPUT_CSV_SHARD"
+    exit 0
+fi
 
 export SHARD_ID="$1"
 echo "Running with SHARD_ID=$SHARD_ID"
@@ -29,7 +36,6 @@ if [ "$FILE_AGE" -gt 60 ]; then
 fi
 
 # Rename to include SHARD_ID
-OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.shard_${SHARD_ID}.csv"
 mv "$OUTPUT_CSV" "$OUTPUT_CSV_SHARD"
 
 echo "Output: $OUTPUT_CSV_SHARD"
