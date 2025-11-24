@@ -34,6 +34,7 @@ class Data:
                                            "abehandlerorg/blockeddocs": "text",
                                            "abehandlerorg/copyrighttrapszeros": "text",
                                            "abehandlerorg/confounddataset": "text",
+                                           "abehandlerorg/confounddatasetxpress": "text",
                                            "abehandlerorg/nobloxbypublisher": "text",
                                            "abehandlerorg/bothbins": "text",
                                            "the_pile": "text",
@@ -138,6 +139,9 @@ class Data:
             if self.name == "abehandlerorg/bothbins":
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
                 return ds.select(range(n_samples))
+
+            if self.name == "abehandlerorg/confounddatasetxpress":
+                return ds
 
             if self.name == "abehandlerorg/nobloxbypublisher":
                 return ds.select(range(n_samples))
