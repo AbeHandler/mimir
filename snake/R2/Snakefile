@@ -9,8 +9,8 @@ Usage:
 CONFIGS = [
     "bothbins.blocks.lite",
     "bothbins.noblocks.lite",
-    "confounddatasetxpress.blocks.lite.json",
-    "confounddatasetxpress.noblocks.lite.json"
+    "confounddatasetxpress.blocks.lite",
+    "confounddatasetxpress.noblocks.lite"
 ]
 
 # Rule to run all configs
