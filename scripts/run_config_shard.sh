@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <SHARD_ID>"
-    echo "Example: $0 0"
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Usage: $0 <SHARD_ID> <CONFIG_FILENAME>"
+    echo "Example: ./scripts/run_config_shard.sh 0 confounddataset.blocks.lite.json"
     exit 1
 fi
 
-CONFIG_FILENAME="confounddataset.blocks.lite.json"
+CONFIG_FILENAME="$2"
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 OUTPUT_CSV="${CONFIG_BASENAME}.csv"
 OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.shard_${1}.csv"

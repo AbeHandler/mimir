@@ -78,6 +78,77 @@ def main(csv_dir):
     return merged_df
 
 
+def analysis():
+
+    import pandas as pd
+    import numpy as np
+    import statsmodels.formula.api as smf
+    from scipy import stats
+    from tqdm import tqdm as tqdm
+
+    # Read the CSV
+    df = pd.read_csv("csvs/confounddataset/full.csv", dtype={
+        'in_blocksbin': 'int8',
+        'in_noblocksbin': 'int8',
+        'group': 'category',
+        'method': 'category',
+        'source_domain': 'category',
+        'tag': 'category'
+    })
+
+    df = df[df['method'] == 'loss'].copy()
+
+    #                                                                                                                
+    # 88          88                                                        88          88                       88  
+    # 88          ""                                                        88          ""                       88  
+    # 88                                                                    88                                   88  
+    # 88,dPPYba,  88  ,adPPYba, 8b,dPPYba, ,adPPYYba, 8b,dPPYba,  ,adPPYba, 88,dPPYba,  88  ,adPPYba, ,adPPYYba, 88  
+    # 88P'    "8a 88 a8P_____88 88P'   "Y8 ""     `Y8 88P'   "Y8 a8"     "" 88P'    "8a 88 a8"     "" ""     `Y8 88  
+    # 88       88 88 8PP""""""" 88         ,adPPPPP88 88         8b         88       88 88 8b         ,adPPPPP88 88  
+    # 88       88 88 "8b,   ,aa 88         88,    ,88 88         "8a,   ,aa 88       88 88 "8a,   ,aa 88,    ,88 88  
+    # 88       88 88  `"Ybbd8"' 88         `"8bbdP"Y8 88          `"Ybbd8"' 88       88 88  `"Ybbd8"' `"8bbdP"Y8 88  
+    #                                                                                                                
+    #                                                                                                                
+
+    model = smf.mixedlm("score ~ 1", df, groups=df["source_domain"])
+    result = model.fit()
+
+    print(result.summary())
+
+    #                                                                                          
+    #                                                                                          
+    #                                                       ,d                          ,d     
+    #                                                       88                          88     
+    # 8b,dPPYba,   ,adPPYba, 8b,dPPYba, 88,dPYba,,adPYba, MM88MMM ,adPPYba, ,adPPYba, MM88MMM  
+    # 88P'    "8a a8P_____88 88P'   "Y8 88P'   "88"    "8a  88   a8P_____88 I8[    ""   88     
+    # 88       d8 8PP""""""" 88         88      88      88  88   8PP"""""""  `"Y8ba,    88     
+    # 88b,   ,a8" "8b,   ,aa 88         88      88      88  88,  "8b,   ,aa aa    ]8I   88,    
+    # 88`YbbdP"'   `"Ybbd8"' 88         88      88      88  "Y888 `"Ybbd8"' `"YbbdP"'   "Y888  
+    # 88                                                                                       
+    # 88                                                                                       
+
+
+    # Permutation test focusing on variance across domain means
+    import numpy as np
+
+    def test_statistic(df):
+        domain_means = df.groupby('source_domain')['score'].mean()
+        return domain_means.var()  # or .std()
+
+    obs_stat = test_statistic(df)
+
+    # Permutation
+    n_perm = 10000
+    perm_stats = []
+    for _ in tqdm(range(n_perm)):
+        df_perm = df.copy()
+        df_perm['score'] = np.random.permutation(df_perm['score'])
+        perm_stats.append(test_statistic(df_perm))
+    p_value = (np.array(perm_stats) >= obs_stat).mean()
+    print(p_value)
+
+
+
 if __name__ == "__main__":
     project_root = Path(__file__).parent.parent
     csv_dir = project_root / "csvs" / "confounddataset"
