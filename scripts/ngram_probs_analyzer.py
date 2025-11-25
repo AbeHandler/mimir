@@ -82,6 +82,7 @@ def analyze_results(
         output_path: Optional output file path
         max_docs: Maximum number of documents to process
     """
+    print(f"Here we go {model_name}")
     from transformers import AutoTokenizer
     from tqdm import tqdm
 
@@ -168,7 +169,7 @@ def main():
     parser.add_argument(
         '--n',
         type=int,
-        default=13,
+        default=7,
         help='N-gram size (default: 13)'
     )
     parser.add_argument(
