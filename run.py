@@ -134,6 +134,7 @@ def get_mia_scores(
                 if config.full_doc
                 else [texts[idx]]
             )
+            assert not config.full_doc, "full_doc=True not supported for per-token log probs"
             sample_information["id"] = ids[batch * batch_size + idx] if ids else None
 
             # This will be a list of integers if pretokenized
@@ -155,6 +156,7 @@ def get_mia_scores(
                         detokenized_sample[i], tokens=substr, return_all_probs=True
                     )
                 )
+                assert isinstance(s_tk_probs, list), "s_tk_probs must be a list (no_grads=True required)"
 
                 # Always compute LOSS score. Also helpful for reference-based and many other attacks.
                 loss = (
@@ -164,6 +166,7 @@ def get_mia_scores(
                         detokenized_sample[i], tokens=substr, probs=s_tk_probs
                     )
                 )
+                sample_information['s_tk_probs'].append([float(x) for x in s_tk_probs])
                 sample_information[AllAttacks.LOSS].append(loss)
 
                 # TODO: Shift functionality into each attack entirely, so that this is just a for loop
