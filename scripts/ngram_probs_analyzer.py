@@ -83,6 +83,7 @@ def analyze_results(
         max_docs: Maximum number of documents to process
     """
     from transformers import AutoTokenizer
+    from tqdm import tqdm
 
     print(f"Loading tokenizer: {model_name}")
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
@@ -100,7 +101,7 @@ def analyze_results(
         if max_docs:
             ids = ids[:max_docs]
 
-        for doc_id in ids:
+        for doc_id in tqdm(ids, desc=f"  {membership}"):
             text = data['id_to_text'][membership][doc_id]
             if isinstance(text, list):
                 text = text[0]  # Handle substring case
@@ -173,7 +174,7 @@ def main():
     parser.add_argument(
         '--output',
         type=str,
-        help='Output JSON file path (optional)'
+        help='Output JSON file path (optional, defaults to ngrams_analysis.json in same dir as input)'
     )
     parser.add_argument(
         '--max-docs',
@@ -183,11 +184,18 @@ def main():
 
     args = parser.parse_args()
 
+    # If no output specified, put it in same directory as input
+    output_path = args.output
+    if output_path is None:
+        input_path = Path(args.results_path)
+        output_path = input_path.parent / 'ngrams_analysis.json'
+        output_path = str(output_path)
+
     analyze_results(
         args.results_path,
         args.model,
         args.n,
-        args.output,
+        output_path,
         args.max_docs
     )
 
