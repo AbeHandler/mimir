@@ -66,19 +66,29 @@ parse_config() {
     local config_file=$1
     python -c "
 import json
+import os
 with open('$config_file', 'r') as f:
     config = json.load(f)
 
-# Reconstruct the results path following the pattern in run.py
-base_model = config['base_model'].replace('/', '_')
-dataset_member = config['dataset_member'].replace('/', '_')
-dataset_nonmember = config['dataset_nonmember'].replace('/', '_')
-output_name = config.get('output_name', '')
+# Reconstruct the results path following the pattern in run.py (lines 487-498)
+exp_name = config['experiment_name']
+base_model_slug = config['base_model'].replace('/', '_')
 
-if output_name:
-    results_path = f\"tmp_results/{dataset_member}/{base_model}/{dataset_nonmember}/{output_name}\"
+# Build sf path
+sf = os.path.join(exp_name, base_model_slug)
+
+# Check which branch to use
+if config.get('specific_source') and not config.get('ourdataset'):
+    # This would need sourcename_process logic, but unlikely to be used
+    raise ValueError('specific_source not supported in postprocessing script')
+elif config.get('ourdataset'):
+    sf = os.path.join(sf, config['ourdataset'])
 else:
-    results_path = f\"tmp_results/{dataset_member}/{base_model}/{dataset_nonmember}\"
+    raise ValueError('Neither specific_source nor ourdataset found in config')
+
+# Get tmp_results path (default is 'tmp_results')
+tmp_results = config.get('env_config', {}).get('tmp_results', 'tmp_results')
+results_path = os.path.join(tmp_results, sf)
 
 model_name = config['base_model']
 
