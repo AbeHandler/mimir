@@ -146,7 +146,7 @@ echo "Step 1/3: Extracting n-grams from model 1..."
 conda run -n mimir python scripts/ngram_probs_analyzer.py \
     "$MODEL1_RESULTS_DIR" \
     --model "$MODEL1_NAME" \
-    --n 13
+    --n 7
 
 # Step 2: Extract n-grams from model 2
 echo ""
@@ -154,7 +154,7 @@ echo "Step 2/3: Extracting n-grams from model 2..."
 conda run -n mimir python scripts/ngram_probs_analyzer.py \
     "$MODEL2_RESULTS_DIR" \
     --model "$MODEL2_NAME" \
-    --n 13
+    --n 7
 
 # Step 3: Merge the analyses
 echo ""
