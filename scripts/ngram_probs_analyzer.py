@@ -155,9 +155,9 @@ def main():
         description='Extract n-grams and their token log probabilities from results'
     )
     parser.add_argument(
-        'results_path',
+        'results_dir',
         type=str,
-        help='Path to loss_results.json file'
+        help='Directory containing loss_results.json'
     )
     parser.add_argument(
         '--model',
@@ -172,11 +172,6 @@ def main():
         help='N-gram size (default: 13)'
     )
     parser.add_argument(
-        '--output',
-        type=str,
-        help='Output JSON file path (optional, defaults to ngrams_analysis.json in same dir as input)'
-    )
-    parser.add_argument(
         '--max-docs',
         type=int,
         help='Maximum number of documents to process (optional)'
@@ -184,18 +179,20 @@ def main():
 
     args = parser.parse_args()
 
-    # If no output specified, put it in same directory as input
-    output_path = args.output
-    if output_path is None:
-        input_path = Path(args.results_path)
-        output_path = input_path.parent / 'ngrams_analysis.json'
-        output_path = str(output_path)
+    # Construct paths
+    results_dir = Path(args.results_dir)
+    results_path = results_dir / 'loss_results.json'
+    output_path = results_dir / 'ngrams_analysis.json'
+
+    if not results_path.exists():
+        print(f"Error: {results_path} does not exist")
+        return
 
     analyze_results(
-        args.results_path,
+        str(results_path),
         args.model,
         args.n,
-        output_path,
+        str(output_path),
         args.max_docs
     )
 

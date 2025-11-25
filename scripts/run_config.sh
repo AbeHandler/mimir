@@ -9,6 +9,8 @@ set -e
 #   This script runs the complete MIMIR membership inference analysis pipeline:
 #   1. Runs the main MIMIR analysis (run.py) using the specified config file
 #   2. Processes and flattens the results into CSV format (build_output.py)
+#   3. Extracts n-grams with per-token log probabilities (ngram_probs_analyzer.py)
+#   4. Merges n-gram analyses from multiple models (merge_ngram_analyses.py)
 #
 # Usage:
 #   ./scripts/run_config.sh <config_filename>
