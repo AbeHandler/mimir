@@ -304,18 +304,20 @@ def get_mia_scores(
     # Rearrange the nesting of the results dict and calculated aggregated score for sample
     # attack -> member/nonmember -> list of scores
     samples = []
+    token_probs_out = []
     ids_out = [] #  👈 new
     predictions = defaultdict(lambda: [])
     logger.info("D")
     for r in results:
         samples.append(r["sample"])
+        token_probs_out.append(r.get("s_tk_probs"))
         ids_out.append(r.get("id"))  # 👈 attach id here
         for attack, scores in r.items():
-            if attack != "sample" and attack != "detokenized" and attack !="id":  # 👈 adjusted
+            if attack != "sample" and attack != "detokenized" and attack !="id" and attack != "s_tk_probs":  # 👈 adjusted
                 # TODO: Is there a reason for the np.min here?
                 predictions[attack].append(np.min(scores))
 
-    return predictions, samples, ids_out
+    return predictions, samples, ids_out, token_probs_out
 
 
 def compute_metrics_from_scores(
@@ -323,6 +325,8 @@ def compute_metrics_from_scores(
         preds_nonmember: dict,
         samples_member: List,
         samples_nonmember: List,
+        token_probs_member: List,
+        token_probs_nonmember: List,
         ids_members: List[str],        # ← new
         ids_nonmembers: List[str],     # ← new
         n_samples: int):
@@ -341,6 +345,8 @@ def compute_metrics_from_scores(
         id_score_nonmember = dict(zip(ids_nonmembers, preds_nonmember_))
         id_text_member    = dict(zip(ids_members,    samples_member))
         id_text_nonmember = dict(zip(ids_nonmembers, samples_nonmember))
+        id_token_probs_member = dict(zip(ids_members, token_probs_member))
+        id_token_probs_nonmember = dict(zip(ids_nonmembers, token_probs_nonmember))
         blackbox_attack_outputs[attack] = {
             "name": f"{attack}_threshold",
             "predictions": {
@@ -354,6 +360,10 @@ def compute_metrics_from_scores(
             "id_to_text": {
                 "member":    id_text_member,
                 "nonmember": id_text_nonmember,
+            },
+            "id_to_token_probs": {
+                "member":    id_token_probs_member,
+                "nonmember": id_token_probs_nonmember,
             },
             "info": {
                 "n_samples": n_samples,
@@ -678,7 +688,7 @@ def main(config: ExperimentConfig):
         raise ValueError("No blackbox attacks specified in config!")
 
     # Collect scores for members
-    member_preds, member_samples, ids_members = get_mia_scores(
+    member_preds, member_samples, ids_members, token_probs_members = get_mia_scores(
         data_members,
         attackers_dict,
         data_obj_mem,
@@ -691,7 +701,7 @@ def main(config: ExperimentConfig):
         ids=ids_member  # 👈 add this
     )
     # Collect scores for non-members
-    nonmember_preds, nonmember_samples, ids_nonmembers = get_mia_scores(
+    nonmember_preds, nonmember_samples, ids_nonmembers, token_probs_nonmembers = get_mia_scores(
         data_nonmembers,
         attackers_dict,
         data_obj_nonmem,
@@ -708,6 +718,8 @@ def main(config: ExperimentConfig):
         nonmember_preds,
         member_samples,
         nonmember_samples,
+        token_probs_members,
+        token_probs_nonmembers,
         n_samples=n_samples,
         ids_members=ids_members,
         ids_nonmembers=ids_nonmembers,
