@@ -36,9 +36,8 @@ class Data:
                                            "abehandlerorg/confounddataset": "text",
                                            "abehandlerorg/confounddatasetxpress": "text",
                                            "abehandlerorg/nobloxbypublisher": "text",
+                                           "abehandlerorg/excluded-docs": "text",
                                            "abehandlerorg/bothbins": "text",
-                                           "the_pile": "text",
-                                           "xsum": "document",
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            "abehandlerorg/copywritetraps": "text"}):
         self.name_key_mapping = name_key_mapping
@@ -147,6 +146,15 @@ class Data:
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/confounddataset":
+                if "SHARD_ID" not in os.environ:
+                    raise ValueError("SHARD_ID not set in environment")
+                shard_id = int(os.environ["SHARD_ID"])
+                SHARD_SIZE = 5000
+                start = shard_id * SHARD_SIZE
+                end = (shard_id + 1) * SHARD_SIZE
+                return ds.select(range(start, end))
+
+            if self.name == "abehandlerorg/excluded-docs":
                 if "SHARD_ID" not in os.environ:
                     raise ValueError("SHARD_ID not set in environment")
                 shard_id = int(os.environ["SHARD_ID"])
