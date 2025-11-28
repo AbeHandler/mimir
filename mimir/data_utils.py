@@ -161,6 +161,7 @@ class Data:
                 SHARD_SIZE = 5000
                 start = shard_id * SHARD_SIZE
                 end = (shard_id + 1) * SHARD_SIZE
+                end = min(end, len(ds)) # if end if past len ds then pick end
                 return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/twfe":
