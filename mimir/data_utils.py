@@ -137,7 +137,11 @@ class Data:
 
             if self.name == "abehandlerorg/bothbins":
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
-                return ds.select(range(n_samples))
+                shard_id = int(os.environ["SHARD_ID"])
+                SHARD_SIZE = 5000
+                start = shard_id * SHARD_SIZE
+                end = (shard_id + 1) * SHARD_SIZE
+                return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/confounddatasetxpress":
                 return ds

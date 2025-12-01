@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-for CONFIG_FILENAME in "excluded-docs.blocks.lite.json" "excluded-docs.noblocks.lite.json" "confounddataset.blocks.lite.json" "confounddataset.noblocks.lite.json"; do
+for CONFIG_FILENAME in "bothbins.blocks.lite.json" "bothbins.noblocks.lite.json" "excluded-docs.blocks.lite.json" "excluded-docs.noblocks.lite.json" "confounddataset.blocks.lite.json" "confounddataset.noblocks.lite.json"; do
     echo "Processing config: $CONFIG_FILENAME"
 
     # Use 20 shards for excluded-docs configs, 36 for others
