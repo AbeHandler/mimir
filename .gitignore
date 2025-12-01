@@ -72,3 +72,4 @@ DEBUG/*
 edit_distance_members
 
 *html
+csvs/confounddataset/full.csv
