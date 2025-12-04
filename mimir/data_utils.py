@@ -137,6 +137,7 @@ class Data:
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
 
             if self.name == "abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered":
+                ds = ds.map(lambda x: {"id": x["url"]})
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/bothbins":
