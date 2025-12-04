@@ -39,7 +39,7 @@ class Data:
                                            "abehandlerorg/excluded-docs": "text",
                                            "abehandlerorg/bothbins": "text",
                                            "abehandlerorg/olmobypublisherdev": "text",
-                                           'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text"
+                                           'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
                                            "abehandlerorg/copywritetraps": "text"}):
         self.name_key_mapping = name_key_mapping
         self.config = config
