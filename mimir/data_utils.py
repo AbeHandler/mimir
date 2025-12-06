@@ -41,7 +41,7 @@ class Data:
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
                                            "abehandlerorg/copywritetraps": "text",
-                                           "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4"}):
+                                           "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4": "text"}):
         self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
