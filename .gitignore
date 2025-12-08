@@ -73,3 +73,4 @@ edit_distance_members
 
 *html
 csvs/confounddataset/full.csv
+*.all_shards.csv
