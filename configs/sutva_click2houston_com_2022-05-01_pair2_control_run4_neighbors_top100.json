@@ -11,7 +11,7 @@
     "ourdataset": "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100",
     "output_name": "unified_mia",
     "specific_source": "Github_ngram_13_<0.8_truncated",
-    "n_samples": 5000,
+    "n_samples": 1000,
     "chunk_size": 1,
     "blackbox_attacks": [
         "loss",

@@ -41,6 +41,7 @@ class Data:
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
                                            "abehandlerorg/copywritetraps": "text",
+                                           "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_treated_run1": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_treated_run3": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered": "text",
@@ -140,6 +141,10 @@ class Data:
             #  👀 simplify here for our setting
 
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
+
+
+            if self.name == "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100":
+                return ds.select(range(n_samples))
 
             if "sutva" in self.name and "pair" in self.name:
                 ds = ds.map(lambda x: {"id": x["url"]})
