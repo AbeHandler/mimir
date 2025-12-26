@@ -113,3 +113,7 @@ python ~/dolma/scripts/R2/sutva/query_card_sentences.py \
 
 echo ""
 echo "✓ Pipeline complete!"
+
+
+
+#TODO for each sentence in doc, what is the ATE?
