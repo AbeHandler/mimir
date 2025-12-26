@@ -28,7 +28,7 @@ echo "=== Initializing sentence-level Annoy index ==="
 echo ""
 if [ ! -f "data/interim/sutva/${INDEX_DATASET##*/}/annoy_sentences/index.ann" ]; then
     echo "Creating sentence-level index for ${INDEX_DATASET}..."
-    python ~/dolma/scripts/R2/sutva/init_card_sentences.py \
+    CUDA_VISIBLE_DEVICES=0 python ~/dolma/scripts/R2/sutva/init_card_sentences.py \
         --dataset-name $INDEX_DATASET
     echo ""
 else
