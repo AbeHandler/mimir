@@ -11,6 +11,18 @@ N_RESULTS=100
 echo "=== Reconstructing sentences from MIMIR results ==="
 echo ""
 
+#                                                    
+# 88                      88                         
+# ""                      88                         
+#                         88                         
+# 88 8b,dPPYba,   ,adPPYb,88  ,adPPYba, 8b,     ,d8  
+# 88 88P'   `"8a a8"    `Y88 a8P_____88  `Y8, ,8P'   
+# 88 88       88 8b       88 8PP"""""""    )888(     
+# 88 88       88 "8a,   ,d88 "8b,   ,aa  ,d8" "8b,   
+# 88 88       88  `"8bbdP"Y8  `"Ybbd8"' 8P'     `Y8  
+#                                                    
+#                                                    
+
 # Step 1: Create the sentence-level Annoy index if it doesn't exist
 echo "=== Initializing sentence-level Annoy index ==="
 echo ""
@@ -23,6 +35,18 @@ else
     echo "✓ Sentence-level index already exists, skipping initialization"
     echo ""
 fi
+
+#                                                                                                                       
+#                                                                                                                       
+#                                                                      ,d                                        ,d     
+#                                                                      88                                        88     
+# 8b,dPPYba,  ,adPPYba,  ,adPPYba,  ,adPPYba,  8b,dPPYba,  ,adPPYba, MM88MMM 8b,dPPYba, 88       88  ,adPPYba, MM88MMM  
+# 88P'   "Y8 a8P_____88 a8"     "" a8"     "8a 88P'   `"8a I8[    ""   88    88P'   "Y8 88       88 a8"     ""   88     
+# 88         8PP""""""" 8b         8b       d8 88       88  `"Y8ba,    88    88         88       88 8b           88     
+# 88         "8b,   ,aa "8a,   ,aa "8a,   ,a8" 88       88 aa    ]8I   88,   88         "8a,   ,a88 "8a,   ,aa   88,    
+# 88          `"Ybbd8"'  `"Ybbd8"'  `"YbbdP"'  88       88 `"YbbdP"'   "Y888 88          `"YbbdP'Y8  `"Ybbd8"'   "Y888  
+#                                                                                                                       
+#                                                                                                                       
 
 echo "=== Reconstructing sentences from loss results ==="
 echo ""
@@ -40,6 +64,19 @@ python reconstructor.py --output-root tmp/sentences --results-json tmp_results/s
 echo ""
 echo "Processing pair2 control..."
 python reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair2_control_run4/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
+
+#                                                            
+#                                                            
+#                                                            
+#                                                            
+#  ,adPPYb,d8 88       88  ,adPPYba, 8b,dPPYba, 8b       d8  
+# a8"    `Y88 88       88 a8P_____88 88P'   "Y8 `8b     d8'  
+# 8b       88 88       88 8PP""""""" 88          `8b   d8'   
+# "8a    ,d88 "8a,   ,a88 "8b,   ,aa 88           `8b,d8'    
+#  `"YbbdP'88  `"YbbdP'Y8  `"Ybbd8"' 88             Y88'     
+#          88                                       d8'      
+#          88                                      d8'       
+
 
 echo ""
 echo "=== Querying sentence-level index for similar sentences ==="
