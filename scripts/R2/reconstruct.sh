@@ -11,6 +11,22 @@ N_RESULTS=100
 echo "=== Reconstructing sentences from MIMIR results ==="
 echo ""
 
+# Step 1: Create the sentence-level Annoy index if it doesn't exist
+echo "=== Initializing sentence-level Annoy index ==="
+echo ""
+if [ ! -f "data/interim/sutva/${INDEX_DATASET##*/}/annoy_sentences/index.ann" ]; then
+    echo "Creating sentence-level index for ${INDEX_DATASET}..."
+    python ~/dolma/scripts/R2/sutva/init_card_sentences.py \
+        --dataset-name $INDEX_DATASET
+    echo ""
+else
+    echo "✓ Sentence-level index already exists, skipping initialization"
+    echo ""
+fi
+
+echo "=== Reconstructing sentences from loss results ==="
+echo ""
+
 # Pair 1 treated
 echo "Processing pair1 treated..."
 python reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair1_treated_run1/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
