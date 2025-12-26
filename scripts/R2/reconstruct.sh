@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+
 mkdir -p tmp/sentences
 
 python reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair1_treated_run1/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
