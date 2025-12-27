@@ -53,17 +53,17 @@ echo ""
 
 # Pair 1 treated
 echo "Processing pair1 treated..."
-python reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair1_treated_run1/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
+python scripts/R2/scm/reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair1_treated_run1/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
 
 # Pair 2 treated
 echo ""
 echo "Processing pair2 treated..."
-python reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair2_treated_run3/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
+python scripts/R2/scm/reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair2_treated_run3/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
 
 # Pair 2 control
 echo ""
 echo "Processing pair2 control..."
-python reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair2_control_run4/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
+python scripts/R2/scm/reconstructor.py --output-root tmp/sentences --results-json tmp_results/sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair2_control_run4/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/loss_results.json
 
 #                                                            
 #                                                            
@@ -110,6 +110,11 @@ python ~/dolma/scripts/R2/sutva/query_card_sentences.py \
     --sentence-field text \
     --n-results $N_RESULTS \
     --output-file tmp/sentences/tmp_results/sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/abehandler_sutva_click2houston_com_2022-05-01_pair2_control_run4/abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered/sentence_matches.jsonl.gz
+
+echo ""
+echo "=== Analyzing and merging sentence data ==="
+echo ""
+python scripts/R2/scm/analyze_sentences.py
 
 echo ""
 echo "✓ Pipeline complete!"

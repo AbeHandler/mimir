@@ -143,8 +143,9 @@ def compute_sentence_loss(tokens: List[Dict]) -> float:
 
 def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
     """
-    Compute ATT (Average Treatment Effect) for each sentence.
-    ATT = loss_run1 - loss_run4
+    Compute ATT (Average Treatment Effect) for each sentence for both run1 and run3.
+    ATT_run1 = loss_run1 - loss_run4
+    ATT_run3 = loss_run3 - loss_run4
 
     Args:
         merged_data: Merged sentence data from all sources
@@ -154,70 +155,76 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
         {
             'sentence_id': {
                 'loss_run1': float,
+                'loss_run3': float,
                 'loss_run4': float,
-                'att': float
+                'att_run1': float,
+                'att_run3': float,
+                'text': str,
+                'doc_id': str
             }
         }
     """
     print(f"\n{'='*80}")
-    print(f"COMPUTING SENTENCE-LEVEL ATT")
+    print(f"COMPUTING SENTENCE-LEVEL ATT FOR RUN1 AND RUN3")
     print(f"{'='*80}\n")
 
     results = {}
 
     for sent_id, sources in tqdm(merged_data.items(), desc="Analyzing sentences"):
-        # Get data for run1 (treated) and run4 (control)
+        # Get data for all runs
         run1_data = sources.get('pair1_treated_run1')
+        run3_data = sources.get('pair2_treated_run3')
         run4_data = sources.get('pair2_control_run4')
 
-        if not run1_data or not run4_data:
-            continue
+        # Compute losses for available runs
+        loss_run1 = compute_sentence_loss(run1_data.get('tokens', [])) if run1_data else np.nan
+        loss_run3 = compute_sentence_loss(run3_data.get('tokens', [])) if run3_data else np.nan
+        loss_run4 = compute_sentence_loss(run4_data.get('tokens', [])) if run4_data else np.nan
 
-        # Compute losses
-        loss_run1 = compute_sentence_loss(run1_data.get('tokens', []))
-        loss_run4 = compute_sentence_loss(run4_data.get('tokens', []))
+        # Compute ATT for run1 and run3
+        att_run1 = loss_run1 - loss_run4 if not np.isnan(loss_run1) and not np.isnan(loss_run4) else np.nan
+        att_run3 = loss_run3 - loss_run4 if not np.isnan(loss_run3) and not np.isnan(loss_run4) else np.nan
 
-        # Compute ATT = treated - control
-        if not np.isnan(loss_run1) and not np.isnan(loss_run4):
-            att = loss_run1 - loss_run4
-        else:
-            att = np.nan
+        # Get text from first available source
+        text = ''
+        doc_id = ''
+        for data in [run1_data, run3_data, run4_data]:
+            if data:
+                text = data.get('text', '')
+                doc_id = data.get('doc_id', '')
+                break
 
         results[sent_id] = {
             'loss_run1': loss_run1,
+            'loss_run3': loss_run3,
             'loss_run4': loss_run4,
-            'att': att,
-            'text': run1_data.get('text', ''),
-            'doc_id': run1_data.get('doc_id', '')
+            'att_run1': att_run1,
+            'att_run3': att_run3,
+            'text': text,
+            'doc_id': doc_id
         }
 
-    # Print summary statistics
-    valid_atts = [r['att'] for r in results.values() if not np.isnan(r['att'])]
+    # Print summary statistics for both runs
+    valid_att_run1 = [r['att_run1'] for r in results.values() if not np.isnan(r['att_run1'])]
+    valid_att_run3 = [r['att_run3'] for r in results.values() if not np.isnan(r['att_run3'])]
 
-    if valid_atts:
-        print(f"\nATT Statistics:")
-        print(f"  Total sentences: {len(results):,}")
-        print(f"  Valid ATTs: {len(valid_atts):,}")
-        print(f"  Mean ATT: {np.mean(valid_atts):.6f}")
-        print(f"  Median ATT: {np.median(valid_atts):.6f}")
-        print(f"  Std ATT: {np.std(valid_atts):.6f}")
-        print(f"  Min ATT: {np.min(valid_atts):.6f}")
-        print(f"  Max ATT: {np.max(valid_atts):.6f}")
+    print(f"\nATT Statistics for RUN1 (run1 - run4):")
+    if valid_att_run1:
+        print(f"  Valid ATTs: {len(valid_att_run1):,}")
+        print(f"  Mean ATT: {np.mean(valid_att_run1):.6f}")
+        print(f"  Median ATT: {np.median(valid_att_run1):.6f}")
+        print(f"  Std ATT: {np.std(valid_att_run1):.6f}")
+        print(f"  Min ATT: {np.min(valid_att_run1):.6f}")
+        print(f"  Max ATT: {np.max(valid_att_run1):.6f}")
 
-        # Show some examples
-        sorted_by_att = sorted(results.items(), key=lambda x: x[1]['att'] if not np.isnan(x[1]['att']) else 0, reverse=True)
-
-        print(f"\nTop 3 sentences with highest ATT (most affected by treatment):")
-        for i, (sent_id, data) in enumerate(sorted_by_att[:3], 1):
-            print(f"\n{i}. ID: {sent_id}")
-            print(f"   ATT: {data['att']:.6f} (loss_run1: {data['loss_run1']:.6f}, loss_run4: {data['loss_run4']:.6f})")
-            print(f"   Text: {data['text'][:100]}...")
-
-        print(f"\nTop 3 sentences with lowest ATT (least affected by treatment):")
-        for i, (sent_id, data) in enumerate(sorted_by_att[-3:], 1):
-            print(f"\n{i}. ID: {sent_id}")
-            print(f"   ATT: {data['att']:.6f} (loss_run1: {data['loss_run1']:.6f}, loss_run4: {data['loss_run4']:.6f})")
-            print(f"   Text: {data['text'][:100]}...")
+    print(f"\nATT Statistics for RUN3 (run3 - run4):")
+    if valid_att_run3:
+        print(f"  Valid ATTs: {len(valid_att_run3):,}")
+        print(f"  Mean ATT: {np.mean(valid_att_run3):.6f}")
+        print(f"  Median ATT: {np.median(valid_att_run3):.6f}")
+        print(f"  Std ATT: {np.std(valid_att_run3):.6f}")
+        print(f"  Min ATT: {np.min(valid_att_run3):.6f}")
+        print(f"  Max ATT: {np.max(valid_att_run3):.6f}")
 
     return results
 
@@ -292,51 +299,61 @@ def main():
     base_dir = Path("tmp/sentences/tmp_results")
     write_dir = Path("/tmp")
     output_file = write_dir / "merged_sentences.jsonl.gz"
+    att_output_file = write_dir / "sentence_att_results.jsonl.gz"
 
-    # Check if cached merged file exists - skip creation if it does
+    # Check if both cached files exist
+    if output_file.exists() and att_output_file.exists():
+        print(f"✓ Both merged file and ATT results already exist:")
+        print(f"  - {output_file}")
+        print(f"  - {att_output_file}")
+        print("Skipping creation. Delete these files to rebuild.")
+        return
+
+    # Load or rebuild merged data
     if output_file.exists():
         print(f"✓ Merged file already exists: {output_file}")
-        print("Skipping creation. Delete this file to rebuild.")
-        return
+        print("Loading from cache...\n")
+        merged_data = load_merged_from_cache(output_file)
+    else:
+        print(f"No cached file found at {output_file}")
+        print(f"Rebuilding from source files...\n")
 
-    # Cache doesn't exist, rebuild it
-    print(f"No cached file found at {output_file}")
-    print(f"Rebuilding from source files...\n")
+        if not base_dir.exists():
+            print(f"Error: Directory {base_dir} does not exist")
+            return
 
-    if not base_dir.exists():
-        print(f"Error: Directory {base_dir} does not exist")
-        return
+        print(f"Loading sentence-level data from {base_dir}\n")
 
-    print(f"Loading sentence-level data from {base_dir}\n")
+        # Load and merge data
+        merged_data = load_sentence_level_data(base_dir)
 
-    # Load and merge data
-    merged_data = load_sentence_level_data(base_dir)
+        # Analyze the merged data
+        analyze_merged_data(merged_data)
 
-    # Analyze the merged data
-    analyze_merged_data(merged_data)
+        # Save merged data
+        print(f"\n{'='*80}")
+        print(f"SAVING MERGED DATA")
+        print(f"{'='*80}")
+        print(f"Writing to: {output_file}")
+
+        with gzip.open(output_file, 'wt') as f:
+            for doc_id, sources_data in tqdm(merged_data.items(), desc="Writing merged data"):
+                record = {
+                    'id': doc_id,
+                    **sources_data
+                }
+                f.write(json.dumps(record) + '\n')
+
+        print(f"✓ Wrote {len(merged_data):,} merged records")
 
     # Compute ATT for each sentence
     att_results = analyze_sentences(merged_data)
 
-    # Save merged data
-    print(f"\n{'='*80}")
-    print(f"SAVING MERGED DATA")
-    print(f"{'='*80}")
-    print(f"Writing to: {output_file}")
-
-    with gzip.open(output_file, 'wt') as f:
-        for doc_id, sources_data in tqdm(merged_data.items(), desc="Writing merged data"):
-            record = {
-                'id': doc_id,
-                **sources_data
-            }
-            f.write(json.dumps(record) + '\n')
-
-    print(f"✓ Wrote {len(merged_data):,} merged records")
-
     # Save ATT results
-    att_output_file = write_dir / "sentence_att_results.jsonl.gz"
-    print(f"\nWriting ATT results to: {att_output_file}")
+    print(f"\n{'='*80}")
+    print(f"SAVING ATT RESULTS")
+    print(f"{'='*80}")
+    print(f"Writing ATT results to: {att_output_file}")
 
     with gzip.open(att_output_file, 'wt') as f:
         for sent_id, att_data in tqdm(att_results.items(), desc="Writing ATT results"):
@@ -347,6 +364,21 @@ def main():
             f.write(json.dumps(record) + '\n')
 
     print(f"✓ Wrote {len(att_results):,} ATT results")
+
+    # Run prediction analysis
+    print(f"\n{'='*80}")
+    print(f"RUNNING ATT PREDICTION ANALYSIS")
+    print(f"{'='*80}\n")
+
+    import subprocess
+    import sys
+    result = subprocess.run(
+        [sys.executable, "scripts/R2/scm/predict_att.py"],
+        capture_output=False
+    )
+
+    if result.returncode != 0:
+        print(f"\n⚠ Warning: predict_att.py exited with code {result.returncode}")
 
 
 if __name__ == "__main__":
