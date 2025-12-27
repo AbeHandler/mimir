@@ -49,7 +49,9 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
                     'att': record['att_run1'],
                     'loss_treated': record.get('loss_run1', np.nan),
                     'loss_control': record.get('loss_run4', np.nan),
-                    'run': 'run1'
+                    'run': 'run1',
+                    'sentence_number': record.get('sentence_number', -1),
+                    'sentence_position': record.get('sentence_position', np.nan)
                 }
                 records.append(run1_record)
 
@@ -63,7 +65,9 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
                     'att': record['att_run3'],
                     'loss_treated': record.get('loss_run3', np.nan),
                     'loss_control': record.get('loss_run4', np.nan),
-                    'run': 'run3'
+                    'run': 'run3',
+                    'sentence_number': record.get('sentence_number', -1),
+                    'sentence_position': record.get('sentence_position', np.nan)
                 }
                 records.append(run3_record)
 
@@ -229,7 +233,7 @@ def create_feature_matrix(df: pd.DataFrame, sample_size: int = 20000) -> pd.Data
 
     # Combine all features
     feature_df = pd.concat([
-        df_sample[['id', 'original_id', 'att', 'loss_treated', 'loss_control', 'run']].reset_index(drop=True),
+        df_sample[['id', 'original_id', 'att', 'loss_treated', 'loss_control', 'run', 'sentence_number', 'sentence_position']].reset_index(drop=True),
         linguistic_df,
         bow_df
     ], axis=1)
@@ -259,6 +263,7 @@ def train_att_predictor(feature_df: pd.DataFrame):
     print(f"  Max: {feature_df['att'].max():.6f}\n")
 
     # Select features (exclude id, att, losses, and run info)
+    # Note: sentence_number and sentence_position are now included as features
     exclude_cols = ['id', 'original_id', 'att', 'loss_treated', 'loss_control', 'run']
     feature_cols = [col for col in feature_df.columns if col not in exclude_cols]
 

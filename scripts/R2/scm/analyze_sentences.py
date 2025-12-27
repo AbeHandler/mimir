@@ -160,13 +160,26 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
                 'att_run1': float,
                 'att_run3': float,
                 'text': str,
-                'doc_id': str
+                'doc_id': str,
+                'sentence_number': int,
+                'sentence_position': float
             }
         }
     """
     print(f"\n{'='*80}")
     print(f"COMPUTING SENTENCE-LEVEL ATT FOR RUN1 AND RUN3")
     print(f"{'='*80}\n")
+
+    # First pass: count sentences per document to compute total_sentences
+    print("Counting sentences per document...")
+    doc_sentence_counts = defaultdict(int)
+    for sent_id in merged_data.keys():
+        # Parse sentence ID format: d{doc_num}s{sentence_num}
+        if sent_id.startswith('d') and 's' in sent_id:
+            doc_part = sent_id.split('s')[0]  # e.g., "d0"
+            doc_sentence_counts[doc_part] += 1
+
+    print(f"Found {len(doc_sentence_counts):,} documents")
 
     results = {}
 
@@ -194,6 +207,20 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
                 doc_id = data.get('doc_id', '')
                 break
 
+        # Extract sentence position information from sent_id (format: d{doc_num}s{sentence_num})
+        sentence_number = -1
+        sentence_position = np.nan
+        if sent_id.startswith('d') and 's' in sent_id:
+            try:
+                parts = sent_id.split('s')
+                doc_part = parts[0]  # e.g., "d0"
+                sentence_number = int(parts[1])  # e.g., 0, 1, 2, ...
+                total_sentences = doc_sentence_counts.get(doc_part, 0)
+                if total_sentences > 0:
+                    sentence_position = sentence_number / total_sentences
+            except (ValueError, IndexError):
+                pass
+
         results[sent_id] = {
             'loss_run1': loss_run1,
             'loss_run3': loss_run3,
@@ -201,7 +228,9 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
             'att_run1': att_run1,
             'att_run3': att_run3,
             'text': text,
-            'doc_id': doc_id
+            'doc_id': doc_id,
+            'sentence_number': sentence_number,
+            'sentence_position': sentence_position
         }
 
     # Print summary statistics for both runs
@@ -294,6 +323,51 @@ def load_merged_from_cache(cache_file: Path) -> Dict[str, Dict[str, Any]]:
     return merged_data
 
 
+def rebuild_merged_data(base_dir: Path, output_file: Path) -> Dict[str, Dict[str, Any]]:
+    """
+    Rebuild merged data from source files and save to cache.
+
+    Args:
+        base_dir: Base directory containing sentences.jsonl files
+        output_file: Path to save merged data cache file
+
+    Returns:
+        Dictionary mapping sentence IDs to merged data from all sources
+    """
+    print(f"No cached file found at {output_file}")
+    print(f"Rebuilding from source files...\n")
+
+    if not base_dir.exists():
+        print(f"Error: Directory {base_dir} does not exist")
+        return {}
+
+    print(f"Loading sentence-level data from {base_dir}\n")
+
+    # Load and merge data
+    merged_data = load_sentence_level_data(base_dir)
+
+    # Analyze the merged data
+    analyze_merged_data(merged_data)
+
+    # Save merged data
+    print(f"\n{'='*80}")
+    print(f"SAVING MERGED DATA")
+    print(f"{'='*80}")
+    print(f"Writing to: {output_file}")
+
+    with gzip.open(output_file, 'wt') as f:
+        for doc_id, sources_data in tqdm(merged_data.items(), desc="Writing merged data"):
+            record = {
+                'id': doc_id,
+                **sources_data
+            }
+            f.write(json.dumps(record) + '\n')
+
+    print(f"✓ Wrote {len(merged_data):,} merged records")
+
+    return merged_data
+
+
 def main():
     """Main entry point."""
     base_dir = Path("tmp/sentences/tmp_results")
@@ -315,36 +389,9 @@ def main():
         print("Loading from cache...\n")
         merged_data = load_merged_from_cache(output_file)
     else:
-        print(f"No cached file found at {output_file}")
-        print(f"Rebuilding from source files...\n")
-
-        if not base_dir.exists():
-            print(f"Error: Directory {base_dir} does not exist")
+        merged_data = rebuild_merged_data(base_dir, output_file)
+        if not merged_data:
             return
-
-        print(f"Loading sentence-level data from {base_dir}\n")
-
-        # Load and merge data
-        merged_data = load_sentence_level_data(base_dir)
-
-        # Analyze the merged data
-        analyze_merged_data(merged_data)
-
-        # Save merged data
-        print(f"\n{'='*80}")
-        print(f"SAVING MERGED DATA")
-        print(f"{'='*80}")
-        print(f"Writing to: {output_file}")
-
-        with gzip.open(output_file, 'wt') as f:
-            for doc_id, sources_data in tqdm(merged_data.items(), desc="Writing merged data"):
-                record = {
-                    'id': doc_id,
-                    **sources_data
-                }
-                f.write(json.dumps(record) + '\n')
-
-        print(f"✓ Wrote {len(merged_data):,} merged records")
 
     # Compute ATT for each sentence
     att_results = analyze_sentences(merged_data)
