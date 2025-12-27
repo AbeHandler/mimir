@@ -141,7 +141,7 @@ def compute_sentence_loss(tokens: List[Dict]) -> float:
     return -np.mean(log_probs)
 
 
-def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
+def analyze_sentences(merged_data: Dict[str, Dict[str, Any]], sent_id2embed: Dict[str, List[float]] = None) -> Dict[str, Dict[str, float]]:
     """
     Compute ATT (Average Treatment Effect) for each sentence for both run1 and run3.
     ATT_run1 = loss_run1 - loss_run4
@@ -149,6 +149,7 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
 
     Args:
         merged_data: Merged sentence data from all sources
+        sent_id2embed: Optional dictionary mapping sentence IDs to SBERT embeddings
 
     Returns:
         Dictionary mapping sentence IDs to analysis results:
@@ -162,7 +163,8 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
                 'text': str,
                 'doc_id': str,
                 'sentence_number': int,
-                'sentence_position': float
+                'sentence_position': float,
+                'embedding': list (if sent_id2embed provided)
             }
         }
     """
@@ -180,6 +182,10 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
             doc_sentence_counts[doc_part] += 1
 
     print(f"Found {len(doc_sentence_counts):,} documents")
+
+    # Collect stats on sentence IDs and embeddings
+    sent_ids_with_embeddings = set()
+    sent_ids_without_embeddings = set()
 
     results = {}
 
@@ -221,7 +227,8 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
             except (ValueError, IndexError):
                 pass
 
-        results[sent_id] = {
+        # Build result dictionary
+        result = {
             'loss_run1': loss_run1,
             'loss_run3': loss_run3,
             'loss_run4': loss_run4,
@@ -232,6 +239,17 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
             'sentence_number': sentence_number,
             'sentence_position': sentence_position
         }
+
+        # Add SBERT embedding if available
+        if sent_id2embed is not None:
+            embedding = sent_id2embed.get(sent_id)
+            if embedding is not None:
+                result['embedding'] = embedding
+                sent_ids_with_embeddings.add(sent_id)
+            else:
+                sent_ids_without_embeddings.add(sent_id)
+
+        results[sent_id] = result
 
     # Print summary statistics for both runs
     valid_att_run1 = [r['att_run1'] for r in results.values() if not np.isnan(r['att_run1'])]
@@ -254,6 +272,28 @@ def analyze_sentences(merged_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[
         print(f"  Std ATT: {np.std(valid_att_run3):.6f}")
         print(f"  Min ATT: {np.min(valid_att_run3):.6f}")
         print(f"  Max ATT: {np.max(valid_att_run3):.6f}")
+
+    # Print detailed embedding statistics
+    if sent_id2embed is not None:
+        with_embeddings = sum(1 for r in results.values() if 'embedding' in r)
+        without_embeddings = len(results) - with_embeddings
+
+        print(f"\n{'='*80}")
+        print(f"SBERT EMBEDDING MATCHING STATISTICS")
+        print(f"{'='*80}")
+        print(f"\nSentence-level stats:")
+        print(f"  Total sentences: {len(results):,}")
+        print(f"  Sentences with SBERT embeddings: {with_embeddings:,} ({100*with_embeddings/len(results):.1f}%)")
+        print(f"  Sentences without SBERT embeddings: {without_embeddings:,} ({100*without_embeddings/len(results):.1f}%)")
+
+        # Show sample sentence IDs without embeddings
+        if sent_ids_without_embeddings:
+            sample_missing = list(sent_ids_without_embeddings)[:5]
+            print(f"\nSample sentence IDs without embeddings:")
+            for sent_id in sample_missing:
+                print(f"  - {sent_id}")
+            if len(sent_ids_without_embeddings) > 5:
+                print(f"  ... and {len(sent_ids_without_embeddings) - 5:,} more")
 
     return results
 
@@ -368,6 +408,36 @@ def rebuild_merged_data(base_dir: Path, output_file: Path) -> Dict[str, Dict[str
     return merged_data
 
 
+def clean_cache(write_dir: Path = Path("/tmp")):
+    """Delete cached files to prepare for a fresh run.
+
+    Args:
+        write_dir: Directory containing cached files
+    """
+    cache_files = [
+        write_dir / "merged_sentences.jsonl.gz",
+        write_dir / "sentence_att_results.jsonl.gz"
+    ]
+
+    print(f"\n{'='*80}")
+    print(f"CLEANING CACHE")
+    print(f"{'='*80}\n")
+
+    deleted_count = 0
+    for cache_file in cache_files:
+        if cache_file.exists():
+            cache_file.unlink()
+            print(f"✓ Deleted: {cache_file}")
+            deleted_count += 1
+        else:
+            print(f"  Skipped (not found): {cache_file}")
+
+    if deleted_count > 0:
+        print(f"\n✓ Deleted {deleted_count} cache file(s)")
+    else:
+        print("\nNo cache files found to delete")
+
+
 def main():
     """Main entry point."""
     base_dir = Path("tmp/sentences/tmp_results")
@@ -393,8 +463,46 @@ def main():
         if not merged_data:
             return
 
-    # Compute ATT for each sentence
-    att_results = analyze_sentences(merged_data)
+    # Load or compute SBERT embeddings
+    print(f"\n{'='*80}")
+    print(f"LOADING SBERT EMBEDDINGS")
+    print(f"{'='*80}\n")
+
+    sbert_embeddings_file = write_dir / "sentence_sbert_embeddings.jsonl.gz"
+
+    if not sbert_embeddings_file.exists():
+        print(f"SBERT embeddings not found at {sbert_embeddings_file}")
+        print("Computing SBERT embeddings...")
+        import subprocess
+        import sys
+        result = subprocess.run(
+            [sys.executable, "scripts/R2/scm/compute_sbert_embeddings.py"],
+            capture_output=False
+        )
+
+        if result.returncode != 0:
+            print(f"\n⚠ Warning: compute_sbert_embeddings.py exited with code {result.returncode}")
+            print("Proceeding without embeddings...")
+            sent_id2embed = None
+        else:
+            # Load the newly computed embeddings
+            sent_id2embed = {}
+            with gzip.open(sbert_embeddings_file, 'rt') as f:
+                for line in f:
+                    record = json.loads(line)
+                    sent_id2embed[record['id']] = record['embedding']
+            print(f"✓ Loaded {len(sent_id2embed):,} SBERT embeddings\n")
+    else:
+        print(f"Loading SBERT embeddings from {sbert_embeddings_file}")
+        sent_id2embed = {}
+        with gzip.open(sbert_embeddings_file, 'rt') as f:
+            for line in f:
+                record = json.loads(line)
+                sent_id2embed[record['id']] = record['embedding']
+        print(f"✓ Loaded {len(sent_id2embed):,} SBERT embeddings\n")
+
+    # Compute ATT for each sentence (with SBERT embeddings)
+    att_results = analyze_sentences(merged_data, sent_id2embed)
 
     # Save ATT results
     print(f"\n{'='*80}")
@@ -429,4 +537,18 @@ def main():
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Analyze sentence-level data and compute ATT")
+    parser.add_argument(
+        "--clean-cache",
+        action="store_true",
+        help="Delete cached files before running"
+    )
+
+    args = parser.parse_args()
+
+    if args.clean_cache:
+        clean_cache()
+
     main()

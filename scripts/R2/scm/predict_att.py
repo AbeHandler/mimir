@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-"""Predict ATT using linguistic features extracted with spaCy."""
+"""Predict ATT using SBERT embeddings for individual sentences."""
 
 import json
 import gzip
 import numpy as np
 import pandas as pd
-import spacy
 from pathlib import Path
 from tqdm import tqdm
 from typing import Dict, List, Any
-from collections import Counter
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
@@ -35,9 +33,19 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
     print(f"Loading ATT results from {filepath}")
 
     records = []
+    embeddings_found = 0
+    embeddings_missing = 0
+
     with gzip.open(filepath, 'rt') as f:
         for line in tqdm(f, desc="Loading ATT data"):
             record = json.loads(line)
+
+            # Extract embedding if present
+            embedding = record.get('embedding')
+            if embedding is not None:
+                embeddings_found += 1
+            else:
+                embeddings_missing += 1
 
             # Create a row for run1 if ATT is valid
             if 'att_run1' in record and not pd.isna(record['att_run1']):
@@ -51,7 +59,8 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
                     'loss_control': record.get('loss_run4', np.nan),
                     'run': 'run1',
                     'sentence_number': record.get('sentence_number', -1),
-                    'sentence_position': record.get('sentence_position', np.nan)
+                    'sentence_position': record.get('sentence_position', np.nan),
+                    'embedding': embedding
                 }
                 records.append(run1_record)
 
@@ -67,146 +76,33 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
                     'loss_control': record.get('loss_run4', np.nan),
                     'run': 'run3',
                     'sentence_number': record.get('sentence_number', -1),
-                    'sentence_position': record.get('sentence_position', np.nan)
+                    'sentence_position': record.get('sentence_position', np.nan),
+                    'embedding': embedding
                 }
                 records.append(run3_record)
 
     df = pd.DataFrame(records)
     print(f"✓ Loaded {len(df):,} sentence-run pairs from both run1 and run3")
     print(f"  Run1 sentences: {(df['run'] == 'run1').sum():,}")
-    print(f"  Run3 sentences: {(df['run'] == 'run3').sum():,}\n")
+    print(f"  Run3 sentences: {(df['run'] == 'run3').sum():,}")
+    print(f"  Sentences with embeddings: {embeddings_found:,}")
+    print(f"  Sentences without embeddings: {embeddings_missing:,}\n")
 
     return df
 
 
-def extract_linguistic_features(text: str, nlp) -> Dict[str, Any]:
+
+
+def create_feature_matrix(df: pd.DataFrame, sample_size: int = 50000) -> pd.DataFrame:
     """
-    Extract linguistic features from text using spaCy.
-
-    Args:
-        text: Sentence text
-        nlp: spaCy language model
-
-    Returns:
-        Dictionary of linguistic features
-    """
-    doc = nlp(text)
-
-    features = {}
-
-    # Length features
-    features['char_length'] = len(text)
-    features['token_count'] = len(doc)
-    features['avg_token_length'] = np.mean([len(token.text) for token in doc]) if len(doc) > 0 else 0
-
-    # POS tag distribution
-    pos_counts = Counter([token.pos_ for token in doc])
-    total_tokens = len(doc) if len(doc) > 0 else 1
-
-    # Proportion of each POS tag
-    for pos in ['NOUN', 'VERB', 'ADJ', 'ADV', 'PRON', 'DET', 'ADP', 'CONJ', 'NUM', 'PROPN']:
-        features[f'pos_{pos.lower()}_ratio'] = pos_counts.get(pos, 0) / total_tokens
-
-    # Dependency features
-    dep_counts = Counter([token.dep_ for token in doc])
-    features['n_root'] = dep_counts.get('ROOT', 0)
-    features['n_nsubj'] = dep_counts.get('nsubj', 0)
-    features['n_dobj'] = dep_counts.get('dobj', 0)
-
-    # Named entity features
-    features['n_entities'] = len(doc.ents)
-    features['entity_ratio'] = len(doc.ents) / total_tokens
-
-    # Entity type distribution
-    entity_types = Counter([ent.label_ for ent in doc.ents])
-    for ent_type in ['PERSON', 'ORG', 'GPE', 'DATE', 'MONEY', 'CARDINAL']:
-        features[f'entity_{ent_type.lower()}'] = entity_types.get(ent_type, 0)
-
-    # Syntactic complexity
-    features['max_depth'] = max([len(list(token.ancestors)) for token in doc]) if len(doc) > 0 else 0
-    features['avg_depth'] = np.mean([len(list(token.ancestors)) for token in doc]) if len(doc) > 0 else 0
-
-    # Lexical diversity
-    unique_lemmas = len(set([token.lemma_.lower() for token in doc if token.is_alpha]))
-    features['lexical_diversity'] = unique_lemmas / total_tokens if total_tokens > 0 else 0
-
-    # Punctuation features
-    features['n_punctuation'] = sum([1 for token in doc if token.is_punct])
-    features['punct_ratio'] = features['n_punctuation'] / total_tokens
-
-    # Stopword ratio
-    features['stopword_ratio'] = sum([1 for token in doc if token.is_stop]) / total_tokens if total_tokens > 0 else 0
-
-    # Capitalization features
-    features['n_capitalized'] = sum([1 for token in doc if token.text and token.text[0].isupper()])
-    features['cap_ratio'] = features['n_capitalized'] / total_tokens if total_tokens > 0 else 0
-
-    # Sentence structure
-    features['has_subordinate'] = any([token.dep_ in ['advcl', 'acl', 'relcl'] for token in doc])
-    features['has_coordination'] = any([token.dep_ == 'cc' for token in doc])
-
-    # Number features
-    features['has_numbers'] = any([token.like_num for token in doc])
-    features['n_numbers'] = sum([1 for token in doc if token.like_num])
-
-    # URL and special tokens
-    features['has_url'] = any([token.like_url for token in doc])
-    features['has_email'] = any([token.like_email for token in doc])
-
-    return features
-
-
-def extract_bow_features(texts: List[str], nlp, max_features: int = 100) -> pd.DataFrame:
-    """
-    Extract Bag of Words features using lemmatized tokens.
-
-    Args:
-        texts: List of sentence texts
-        nlp: spaCy language model
-        max_features: Maximum number of top tokens to include
-
-    Returns:
-        DataFrame with BOW features
-    """
-    print("\nExtracting Bag of Words features...")
-
-    # Count all lemmas
-    all_lemmas = []
-    for text in tqdm(texts, desc="Lemmatizing"):
-        doc = nlp(text)
-        lemmas = [token.lemma_.lower() for token in doc
-                  if token.is_alpha and not token.is_stop and len(token.text) > 2]
-        all_lemmas.extend(lemmas)
-
-    # Get top N most common lemmas
-    lemma_counts = Counter(all_lemmas)
-    top_lemmas = [lemma for lemma, _ in lemma_counts.most_common(max_features)]
-
-    print(f"Using top {len(top_lemmas)} lemmas as BOW features")
-
-    # Create BOW features
-    bow_features = []
-    for text in tqdm(texts, desc="Creating BOW features"):
-        doc = nlp(text)
-        lemmas = [token.lemma_.lower() for token in doc if token.is_alpha and not token.is_stop]
-        lemma_set = set(lemmas)
-
-        bow = {f'bow_{lemma}': 1 if lemma in lemma_set else 0 for lemma in top_lemmas}
-        bow_features.append(bow)
-
-    return pd.DataFrame(bow_features)
-
-
-def create_feature_matrix(df: pd.DataFrame, sample_size: int = 20000) -> pd.DataFrame:
-    """
-    Create feature matrix from sentences.
+    Create feature matrix from sentences using SBERT embeddings only.
 
     Args:
         df: DataFrame with ATT results (includes both run1 and run3)
         sample_size: Number of sentence-run pairs to sample for analysis
 
     Returns:
-        DataFrame with all features
+        DataFrame with SBERT embedding features and metadata
     """
     # Sample if dataset is large
     if len(df) > sample_size:
@@ -215,30 +111,42 @@ def create_feature_matrix(df: pd.DataFrame, sample_size: int = 20000) -> pd.Data
     else:
         df_sample = df.copy()
 
-    print(f"\nLoading spaCy model...")
-    nlp = spacy.load("en_core_web_sm", disable=[])
-    print("✓ spaCy model loaded\n")
+    # Process SBERT embeddings into separate feature columns
+    print("\nProcessing SBERT embeddings...")
+    embeddings_with_data = df_sample['embedding'].notna().sum()
+    print(f"  Rows with embeddings: {embeddings_with_data:,} / {len(df_sample):,}")
 
-    # Extract linguistic features
-    print("Extracting linguistic features...")
-    linguistic_features = []
-    for text in tqdm(df_sample['text'], desc="Processing sentences", unit="sent"):
-        features = extract_linguistic_features(text, nlp)
-        linguistic_features.append(features)
+    if embeddings_with_data > 0:
+        # Get first non-null embedding to determine dimensionality
+        first_embedding = df_sample[df_sample['embedding'].notna()]['embedding'].iloc[0]
+        embedding_dim = len(first_embedding)
+        print(f"  SBERT embedding dimension: {embedding_dim}")
 
-    linguistic_df = pd.DataFrame(linguistic_features)
+        # Create embedding features
+        embedding_data = []
+        for emb in df_sample['embedding']:
+            if emb is not None and isinstance(emb, list):
+                embedding_data.append(emb)
+            else:
+                # Fill missing embeddings with zeros
+                embedding_data.append([0.0] * embedding_dim)
 
-    # Extract BOW features
-    bow_df = extract_bow_features(df_sample['text'].tolist(), nlp, max_features=50)
+        embedding_df = pd.DataFrame(
+            embedding_data,
+            columns=[f'sbert_{i}' for i in range(embedding_dim)]
+        )
+        print(f"✓ Created {embedding_dim} SBERT embedding features")
+    else:
+        print("  ERROR: No SBERT embeddings found!")
+        raise ValueError("No SBERT embeddings available for prediction. Please run compute_sbert_embeddings.py first.")
 
-    # Combine all features
+    # Combine metadata and embeddings
     feature_df = pd.concat([
         df_sample[['id', 'original_id', 'att', 'loss_treated', 'loss_control', 'run', 'sentence_number', 'sentence_position']].reset_index(drop=True),
-        linguistic_df,
-        bow_df
+        embedding_df
     ], axis=1)
 
-    print(f"\n✓ Created feature matrix with {len(feature_df.columns)} features")
+    print(f"\n✓ Created feature matrix with {len(feature_df.columns)} total columns ({embedding_dim} SBERT features)")
 
     return feature_df
 
@@ -385,8 +293,8 @@ def main():
     df = df[~df['att'].isna()].copy()
     print(f"Valid sentence-run pairs with ATT: {len(df):,}\n")
 
-    # Create feature matrix (using 20k samples to capture data from both runs)
-    feature_df = create_feature_matrix(df, sample_size=20000)
+    # Create feature matrix (using 50k samples to capture data from both runs)
+    feature_df = create_feature_matrix(df, sample_size=50000)
 
     # Train predictor
     model, scaler, feature_cols, feature_importance = train_att_predictor(feature_df)
