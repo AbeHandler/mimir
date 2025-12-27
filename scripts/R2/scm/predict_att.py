@@ -93,7 +93,7 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
 
 
 
-def create_feature_matrix(df: pd.DataFrame, sample_size: int = 50000) -> pd.DataFrame:
+def create_feature_matrix(df: pd.DataFrame, sample_size: int = 120000) -> pd.DataFrame:
     """
     Create feature matrix from sentences using SBERT embeddings only.
 
@@ -293,8 +293,8 @@ def main():
     df = df[~df['att'].isna()].copy()
     print(f"Valid sentence-run pairs with ATT: {len(df):,}\n")
 
-    # Create feature matrix (using 50k samples to capture data from both runs)
-    feature_df = create_feature_matrix(df, sample_size=50000)
+    # Create feature matrix (using 100k samples to capture data from both runs)
+    feature_df = create_feature_matrix(df, sample_size=120000)
 
     # Train predictor
     model, scaler, feature_cols, feature_importance = train_att_predictor(feature_df)
