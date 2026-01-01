@@ -16,7 +16,88 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-def load_att_results(filepath: Path) -> pd.DataFrame:
+def compute_token_ll_stats(tokens: List[Dict]) -> Dict[str, float]:
+    """
+    Compute statistics from token-level log-likelihoods.
+
+    Args:
+        tokens: List of token dictionaries with 'log_prob' field
+
+    Returns:
+        Dictionary with LL statistics: min, max, mean, median, std, q25, q75
+    """
+    if not tokens:
+        return {
+            'll_min': np.nan, 'll_max': np.nan, 'll_mean': np.nan,
+            'll_median': np.nan, 'll_std': np.nan, 'll_q25': np.nan, 'll_q75': np.nan,
+            'll_count': 0
+        }
+
+    log_probs = []
+    for token in tokens:
+        log_prob = token.get('log_prob')
+        if log_prob is not None and not np.isnan(log_prob):
+            log_probs.append(log_prob)
+
+    if not log_probs:
+        return {
+            'll_min': np.nan, 'll_max': np.nan, 'll_mean': np.nan,
+            'll_median': np.nan, 'll_std': np.nan, 'll_q25': np.nan, 'll_q75': np.nan,
+            'll_count': 0
+        }
+
+    log_probs_arr = np.array(log_probs)
+
+    return {
+        'll_min': np.min(log_probs_arr),
+        'll_max': np.max(log_probs_arr),
+        'll_mean': np.mean(log_probs_arr),
+        'll_median': np.median(log_probs_arr),
+        'll_std': np.std(log_probs_arr),
+        'll_q25': np.percentile(log_probs_arr, 25),
+        'll_q75': np.percentile(log_probs_arr, 75),
+        'll_count': len(log_probs)
+    }
+
+
+def load_token_data(filepath: Path) -> Dict[str, Dict[str, List[Dict]]]:
+    """
+    Load token-level data from merged sentences file.
+
+    Args:
+        filepath: Path to merged_sentences.jsonl.gz
+
+    Returns:
+        Dictionary mapping sentence ID to run data with tokens:
+        {
+            'sentence_id': {
+                'pair1_treated_run1': {'tokens': [...]},
+                'pair2_treated_run3': {'tokens': [...]},
+                'pair2_control_run4': {'tokens': [...]}
+            }
+        }
+    """
+    print(f"Loading token-level data from {filepath}")
+
+    token_data = {}
+
+    with gzip.open(filepath, 'rt') as f:
+        for line in tqdm(f, desc="Loading token data"):
+            record = json.loads(line)
+            sent_id = record.get('id')
+
+            if sent_id:
+                token_data[sent_id] = {
+                    'pair1_treated_run1': record.get('pair1_treated_run1'),
+                    'pair2_treated_run3': record.get('pair2_treated_run3'),
+                    'pair2_control_run4': record.get('pair2_control_run4')
+                }
+
+    print(f"✓ Loaded token data for {len(token_data):,} sentences\n")
+    return token_data
+
+
+def load_att_results(filepath: Path, token_data: Dict[str, Dict[str, List[Dict]]] = None) -> pd.DataFrame:
     """
     Load ATT results from gzipped JSONL file and expand to include both run1 and run3.
 
@@ -26,6 +107,7 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
 
     Args:
         filepath: Path to sentence_att_results.jsonl.gz
+        token_data: Optional dictionary with token-level data for computing LL features
 
     Returns:
         DataFrame with ATT analysis results, expanded for both runs
@@ -35,10 +117,12 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
     records = []
     embeddings_found = 0
     embeddings_missing = 0
+    ll_features_computed = 0
 
     with gzip.open(filepath, 'rt') as f:
         for line in tqdm(f, desc="Loading ATT data"):
             record = json.loads(line)
+            sent_id = record['id']
 
             # Extract embedding if present
             embedding = record.get('embedding')
@@ -46,6 +130,23 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
                 embeddings_found += 1
             else:
                 embeddings_missing += 1
+
+            # Get token-level data for LL features if available
+            # Only use R1 and R3 features to avoid perfectly predicting ATT
+            ll_treated_run1 = {}
+            ll_treated_run3 = {}
+
+            if token_data and sent_id in token_data:
+                sent_token_data = token_data[sent_id]
+
+                if sent_token_data.get('pair1_treated_run1'):
+                    tokens = sent_token_data['pair1_treated_run1'].get('tokens', [])
+                    ll_treated_run1 = compute_token_ll_stats(tokens)
+                    ll_features_computed += 1
+
+                if sent_token_data.get('pair2_treated_run3'):
+                    tokens = sent_token_data['pair2_treated_run3'].get('tokens', [])
+                    ll_treated_run3 = compute_token_ll_stats(tokens)
 
             # Create a row for run1 if ATT is valid
             if 'att_run1' in record and not pd.isna(record['att_run1']):
@@ -62,6 +163,11 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
                     'sentence_position': record.get('sentence_position', np.nan),
                     'embedding': embedding
                 }
+
+                # Add LL features for treated (run1) only - no R4 features
+                for key, val in ll_treated_run1.items():
+                    run1_record[f'treated_{key}'] = val
+
                 records.append(run1_record)
 
             # Create a row for run3 if ATT is valid
@@ -79,6 +185,11 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
                     'sentence_position': record.get('sentence_position', np.nan),
                     'embedding': embedding
                 }
+
+                # Add LL features for treated (run3) only - no R4 features
+                for key, val in ll_treated_run3.items():
+                    run3_record[f'treated_{key}'] = val
+
                 records.append(run3_record)
 
     df = pd.DataFrame(records)
@@ -86,7 +197,10 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
     print(f"  Run1 sentences: {(df['run'] == 'run1').sum():,}")
     print(f"  Run3 sentences: {(df['run'] == 'run3').sum():,}")
     print(f"  Sentences with embeddings: {embeddings_found:,}")
-    print(f"  Sentences without embeddings: {embeddings_missing:,}\n")
+    print(f"  Sentences without embeddings: {embeddings_missing:,}")
+    if token_data:
+        print(f"  Sentences with LL features: {ll_features_computed:,}")
+    print()
 
     return df
 
@@ -95,14 +209,14 @@ def load_att_results(filepath: Path) -> pd.DataFrame:
 
 def create_feature_matrix(df: pd.DataFrame, sample_size: int = 120000) -> pd.DataFrame:
     """
-    Create feature matrix from sentences using SBERT embeddings only.
+    Create feature matrix from sentences using SBERT embeddings and LL features.
 
     Args:
         df: DataFrame with ATT results (includes both run1 and run3)
         sample_size: Number of sentence-run pairs to sample for analysis
 
     Returns:
-        DataFrame with SBERT embedding features and metadata
+        DataFrame with SBERT embedding features, LL features, and metadata
     """
     # Sample if dataset is large
     if len(df) > sample_size:
@@ -110,6 +224,14 @@ def create_feature_matrix(df: pd.DataFrame, sample_size: int = 120000) -> pd.Dat
         df_sample = df.sample(n=sample_size, random_state=42)
     else:
         df_sample = df.copy()
+
+    # Identify LL feature columns
+    ll_feature_cols = [col for col in df_sample.columns if col.startswith('treated_ll_') or col.startswith('control_ll_')]
+    if ll_feature_cols:
+        print(f"\nFound {len(ll_feature_cols)} LL feature columns")
+        print(f"  Example LL features: {ll_feature_cols[:5]}")
+        ll_features_available = df_sample[ll_feature_cols[0]].notna().sum()
+        print(f"  Rows with LL features: {ll_features_available:,} / {len(df_sample):,}")
 
     # Process SBERT embeddings into separate feature columns
     print("\nProcessing SBERT embeddings...")
@@ -140,13 +262,20 @@ def create_feature_matrix(df: pd.DataFrame, sample_size: int = 120000) -> pd.Dat
         print("  ERROR: No SBERT embeddings found!")
         raise ValueError("No SBERT embeddings available for prediction. Please run compute_sbert_embeddings.py first.")
 
-    # Combine metadata and embeddings
+    # Combine metadata, LL features, and embeddings
+    metadata_cols = ['id', 'original_id', 'att', 'loss_treated', 'loss_control', 'run', 'sentence_number', 'sentence_position']
+    metadata_cols.extend(ll_feature_cols)
+
     feature_df = pd.concat([
-        df_sample[['id', 'original_id', 'att', 'loss_treated', 'loss_control', 'run', 'sentence_number', 'sentence_position']].reset_index(drop=True),
+        df_sample[metadata_cols].reset_index(drop=True),
         embedding_df
     ], axis=1)
 
-    print(f"\n✓ Created feature matrix with {len(feature_df.columns)} total columns ({embedding_dim} SBERT features)")
+    total_features = embedding_dim + len(ll_feature_cols) + 2  # +2 for sentence_number and sentence_position
+    print(f"\n✓ Created feature matrix with {len(feature_df.columns)} total columns")
+    print(f"  - {embedding_dim} SBERT features")
+    print(f"  - {len(ll_feature_cols)} LL features")
+    print(f"  - 2 position features (sentence_number, sentence_position)")
 
     return feature_df
 
@@ -280,20 +409,32 @@ def train_att_predictor(feature_df: pd.DataFrame):
 def main():
     """Main entry point."""
     att_results_file = Path("/tmp/sentence_att_results.jsonl.gz")
+    merged_sentences_file = Path("/tmp/merged_sentences.jsonl.gz")
 
     if not att_results_file.exists():
         print(f"Error: {att_results_file} not found")
         print("Please run analyze_sentences.py first to generate ATT results")
         return
 
-    # Load ATT results
-    df = load_att_results(att_results_file)
+    # Load token-level data for LL features
+    token_data = None
+    if merged_sentences_file.exists():
+        print(f"\n{'='*80}")
+        print(f"LOADING TOKEN-LEVEL DATA FOR LL FEATURES")
+        print(f"{'='*80}\n")
+        token_data = load_token_data(merged_sentences_file)
+    else:
+        print(f"\nWarning: {merged_sentences_file} not found")
+        print("Proceeding without LL features. Run analyze_sentences.py to generate merged data.\n")
+
+    # Load ATT results with LL features
+    df = load_att_results(att_results_file, token_data=token_data)
 
     # Remove rows with NaN ATT
     df = df[~df['att'].isna()].copy()
     print(f"Valid sentence-run pairs with ATT: {len(df):,}\n")
 
-    # Create feature matrix (using 100k samples to capture data from both runs)
+    # Create feature matrix (using 120k samples to capture data from both runs)
     feature_df = create_feature_matrix(df, sample_size=120000)
 
     # Train predictor
