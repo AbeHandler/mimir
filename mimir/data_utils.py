@@ -38,6 +38,7 @@ class Data:
                                            "abehandlerorg/nobloxbypublisher": "text",
                                            "abehandlerorg/excluded-docs": "text",
                                            "abehandlerorg/bothbins": "text",
+                                           "abehandlerorg/matching_neighbors": "text",
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
                                            "abehandlerorg/copywritetraps": "text",
@@ -147,6 +148,10 @@ class Data:
                 return ds.select(range(n_samples))
 
             if "sutva" in self.name and "pair" in self.name:
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds.select(range(n_samples))
+
+            if self.name == "abehandlerorg/matching_neighbors":
                 ds = ds.map(lambda x: {"id": x["url"]})
                 return ds.select(range(n_samples))
 
