@@ -152,8 +152,13 @@ class Data:
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/matching_neighbors":
-                ds = ds.map(lambda x: {"id": x["url"]})
-                return ds.select(range(n_samples))
+                ds = ds.filter(lambda example: len(example["text"]) > 100)
+                shard_id = int(os.environ["SHARD_ID"])
+                SHARD_SIZE = 5000
+                start = shard_id * SHARD_SIZE
+                end = (shard_id + 1) * SHARD_SIZE
+                end = min(end, len(ds)) # if end if past len ds then pick end
+                return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/bothbins":
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
@@ -177,6 +182,7 @@ class Data:
                 SHARD_SIZE = 5000
                 start = shard_id * SHARD_SIZE
                 end = (shard_id + 1) * SHARD_SIZE
+                # This does not have end = min(end, len(ds)) but I think its from earlier code. #TODO check later but I think it is fine
                 return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/excluded-docs":
