@@ -158,6 +158,7 @@ class Data:
                 start = shard_id * SHARD_SIZE
                 end = (shard_id + 1) * SHARD_SIZE
                 end = min(end, len(ds)) # if end if past len ds then pick end
+                ds = ds.map(lambda x: {"id": x["url"]})
                 return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/bothbins":
@@ -182,8 +183,7 @@ class Data:
                 SHARD_SIZE = 5000
                 start = shard_id * SHARD_SIZE
                 end = (shard_id + 1) * SHARD_SIZE
-                # This does not have end = min(end, len(ds)) but I think its from earlier code. #TODO check later but I think it is fine
-                ds = ds.map(lambda x: {"id": x["url"]})
+                # This does not have end = min(end, len(ds)) but I think its from earlier code. #TODO check later but I think it is
                 return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/excluded-docs":
