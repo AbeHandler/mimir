@@ -15,3 +15,6 @@ for CONFIG_FILENAME in "bothbins.blocks.lite.json" "bothbins.noblocks.lite.json"
         ./scripts/run_config_shard.sh "$SHARD_ID" "$CONFIG_FILENAME"
     done
 done
+
+
+python scripts/merge_shards.py -d csvs/confounddataset
