@@ -4,8 +4,10 @@ set -e
 for CONFIG_FILENAME in "bothbins.blocks.lite.json" "bothbins.noblocks.lite.json" "excluded-docs.blocks.lite.json" "excluded-docs.noblocks.lite.json" "confounddataset.blocks.lite.json" "confounddataset.noblocks.lite.json" "matching_neighbors.blocks.lite.json"; do
     echo "Processing config: $CONFIG_FILENAME"
 
-    # Use 20 shards for excluded-docs, bothbins, and matching_neighbors configs, 36 for others
-    if [[ "$CONFIG_FILENAME" == excluded-docs.* || "$CONFIG_FILENAME" == bothbins.* || "$CONFIG_FILENAME" == matching_neighbors.* ]]; then
+    # Use 20 shards for excluded-docs and bothbins, 60 for matching_neighbors, 36 for others
+    if [[ "$CONFIG_FILENAME" == matching_neighbors.* ]]; then
+        MAX_SHARD=59
+    elif [[ "$CONFIG_FILENAME" == excluded-docs.* || "$CONFIG_FILENAME" == bothbins.* ]]; then
         MAX_SHARD=19
     else
         MAX_SHARD=36
