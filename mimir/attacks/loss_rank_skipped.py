@@ -1,8 +1,8 @@
 """
     Rank-skipped LOSS attack.
 
-    For each token, if its rank is < K, skip it entirely (don't include in mean calculation).
-    Only compute mean over tokens with rank >= K.
+    For each token, if its rank is >= K, skip it entirely (don't include in mean calculation).
+    Only compute mean over tokens with rank < K (well-predicted tokens).
 """
 import torch
 import numpy as np
@@ -62,7 +62,7 @@ class LOSSRankSkippedAttack(Attack):
             actual_token_log_prob: The actual token's log probability (scalar float)
 
         Returns:
-            bool: True if rank >= K (should include), False if rank < K (should skip)
+            bool: True if rank < K (should include), False if rank >= K (should skip)
         """
         # Sort to get ranks (descending order by probability)
         # sorted_log_probs: [vocab_size], sorted from highest to lowest
@@ -73,8 +73,8 @@ class LOSSRankSkippedAttack(Attack):
         # rank: int, 0-indexed position in sorted list
         rank = (sorted_log_probs >= actual_token_log_prob).sum().item()
 
-        # Include token only if rank >= K
-        return rank >= self.k
+        # Include token only if rank < K (well-predicted tokens)
+        return rank < self.k
 
     @torch.no_grad()
     def _attack(self, document: str, probs: List[float], tokens: Optional[np.ndarray] = None, **kwargs) -> float:
@@ -82,8 +82,8 @@ class LOSSRankSkippedAttack(Attack):
         LOSS-score with rank-based skipping.
 
         For each token:
-        - If rank < K: skip (don't include in mean)
-        - If rank >= K: include actual token's log probability
+        - If rank >= K: skip (don't include in mean)
+        - If rank < K: include actual token's log probability
 
         Args:
             document: The text document (str)
@@ -97,8 +97,8 @@ class LOSSRankSkippedAttack(Attack):
         # Validate and extract all_probs: [num_tokens, vocab_size]
         all_probs = self._validate_inputs(probs, kwargs)
 
-        # Process each token position, only including those with rank >= K
-        included_log_probs = []  # Will contain floats for tokens with rank >= K
+        # Process each token position, only including those with rank < K
+        included_log_probs = []  # Will contain floats for tokens with rank < K
         for actual_log_prob, token_all_log_probs in zip(probs, all_probs):
             # actual_log_prob: float
             # token_all_log_probs: [vocab_size]
