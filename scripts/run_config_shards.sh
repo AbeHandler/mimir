@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+GPU_NUMBER="${1:-0}"  # Default to GPU 0 if not specified
+
 for CONFIG_FILENAME in "bothbins.blocks.lite.json" "bothbins.noblocks.lite.json" "excluded-docs.blocks.lite.json" "excluded-docs.noblocks.lite.json" "confounddataset.blocks.lite.json" "confounddataset.noblocks.lite.json" "matching_neighbors.blocks.lite.json"; do
     echo "Processing config: $CONFIG_FILENAME"
 
@@ -14,7 +16,7 @@ for CONFIG_FILENAME in "bothbins.blocks.lite.json" "bothbins.noblocks.lite.json"
     fi
 
     for SHARD_ID in $(seq 0 $MAX_SHARD); do
-        ./scripts/run_config_shard.sh "$SHARD_ID" "$CONFIG_FILENAME"
+        ./scripts/run_config_shard.sh "$SHARD_ID" "$CONFIG_FILENAME" "$GPU_NUMBER"
     done
 done
 

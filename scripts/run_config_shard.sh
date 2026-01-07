@@ -2,12 +2,14 @@
 set -e
 
 if [ -z "$1" ] || [ -z "$2" ]; then
-    echo "Usage: $0 <SHARD_ID> <CONFIG_FILENAME>"
+    echo "Usage: $0 <SHARD_ID> <CONFIG_FILENAME> [GPU_NUMBER]"
     echo "Example: ./scripts/run_config_shard.sh 0 confounddataset.blocks.lite.json"
+    echo "Example: ./scripts/run_config_shard.sh 0 confounddataset.blocks.lite.json 1"
     exit 1
 fi
 
 CONFIG_FILENAME="$2"
+GPU_NUMBER="${3:-0}"  # Default to GPU 0 if not specified
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 OUTPUT_CSV="${CONFIG_BASENAME}.csv"
 OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.shard_${1}.csv"
@@ -20,9 +22,9 @@ if [ -f "$OUTPUT_DIR/$OUTPUT_CSV_SHARD" ]; then
 fi
 
 export SHARD_ID="$1"
-echo "Running with SHARD_ID=$SHARD_ID"
+echo "Running with SHARD_ID=$SHARD_ID, GPU_NUMBER=$GPU_NUMBER"
 
-./scripts/run_config.sh "$CONFIG_FILENAME"
+./scripts/run_config.sh "$CONFIG_FILENAME" "$GPU_NUMBER"
 
 # Check that output file exists and was created within the last minute
 if [ ! -f "$OUTPUT_CSV" ]; then
