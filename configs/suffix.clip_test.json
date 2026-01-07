@@ -31,7 +31,7 @@
     },
     "env_config": {
         "results": "results_new",
-        "device": "cuda:1",
+        "device": "cuda:0",
         "device_aux": "cuda:0"
     },
     "dump_cache": false,

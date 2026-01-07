@@ -13,28 +13,32 @@ set -e
 #   4. Merges n-gram analyses from multiple models (merge_ngram_analyses.py)
 #
 # Usage:
-#   ./scripts/run_config.sh <config_filename>
+#   ./scripts/run_config.sh <config_filename> [gpu_number]
 #
 # Arguments:
 #   config_filename - Name of config file in configs/ directory (e.g., minhashblocksample_blocks.zlib.json)
+#   gpu_number      - Optional GPU number to use (default: 0)
 #
 # Example:
 #   ./scripts/run_config.sh minhashblocksample_blocks.zlib.json
+#   ./scripts/run_config.sh minhashblocksample_blocks.zlib.json 1
 #
 # Notes:
 #   - Config file must exist in the configs/ directory
-#   - Uses GPU 0 (CUDA_VISIBLE_DEVICES=0)
+#   - GPU selection via CUDA_VISIBLE_DEVICES
 #   - Requires conda environments: 'mimir' and 'analysis'
 # =============================================================================
 
 if [ -z "$1" ]; then
     echo "Error: Config filename argument required"
-    echo "Usage: $0 <config_filename>"
+    echo "Usage: $0 <config_filename> [gpu_number]"
     echo "Example: $0 minhashblocksample_blocks.zlib.json"
+    echo "Example: $0 minhashblocksample_blocks.zlib.json 1"
     exit 1
 fi
 
 CONFIG_FILENAME="$1"
+GPU_NUMBER="${2:-0}"  # Default to GPU 0 if not specified
 CONFIG_FILE="configs/$CONFIG_FILENAME"
 
 # Check if config file exists
@@ -54,6 +58,7 @@ fi
 # Extract config name for build_output.py (remove .json suffix)
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 
-export CUDA_VISIBLE_DEVICES=0 && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
+echo "Using GPU $GPU_NUMBER"
+export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
 
 time conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
