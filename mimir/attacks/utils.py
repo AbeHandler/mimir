@@ -1,6 +1,7 @@
 from mimir.attacks.all_attacks import AllAttacks
 
 from mimir.attacks.loss import LOSSAttack
+from mimir.attacks.loss_rank_clipped import LOSSRankClippedAttack
 from mimir.attacks.reference import ReferenceAttack
 from mimir.attacks.zlib import ZLIBAttack
 from mimir.attacks.min_k import MinKProbAttack
@@ -15,6 +16,7 @@ from mimir.attacks.recall import ReCaLLAttack
 def get_attacker(attack: str):
     mapping = {
         AllAttacks.LOSS: LOSSAttack,
+        AllAttacks.LOSS_RANK_CLIPPED: LOSSRankClippedAttack,
         AllAttacks.REFERENCE_BASED: ReferenceAttack,
         AllAttacks.ZLIB: ZLIBAttack,
         AllAttacks.MIN_K: MinKProbAttack,

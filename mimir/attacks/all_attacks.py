@@ -9,6 +9,7 @@ from mimir.models import Model
 # Attack definitions
 class AllAttacks(str, Enum):
     LOSS = "loss"
+    LOSS_RANK_CLIPPED = "loss_rank_clipped"
     REFERENCE_BASED = "ref"
     ZLIB = "zlib"
     MIN_K = "min_k"
@@ -16,7 +17,7 @@ class AllAttacks(str, Enum):
     NEIGHBOR = "ne"
     GRADNORM = "gradnorm"
     RECALL = "recall"
-    DC_PDD = "dc_pdd" 
+    DC_PDD = "dc_pdd"
     # QUANTILE = "quantile" # Uncomment when tested implementation is available
 
 
