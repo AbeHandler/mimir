@@ -13,7 +13,7 @@
     "specific_source": "Github_ngram_13_<0.8_truncated",
     "n_samples": 100,
     "chunk_size": 1,
-    "blackbox_attacks": ["loss","loss_rank_clipped"],
+    "blackbox_attacks": ["loss","loss_rank_clipped", "loss_rank_skipped"],
     "ref_config": {
         "models": [
             "stabilityai/stablelm-base-alpha-3b-v2"
