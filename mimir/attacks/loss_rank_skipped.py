@@ -92,7 +92,7 @@ class LOSSRankSkippedAttack(Attack):
             **kwargs: Must include 'all_probs' - Tensor of shape [num_tokens, vocab_size]
 
         Returns:
-            float: Negative mean of included log probabilities, or "SKIP" if no tokens included
+            float: Negative mean of included log probabilities, or np.inf if no tokens included
         """
         # Validate and extract all_probs: [num_tokens, vocab_size]
         all_probs = self._validate_inputs(probs, kwargs)
@@ -107,7 +107,7 @@ class LOSSRankSkippedAttack(Attack):
 
         # Handle case where all tokens were filtered out
         if len(included_log_probs) == 0:
-            return "SKIP"
+            return np.inf  # Infinitely bad score when no tokens qualify
 
         # Return negative mean (consistent with LOSS attack)
         return -np.mean(included_log_probs)
