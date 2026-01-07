@@ -11,6 +11,7 @@ class AllAttacks(str, Enum):
     LOSS = "loss"
     LOSS_RANK_CLIPPED = "loss_rank_clipped"
     LOSS_RANK_SKIPPED = "loss_rank_skipped"
+    LOSS_BISECTION = "loss_bisection"
     REFERENCE_BASED = "ref"
     ZLIB = "zlib"
     MIN_K = "min_k"
