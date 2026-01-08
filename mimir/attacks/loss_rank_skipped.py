@@ -64,14 +64,9 @@ class LOSSRankSkippedAttack(Attack):
         Returns:
             bool: True if rank < K (should include), False if rank >= K (should skip)
         """
-        # Sort to get ranks (descending order by probability)
-        # sorted_log_probs: [vocab_size], sorted from highest to lowest
-        # largest to smallest order
-        sorted_log_probs = torch.sort(token_log_probs, descending=True)[0]
-
-        # Find where the actual token ranks by comparing its log prob to sorted values
-        # rank: int, 0-indexed position in sorted list
-        rank = (sorted_log_probs >= actual_token_log_prob).sum().item()
+        # Count how many tokens have higher or equal probability (this is the rank)
+        # Much faster than full sort - O(n) instead of O(n log n)
+        rank = (token_log_probs >= actual_token_log_prob).sum().item()
 
         # Include token only if rank < K (well-predicted tokens)
         return rank < self.k

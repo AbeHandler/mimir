@@ -64,22 +64,19 @@ class LOSSRankClippedAttack(Attack):
         Returns:
             float: Clipped log probability
         """
-        # Sort to get ranks (descending order by probability)
-        # sorted_log_probs: [vocab_size], sorted from highest to lowest
-        # largest to smallest order
-        sorted_log_probs = torch.sort(token_log_probs, descending=True)[0]
-
-        # Find where the actual token ranks by comparing its log prob to sorted values
-        # rank: int, 0-indexed position in sorted list
-        rank = (sorted_log_probs >= actual_token_log_prob).sum().item()
+        # Count how many tokens have higher or equal probability (this is the rank)
+        # Much faster than full sort - O(n) instead of O(n log n)
+        rank = (token_log_probs >= actual_token_log_prob).sum().item()
 
         # Apply clipping
         if rank < self.k:
             # Use actual token's log probability
             return actual_token_log_prob
         else:
-            # Use log probability of token at position K
-            return sorted_log_probs[self.k].item()
+            # Get the k-th largest value using topk (much faster than full sort)
+            # topk returns the k largest elements
+            kth_log_prob = torch.topk(token_log_probs, self.k, sorted=False)[0].min().item()
+            return kth_log_prob
 
     @torch.no_grad()
     def _attack(self, document: str, probs: List[float], tokens: Optional[np.ndarray] = None, **kwargs) -> float:
