@@ -3,6 +3,7 @@ from mimir.attacks.all_attacks import AllAttacks
 from mimir.attacks.loss import LOSSAttack
 from mimir.attacks.loss_rank_clipped import LOSSRankClippedAttack
 from mimir.attacks.loss_rank_skipped import LOSSRankSkippedAttack
+from mimir.attacks.loss_bisection import LOSSBisectionAttack
 from mimir.attacks.reference import ReferenceAttack
 from mimir.attacks.zlib import ZLIBAttack
 from mimir.attacks.min_k import MinKProbAttack
@@ -19,6 +20,7 @@ def get_attacker(attack: str):
         AllAttacks.LOSS: LOSSAttack,
         AllAttacks.LOSS_RANK_CLIPPED: LOSSRankClippedAttack,
         AllAttacks.LOSS_RANK_SKIPPED: LOSSRankSkippedAttack,
+        AllAttacks.LOSS_BISECTION: LOSSBisectionAttack,
         AllAttacks.REFERENCE_BASED: ReferenceAttack,
         AllAttacks.ZLIB: ZLIBAttack,
         AllAttacks.MIN_K: MinKProbAttack,
