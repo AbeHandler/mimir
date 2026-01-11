@@ -84,15 +84,23 @@ class LOSSBisectionAttack(Attack):
         recovered_logprobs = []
         total_queries = 0
 
+        # Get vocabulary size for bounds checking
+        vocab_size = len(self.target_model.tokenizer)
+
         for i in range(len(tokens) - 1):  # -1 because we predict next token
             # Context: tokens[0:i+1]
             # Target: tokens[i+1]
             context_tokens = tokens[:i+1]
-            target_token_id = tokens[i+1]
+            target_token_id = int(tokens[i+1])
 
-            # Decode context and target
+            # Validate token ID is within bounds
+            if target_token_id < 0 or target_token_id >= vocab_size:
+                print(f"Warning: Token {i} has invalid ID {target_token_id} (vocab size: {vocab_size}), skipping")
+                recovered_logprobs.append(-10.0)
+                continue
+
+            # Decode context (but pass target_token_id directly to avoid round-trip issues)
             context_text = self.target_model.tokenizer.decode(context_tokens)
-            target_token = self.target_model.tokenizer.decode([target_token_id])
 
             # Recover relative logprob using bisection
             try:
@@ -100,7 +108,7 @@ class LOSSBisectionAttack(Attack):
                     model=self.target_model.model,
                     tokenizer=self.target_model.tokenizer,
                     prompt=context_text,
-                    target_token=target_token,
+                    target_token_id=target_token_id,
                     device=device,
                     precision=self.precision,
                     max_queries=self.queries_per_token

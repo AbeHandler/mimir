@@ -209,7 +209,8 @@ def recover_token_logprob_difference(
     model,
     tokenizer,
     prompt: str,
-    target_token: str,
+    target_token: str = None,
+    target_token_id: int = None,
     device: str = "cuda",
     precision: float = 0.01,
     max_iterations: Optional[int] = None,
@@ -224,7 +225,8 @@ def recover_token_logprob_difference(
         model: HuggingFace model
         tokenizer: HuggingFace tokenizer
         prompt: Input prompt string
-        target_token: Target token to recover logprob for
+        target_token: Target token string to recover logprob for (if target_token_id not provided)
+        target_token_id: Target token ID to recover logprob for (preferred, avoids encoding issues)
         device: Device to run on
         precision: Desired precision for bisection
         max_iterations: Maximum bisection iterations only (None for unlimited)
@@ -239,20 +241,34 @@ def recover_token_logprob_difference(
     Example:
         >>> # Unlimited budget
         >>> logprob, queries, top = recover_token_logprob_difference(
-        ...     model, tokenizer, "Hello", "World"
+        ...     model, tokenizer, "Hello", target_token="World"
         ... )
         >>> print(f"Target logprob: {logprob}, Queries: {queries}")
         Target logprob: -5.23, Queries: 12
 
-        >>> # Limited budget: max 5 API calls
+        >>> # Limited budget: max 5 API calls, using token ID directly
         >>> logprob, queries, top = recover_token_logprob_difference(
-        ...     model, tokenizer, "Hello", "World", max_queries=5
+        ...     model, tokenizer, "Hello", target_token_id=1234, max_queries=5
         ... )
         >>> print(f"Target logprob: {logprob}, Queries: {queries}")
         Target logprob: -5.10, Queries: 5
     """
-    # Get target token ID
-    target_token_id = tokenizer.encode(target_token, add_special_tokens=False)[0]
+    # Get target token ID - prefer direct ID to avoid encoding issues
+    if target_token_id is None:
+        if target_token is None:
+            raise ValueError("Must provide either target_token or target_token_id")
+        encoded = tokenizer.encode(target_token, add_special_tokens=False)
+        if len(encoded) != 1:
+            raise ValueError(f"target_token '{target_token}' encodes to {len(encoded)} tokens, expected 1")
+        target_token_id = encoded[0]
+
+    # Validate token ID is within vocabulary bounds
+    vocab_size = len(tokenizer)
+    if target_token_id < 0 or target_token_id >= vocab_size:
+        raise ValueError(f"target_token_id {target_token_id} is out of bounds for vocabulary size {vocab_size}")
+
+    # Decode target token for comparison (single token should decode cleanly)
+    target_token_str = tokenizer.decode([target_token_id])
 
     # Get default top token (no bias) - counts toward budget
     top_token = query_with_bias(model, tokenizer, prompt, target_token_id, 0.0, device)
@@ -268,7 +284,7 @@ def recover_token_logprob_difference(
     # Run bisection
     threshold, bisection_queries = bisect_logprob_difference(
         query_fn,
-        target_token,
+        target_token_str,
         target_token_id,
         precision=precision,
         max_iterations=max_iterations,
