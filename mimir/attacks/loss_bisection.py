@@ -12,6 +12,7 @@ This attack simulates a black-box scenario where:
 The attack recovers approximate logprobs using bisection search.
 """
 
+import os
 import torch
 import numpy as np
 from typing import List, Optional
@@ -36,8 +37,6 @@ class LOSSBisectionAttack(Attack):
         self,
         config: ExperimentConfig,
         target_model: Model,
-        queries_per_token: int = 5,
-        precision: float = 0.01
     ) -> None:
         """
         Initialize bisection-based LOSS attack.
@@ -45,12 +44,13 @@ class LOSSBisectionAttack(Attack):
         Args:
             config: Experiment configuration
             target_model: The model to attack
-            queries_per_token: Maximum API calls per token
-            precision: Bisection precision (smaller = more accurate but more queries)
+
+        Environment variables:
+            BISECTION_QUERIES_PER_TOKEN: Maximum API calls per token (default: 5)
         """
         super().__init__(config, target_model, ref_model=None)
-        self.queries_per_token = queries_per_token
-        self.precision = precision
+        self.queries_per_token = int(os.environ.get('BISECTION_QUERIES_PER_TOKEN', '5'))
+        self.precision = 0.01
 
     @torch.no_grad()
     def _attack(

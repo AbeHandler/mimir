@@ -87,15 +87,22 @@ def flatten_results_to_csv(file_paths: List[str], output_csv: str = "mimir_resul
     Each file should have an 'id_to_score' field with 'member' and 'nonmember' keys.
     """
     csv_rows = []
-    
+
+    # Get bisection K value from environment
+    bisection_k = os.environ.get('BISECTION_QUERIES_PER_TOKEN', None)
+
     for file_path in file_paths:
         if not os.path.exists(file_path):
             print(f"Warning: Skipping missing file: {file_path}")
             continue
-            
+
         # Extract method name from filename (remove _results.json)
         filename = os.path.basename(file_path)
         method_name = filename.replace("_results.json", "")
+
+        # If this is a bisection attack, append K to method name
+        if method_name == "loss_bisection" and bisection_k is not None:
+            method_name = f"loss_bisection_k{bisection_k}"
         
         try:
             with open(file_path, 'r') as f:
@@ -171,6 +178,13 @@ if __name__ == "__main__":
     args = parse_args()
     if args.config is not None:
         config_file = f"configs/{args.config}.json"
-        load_config_and_flatten(config_file, flatten_to_csv=True, csv_output=f"{args.config}.csv")
+
+        # If this is a bisection config and BISECTION_QUERIES_PER_TOKEN is set, add K to filename
+        output_name = args.config
+        bisection_k = os.environ.get('BISECTION_QUERIES_PER_TOKEN', None)
+        if "bisection" in output_name and bisection_k is not None:
+            output_name = f"{output_name}.k{bisection_k}"
+
+        load_config_and_flatten(config_file, flatten_to_csv=True, csv_output=f"{output_name}.csv")
     else:
         raise ValueError("config needed")

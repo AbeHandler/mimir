@@ -11,6 +11,16 @@ fi
 CONFIG_FILENAME="$2"
 GPU_NUMBER="${3:-0}"  # Default to GPU 0 if not specified
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
+
+# If this is a bisection config, BISECTION_QUERIES_PER_TOKEN must be set
+if [[ "$CONFIG_BASENAME" == *"bisection"* ]]; then
+    if [ -z "$BISECTION_QUERIES_PER_TOKEN" ]; then
+        echo "ERROR: BISECTION_QUERIES_PER_TOKEN not set for bisection config: $CONFIG_FILENAME"
+        exit 1
+    fi
+    CONFIG_BASENAME="${CONFIG_BASENAME}.k${BISECTION_QUERIES_PER_TOKEN}"
+fi
+
 OUTPUT_CSV="${CONFIG_BASENAME}.csv"
 OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.shard_${1}.csv"
 OUTPUT_DIR="csvs/confounddataset"

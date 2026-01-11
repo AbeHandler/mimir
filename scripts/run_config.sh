@@ -47,6 +47,15 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
+# If this is a bisection config, BISECTION_QUERIES_PER_TOKEN must be set
+if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
+    if [ -z "$BISECTION_QUERIES_PER_TOKEN" ]; then
+        echo "ERROR: BISECTION_QUERIES_PER_TOKEN not set for bisection config: $CONFIG_FILENAME"
+        exit 1
+    fi
+    echo "Running bisection with K=$BISECTION_QUERIES_PER_TOKEN"
+fi
+
 # Validate config file
 echo "Validating config file..."
 python config_validator.py "$CONFIG_FILE"
@@ -59,6 +68,12 @@ fi
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 
 echo "Using GPU $GPU_NUMBER"
-export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
 
-time conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
+# Pass BISECTION_QUERIES_PER_TOKEN to both conda run commands if set
+if [ -n "$BISECTION_QUERIES_PER_TOKEN" ]; then
+    export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
+    time BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
+else
+    export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
+    time conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
+fi
