@@ -13,6 +13,7 @@ The attack recovers approximate logprobs using bisection search.
 """
 
 import os
+import pickle
 import torch
 import numpy as np
 from typing import List, Optional
@@ -102,6 +103,23 @@ class LOSSBisectionAttack(Attack):
 
             # Decode context (but pass target_token_id directly to avoid round-trip issues)
             context_text = self.target_model.tokenizer.decode(context_tokens)
+
+            # Save debug information before bisection call
+            debug_data = {
+                'document': document,
+                'all_tokens': tokens,
+                'token_index': i,
+                'context_tokens': context_tokens,
+                'target_token_id': target_token_id,
+                'context_text': context_text,
+                'device': str(device),
+                'precision': self.precision,
+                'max_queries': self.queries_per_token,
+                'vocab_size': vocab_size,
+                'model_name': self.target_model.name if hasattr(self.target_model, 'name') else 'unknown',
+            }
+            with open('/tmp/mimirdebug.p', 'wb') as f:
+                pickle.dump(debug_data, f)
 
             # Recover relative logprob using bisection
             try:
