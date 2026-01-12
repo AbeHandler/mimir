@@ -72,7 +72,20 @@ def query_with_bias(
     Returns:
         The generated token as a string
     """
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    # Get model's maximum sequence length
+    max_length = getattr(model.config, 'max_position_embeddings', None)
+    if max_length is None:
+        max_length = getattr(model.config, 'n_positions', 1024)
+
+    # Tokenize with truncation from the left (keep most recent context)
+    # Reserve 1 token for generation
+    inputs = tokenizer(
+        prompt,
+        return_tensors="pt",
+        max_length=max_length - 1,
+        truncation=True,
+        truncation_side='left'
+    ).to(device)
 
     # Always create logits processor (bias=0 is a no-op)
     logits_processor = [LogitBiasProcessor(target_token_id, bias)]
@@ -332,7 +345,19 @@ def get_oracle_logprobs(
         >>> print(f"Target 'World' relative: {rel_logprob:.2f}")
         Target 'World' relative: -5.67
     """
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    # Get model's maximum sequence length
+    max_length = getattr(model.config, 'max_position_embeddings', None)
+    if max_length is None:
+        max_length = getattr(model.config, 'n_positions', 1024)
+
+    # Tokenize with truncation from the left (keep most recent context)
+    inputs = tokenizer(
+        prompt,
+        return_tensors="pt",
+        max_length=max_length,
+        truncation=True,
+        truncation_side='left'
+    ).to(device)
 
     with torch.no_grad():
         # Get logits for next token
