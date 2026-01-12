@@ -85,7 +85,8 @@ class LOSSBisectionAttack(Attack):
         total_queries = 0
 
         # Get vocabulary size for bounds checking
-        vocab_size = len(self.target_model.tokenizer)
+        # Use model vocab size, not tokenizer, since model embeddings may not be resized
+        vocab_size = self.target_model.model.config.vocab_size
 
         for i in range(len(tokens) - 1):  # -1 because we predict next token
             # Context: tokens[0:i+1]

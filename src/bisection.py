@@ -263,9 +263,10 @@ def recover_token_logprob_difference(
         target_token_id = encoded[0]
 
     # Validate token ID is within vocabulary bounds
-    vocab_size = len(tokenizer)
+    # Use model vocab size, not tokenizer, since model embeddings may not be resized
+    vocab_size = model.config.vocab_size
     if target_token_id < 0 or target_token_id >= vocab_size:
-        raise ValueError(f"target_token_id {target_token_id} is out of bounds for vocabulary size {vocab_size}")
+        raise ValueError(f"target_token_id {target_token_id} is out of bounds for model vocabulary size {vocab_size}")
 
     # Decode target token for comparison (single token should decode cleanly)
     target_token_str = tokenizer.decode([target_token_id])
