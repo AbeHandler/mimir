@@ -79,13 +79,19 @@ def query_with_bias(
 
     # Tokenize with truncation from the left (keep most recent context)
     # Reserve 1 token for generation
+    # Set truncation side on tokenizer object (not as parameter)
+    original_truncation_side = tokenizer.truncation_side
+    tokenizer.truncation_side = 'left'
+
     inputs = tokenizer(
         prompt,
         return_tensors="pt",
         max_length=max_length - 1,
-        truncation=True,
-        truncation_side='left'
+        truncation=True
     ).to(device)
+
+    # Restore original truncation side
+    tokenizer.truncation_side = original_truncation_side
 
     # Always create logits processor (bias=0 is a no-op)
     logits_processor = [LogitBiasProcessor(target_token_id, bias)]
@@ -351,13 +357,19 @@ def get_oracle_logprobs(
         max_length = getattr(model.config, 'n_positions', 1024)
 
     # Tokenize with truncation from the left (keep most recent context)
+    # Set truncation side on tokenizer object (not as parameter)
+    original_truncation_side = tokenizer.truncation_side
+    tokenizer.truncation_side = 'left'
+
     inputs = tokenizer(
         prompt,
         return_tensors="pt",
         max_length=max_length,
-        truncation=True,
-        truncation_side='left'
+        truncation=True
     ).to(device)
+
+    # Restore original truncation side
+    tokenizer.truncation_side = original_truncation_side
 
     with torch.no_grad():
         # Get logits for next token
