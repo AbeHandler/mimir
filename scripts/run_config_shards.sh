@@ -10,8 +10,11 @@ for CONFIG_FILENAME in "excluded-docs.blocks.bisection.json" "excluded-docs.nobl
     echo "Processing config: $CONFIG_FILENAME"
 
     # Use 20 shards for excluded-docs and bothbins, 60 for matching_neighbors, 36 for others
+    # Exception: bisection configs only use 1 shard due to high cost
     if [[ "$CONFIG_FILENAME" == matching_neighbors.* ]]; then
         MAX_SHARD=59
+    elif [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
+        MAX_SHARD=0
     elif [[ "$CONFIG_FILENAME" == excluded-docs.* || "$CONFIG_FILENAME" == bothbins.* ]]; then
         MAX_SHARD=19
     else
