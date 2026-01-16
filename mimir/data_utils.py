@@ -40,6 +40,7 @@ class Data:
                                            "abehandlerorg/excluded-docs": "text",
                                            "abehandlerorg/excluded-docs-mini": "text",
                                            "abehandlerorg/bothbins": "text",
+                                           "abehandlerorg/hawaiinewsnow_scm": "text",
                                            "abehandlerorg/matching_neighbors": "text",
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
@@ -50,7 +51,7 @@ class Data:
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_control_run2": "text"}):
-        self.name_key_mapping = defaultdict(lambda: "text", name_key_mapping)
+        self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
         self.presampled = presampled
@@ -202,7 +203,7 @@ class Data:
                 return ds.select(range(start, end))
 
             # e.g. abehandlerorg/hawaiinewsnow_scm
-            if self.names.endswith("_scm"):
+            if self.name.endswith("_scm"):
                 # strip the " at start and end
                 ds = ds.map(lambda example: {"id": example["url"]})
                 return ds.filter(lambda example: len(example["text"]) > 100)
