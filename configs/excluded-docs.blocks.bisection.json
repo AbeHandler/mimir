@@ -1,8 +1,8 @@
 {
     "base_model": "dobolyilab/blockbench-blocksbin",
-    "dataset_member": "abehandlerorg/excluded-docs",
+    "dataset_member": "abehandlerorg/excluded-docs-mini",
     "experiment_name": "excluded-docs_cliptest",
-    "dataset_nonmember": "abehandlerorg/excluded-docs",
+    "dataset_nonmember": "abehandlerorg/excluded-docs-mini",
     "min_words": 100,
     "max_words": 200,
     "max_tokens": 512,
