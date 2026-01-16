@@ -8,6 +8,7 @@ import mimir.custom_datasets as custom_datasets
 from mimir.config import ExperimentConfig
 from nltk.tokenize import WhitespaceTokenizer
 from urllib.parse import urlparse
+from collections import defaultdict
 
 
 def normalize_domain(url):
