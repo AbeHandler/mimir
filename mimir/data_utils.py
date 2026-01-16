@@ -37,6 +37,7 @@ class Data:
                                            "abehandlerorg/confounddatasetxpress": "text",
                                            "abehandlerorg/nobloxbypublisher": "text",
                                            "abehandlerorg/excluded-docs": "text",
+                                           "abehandlerorg/excluded-docs-mini": "text",
                                            "abehandlerorg/bothbins": "text",
                                            "abehandlerorg/matching_neighbors": "text",
                                            "abehandlerorg/olmobypublisherdev": "text",
@@ -174,6 +175,9 @@ class Data:
                 return ds
 
             if self.name == "abehandlerorg/nobloxbypublisher":
+                return ds.select(range(n_samples))
+
+            if self.name == "abehandlerorg/excluded-docs-mini":
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/confounddataset":
