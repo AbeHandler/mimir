@@ -49,7 +49,7 @@ class Data:
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_control_run2": "text"}):
-        self.name_key_mapping = name_key_mapping
+        self.name_key_mapping = defaultdict(lambda: "text", name_key_mapping)
         self.config = config
         self.name = name
         self.presampled = presampled
@@ -199,6 +199,12 @@ class Data:
                 end = (shard_id + 1) * SHARD_SIZE
                 end = min(end, len(ds)) # if end if past len ds then pick end
                 return ds.select(range(start, end))
+
+            # e.g. abehandlerorg/hawaiinewsnow_scm
+            if self.names.endswith("_scm"):
+                # strip the " at start and end
+                ds = ds.map(lambda example: {"id": example["url"]})
+                return ds.filter(lambda example: len(example["text"]) > 100)
 
             if self.name == "abehandlerorg/twfe":
                 # strip the " at start and end
