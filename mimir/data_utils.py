@@ -45,6 +45,7 @@ class Data:
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
                                            "abehandlerorg/copywritetraps": "text",
+                                           "abehandlerorg/llamatmp6check": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_treated_run1": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_treated_run3": "text",
