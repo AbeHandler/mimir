@@ -234,8 +234,8 @@ class Model(nn.Module):
             tokenizer = transformers.AutoTokenizer.from_pretrained(
                 "gpt2", **optional_tok_kwargs, cache_dir=self.cache_dir)
         elif "llama" in self.name or "alpaca" in self.name:
-            print("[DEBUG] Using LlamaTokenizer for LLaMA/Alpaca models...")
-            tokenizer = transformers.LlamaTokenizer.from_pretrained(
+            print("[DEBUG] Using AutoTokenizer for LLaMA/Alpaca models...")
+            tokenizer = transformers.AutoTokenizer.from_pretrained(
                 self.name, **optional_tok_kwargs, cache_dir=self.cache_dir)
         elif "pubmedgpt" in self.name:
             print("[DEBUG] Using BioMedLM tokenizer for PubMedGPT...")
