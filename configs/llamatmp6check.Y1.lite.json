@@ -1,5 +1,5 @@
 {
-    "base_model": "dabehandlerorg/cptllama-2024-01-29_model",
+    "base_model": "abehandlerorg/cptllama-2024-01-29_model",
     "dataset_member": "abehandlerorg/llamatmp6check",
     "experiment_name": "llamatmp6check",
     "dataset_nonmember": "abehandlerorg/llamatmp6check",
