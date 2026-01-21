@@ -235,6 +235,7 @@ class Model(nn.Module):
                 "gpt2", **optional_tok_kwargs, cache_dir=self.cache_dir)
         elif "llama" in self.name or "alpaca" in self.name:
             print("[DEBUG] Using AutoTokenizer for LLaMA/Alpaca models...")
+            # this is for llama models changed Jan 20, 2026
             tokenizer = transformers.AutoTokenizer.from_pretrained(
                 self.name, **optional_tok_kwargs, cache_dir=self.cache_dir)
         elif "pubmedgpt" in self.name:

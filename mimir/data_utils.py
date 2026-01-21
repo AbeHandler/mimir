@@ -242,6 +242,9 @@ class Data:
                 ds = ds.map(lambda x: {"text": x["text"].strip('"')})
                 return ds
 
+            if self.name == "abehandlerorg/llamatmp6check":
+                return ds
+
             if self.name == "abehandlerorg/copyrighttrapszeros":
                 ds = ds.map(lambda x: {"text": x["text"].strip('"')})
                 return ds
