@@ -23,5 +23,4 @@ fi
 # Extract config name for build_output.py (remove .json suffix)
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 
-mamba activate unslothmimir
-CUDA_VISIBLE_DEVICES=0,1 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mi python run.py --config $CONFIG_FILE
+mamba run -n unslothmimir CUDA_VISIBLE_DEVICES=0,1 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache python -u run.py --config $CONFIG_FILE
