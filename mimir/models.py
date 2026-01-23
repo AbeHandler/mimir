@@ -199,7 +199,8 @@ class Model(nn.Module):
                 # Extract the model from the model wrapper so we dont need to call model.model
             elif "gpt-oss" in self.name or "gpt_oss" in self.name:
                 # gpt-oss models require trust_remote_code
-                model = transformers.AutoModelForCausalLM.from_pretrained(self.name, **model_kwargs, device_map="balanced_low_0", cache_dir=self.cache_dir, trust_remote_code=True)
+                local_path = f"/home/abe/dolma/scripts/R2/create/cpt/training/gpt-oss-20b-unsloth-bnb-4bit_cptllama-2024-01-29-Y0_debug"
+                model = transformers.AutoModelForCausalLM.from_pretrained(local_path, **model_kwargs, device_map="balanced_low_0", cache_dir=self.cache_dir, trust_remote_code=True)
                 self.device = 'cuda:1'
             elif "llama" in self.name or "alpaca" in self.name:
                 # TODO: This should be smth specified in config in case user has
