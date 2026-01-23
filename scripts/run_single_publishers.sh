@@ -2,11 +2,13 @@
 # Usage: ./scripts/run_single_publishers.sh [gpu_number]
 # Example: ./scripts/run_single_publishers.sh 1
 
+set -e
+
 GPU_NUMBER="${1:-0}"  # Default to GPU 0 if not specified
 
 echo "Using GPU: ${GPU_NUMBER}"
 
-PUBLISHERS=("conchovalleyhomepage" "hawaiinewsnow")
+PUBLISHERS=("nelsoncountygazette" "hawaiinewsnow")
 
 for PUBLISHER in "${PUBLISHERS[@]}"; do
     echo "Processing publisher: ${PUBLISHER}"
