@@ -8,8 +8,8 @@ GPU_NUMBER="${1:-0}"  # Default to GPU 0 if not specified
 
 echo "Using GPU: ${GPU_NUMBER}"
 
-# Read publishers from config file
-mapfile -t PUBLISHERS < configs/single_publishers.txt
+# Read publishers from config file and shuffle for random sampling
+mapfile -t PUBLISHERS < <(shuf configs/single_publishers.txt)
 
 for PUBLISHER in "${PUBLISHERS[@]}"; do
     echo "Processing publisher: ${PUBLISHER}"
