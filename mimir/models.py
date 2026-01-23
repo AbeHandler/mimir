@@ -197,6 +197,10 @@ class Model(nn.Module):
                 model = OpenLMforCausalLM.from_pretrained(
                     self.name, **model_kwargs, device_map=self.device, cache_dir=self.cache_dir)
                 # Extract the model from the model wrapper so we dont need to call model.model
+            elif "gpt-oss" in self.name or "gpt_oss" in self.name:
+                # gpt-oss models require trust_remote_code
+                model = transformers.AutoModelForCausalLM.from_pretrained(self.name, **model_kwargs, device_map="balanced_low_0", cache_dir=self.cache_dir, trust_remote_code=True)
+                self.device = 'cuda:1'
             elif "llama" in self.name or "alpaca" in self.name:
                 # TODO: This should be smth specified in config in case user has
                 # llama is too big, gotta use device map
