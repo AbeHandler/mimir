@@ -20,6 +20,12 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
+# Documenting the env here
+# conda create --name unslothmimir --clone unsloth
+# mamba activate unslothmimir
+# pip install simple-parsing && pip install nltk && pip install matplotlib && pip install openai && pip install ai2-olmo
+
+
 # Extract config name for build_output.py (remove .json suffix)
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 
