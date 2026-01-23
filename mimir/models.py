@@ -199,13 +199,13 @@ class Model(nn.Module):
                 # Extract the model from the model wrapper so we dont need to call model.model
             elif "gpt-oss" in self.name or "gpt_oss" in self.name:
                 # gpt-oss models require trust_remote_code, load from local path
-                local_path = f"/home/abe/dolma/scripts/R2/create/cpt/training/gpt-oss-20b-unsloth-bnb-4bit_cptllama-2024-01-29-Y0_debug"
-                # Use minimal parameters like in push script to avoid cache validation issues
+                # NOTE: Requires unsloth conda environment to be active (has gpt_oss model code)
+                local_path = f"/home/abe/dolma/scripts/R2/create/cpt/training/gpt-oss-20b_cptllama-2024-01-29-Y0_debug"
                 model = transformers.AutoModelForCausalLM.from_pretrained(
                     local_path,
-                    torch_dtype=model_kwargs.get('torch_dtype', None),
                     device_map="balanced_low_0",
-                    trust_remote_code=True
+                    trust_remote_code=True,
+                    local_files_only=True
                 )
                 self.device = 'cuda:1'
             elif "llama" in self.name or "alpaca" in self.name:
