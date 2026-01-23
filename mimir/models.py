@@ -198,11 +198,15 @@ class Model(nn.Module):
                     self.name, **model_kwargs, device_map=self.device, cache_dir=self.cache_dir)
                 # Extract the model from the model wrapper so we dont need to call model.model
             elif "gpt-oss" in self.name or "gpt_oss" in self.name:
-                # gpt-oss models require trust_remote_code
+                # gpt-oss models require trust_remote_code, load from local path
                 local_path = f"/home/abe/dolma/scripts/R2/create/cpt/training/gpt-oss-20b-unsloth-bnb-4bit_cptllama-2024-01-29-Y0_debug"
-                # Filter out Hub-specific kwargs for local loading
-                local_kwargs = {k: v for k, v in model_kwargs.items() if k not in ['revision', 'cache_dir']}
-                model = transformers.AutoModelForCausalLM.from_pretrained(local_path, **local_kwargs, device_map="balanced_low_0", trust_remote_code=True, local_files_only=True)
+                # Use minimal parameters like in push script to avoid cache validation issues
+                model = transformers.AutoModelForCausalLM.from_pretrained(
+                    local_path,
+                    torch_dtype=model_kwargs.get('torch_dtype', None),
+                    device_map="balanced_low_0",
+                    trust_remote_code=True
+                )
                 self.device = 'cuda:1'
             elif "llama" in self.name or "alpaca" in self.name:
                 # TODO: This should be smth specified in config in case user has
