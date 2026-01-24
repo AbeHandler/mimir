@@ -48,7 +48,7 @@ def load_csv_data(csv_path, score_col_name='neighbor_score'):
 def load_hf_dataset():
     """Load the HuggingFace dataset."""
     print("Loading HuggingFace dataset...")
-    dataset = load_dataset('abehandlerorg/matching_neighbors', split='train', streaming=True)
+    dataset = load_dataset('abehandlerorg/matching_neighbors', split='train')
 
     # Convert streaming dataset to pandas with progress bar
     print("Converting to pandas DataFrame...")
@@ -175,11 +175,6 @@ def main():
 
     # Print summary
     print_summary(url_methods, df_detailed)
-
-    # Save results
-    output_path = 'csvs/confounddataset/matching_neighbors_analysis.csv'
-    print(f"\nSaving summary to {output_path}...")
-    url_methods.to_csv(output_path, index=False)
 
     tmp_dir = Path(os.environ.get('TMPDIR', os.environ.get('TMP', '/tmp')))
     detailed_output_path = tmp_dir / 'matching_neighbors_detailed.csv'
