@@ -767,7 +767,9 @@ def main(config: ExperimentConfig):
 
     for attack, output in blackbox_outputs.items():
         outputs.append(output)
-        with open(os.path.join(SAVE_FOLDER, f"{attack}_results.json"), "w") as f:
+        # Python 3.12 changed str enum behavior - need explicit .value to get "loss" instead of "AllAttacks.LOSS"
+        attack_name = attack.value if hasattr(attack, 'value') else attack
+        with open(os.path.join(SAVE_FOLDER, f"{attack_name}_results.json"), "w") as f:
             json.dump(output, f)
 
     '''
