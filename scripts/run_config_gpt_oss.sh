@@ -36,3 +36,5 @@ export MODEL_PATH
 echo "Using model path: $MODEL_PATH"
 
 mamba run -n unslothmimir env CUDA_VISIBLE_DEVICES=0,2 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache MODEL_PATH="$MODEL_PATH" python -u run.py --config $CONFIG_FILE
+
+conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
