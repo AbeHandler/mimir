@@ -29,6 +29,14 @@ fi
 # Extract config name for build_output.py (remove .json suffix)
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 
+# Check if output CSV already exists
+OUTPUT_CSV="${CONFIG_BASENAME}.csv"
+if [ -f "$OUTPUT_CSV" ]; then
+    echo "Output CSV already exists: $OUTPUT_CSV"
+    echo "Skipping run. Delete the CSV file to re-run."
+    exit 0
+fi
+
 # Get the model path from config and set as environment variable
 MODEL_PATH=$(python scripts/get_model_path.py $CONFIG_FILE)
 export MODEL_PATH
