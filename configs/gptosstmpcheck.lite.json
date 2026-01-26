@@ -1,7 +1,7 @@
 {
-    "base_model": "abehandlerorg/gpt-oss-20b_cptllama-2024-01-29-Y0_debug",
+    "base_model": "abehandlerorg/gpt-oss-20b_cptllama-2024-01-29",
     "dataset_member": "abehandlerorg/llamatmp6check",
-    "experiment_name": "gpt-oss-20b_cptllama-2024-01-29-Y0_debug",
+    "experiment_name": "gpt-oss-20b_cptllama-2024-01-29",
     "dataset_nonmember": "abehandlerorg/llamatmp6check",
     "min_words": 100,
     "max_words": 200,
