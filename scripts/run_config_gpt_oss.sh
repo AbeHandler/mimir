@@ -29,4 +29,10 @@ fi
 # Extract config name for build_output.py (remove .json suffix)
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
 
-mamba run -n unslothmimir env CUDA_VISIBLE_DEVICES=1,2 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache python -u run.py --config $CONFIG_FILE
+# Get the model path from config and set as environment variable
+MODEL_PATH=$(python scripts/get_model_path.py $CONFIG_FILE)
+export MODEL_PATH
+
+echo "Using model path: $MODEL_PATH"
+
+mamba run -n unslothmimir env CUDA_VISIBLE_DEVICES=0,2 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache MODEL_PATH="$MODEL_PATH" python -u run.py --config $CONFIG_FILE

@@ -8,6 +8,7 @@ from typing import List
 import numpy as np
 import transformers
 import time
+import os
 from collections import defaultdict
 from multiprocessing.pool import ThreadPool
 import torch.nn.functional as F
@@ -200,7 +201,13 @@ class Model(nn.Module):
             elif "gpt-oss" in self.name or "gpt_oss" in self.name:
                 # gpt-oss models require trust_remote_code, load from local path
                 # NOTE: Requires unsloth conda environment to be active (has gpt_oss model code)
-                local_path = f"/home/abe/dolma/scripts/R2/create/cpt/training/gpt-oss-20b_cptllama-2024-01-29-Y0_debug"
+                local_path = os.environ.get('MODEL_PATH')
+                if local_path is None:
+                    raise ValueError("MODEL_PATH environment variable must be set for gpt-oss models")
+                if not os.path.exists(local_path):
+                    raise FileNotFoundError(f"Model path does not exist: {local_path}")
+                if not os.path.isdir(local_path):
+                    raise NotADirectoryError(f"Model path is not a directory: {local_path}")
                 model = transformers.AutoModelForCausalLM.from_pretrained(
                     local_path,
                     device_map="balanced_low_0",
