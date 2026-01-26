@@ -251,6 +251,17 @@ class Model(nn.Module):
             print("[DEBUG] Using GPT-2 tokenizer for datablations...")
             tokenizer = transformers.AutoTokenizer.from_pretrained(
                 "gpt2", **optional_tok_kwargs, cache_dir=self.cache_dir)
+        elif "gpt-oss" in self.name or "gpt_oss" in self.name:
+            print("[DEBUG] Using tokenizer from local path for gpt-oss models...")
+            local_path = os.environ.get('MODEL_PATH')
+            if local_path is None:
+                raise ValueError("MODEL_PATH environment variable must be set for gpt-oss models")
+            tokenizer = transformers.AutoTokenizer.from_pretrained(
+                local_path,
+                **optional_tok_kwargs,
+                trust_remote_code=True,
+                local_files_only=True
+            )
         elif "llama" in self.name or "alpaca" in self.name:
             print("[DEBUG] Using AutoTokenizer for LLaMA/Alpaca models...")
             # this is for llama models changed Jan 20, 2026
