@@ -1,6 +1,9 @@
 #!/bin/bash
 # Usage: ./scripts/run_single_publishers.sh [gpu_number]
 # Example: ./scripts/run_single_publishers.sh 1
+#
+# To regenerate configs/single_publishers.txt from HuggingFace:
+#   python scripts/fetch_scm_publishers.py
 
 set -e
 
