@@ -68,8 +68,7 @@ class Data:
             for _ in inf:
                 _ = _.strip('\n')
                 k = "abehandlerorg/" + _ + "_scm"
-                name_key_mapping[k]: "text"
-
+                name_key_mapping[k] = "text"
 
         self.name_key_mapping = name_key_mapping
         self.config = config
