@@ -63,6 +63,14 @@ class Data:
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_control_run2": "text"}):
+        
+        with open('configs/single_publishers.txt', 'r') as inf:
+            for _ in inf:
+                _ = _.strip('\n')
+                k = "abehandlerorg/" + _ + "_scm"
+                name_key_mapping[k]: "text"
+
+
         self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
