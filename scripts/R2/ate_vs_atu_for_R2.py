@@ -7,10 +7,12 @@ import numpy as np
 import os
 
 # update the all_shards docs to ensure you get the latest versions
-os.system("python scripts/merge_shards.py -d csvs/confounddataset")
+# os.system("python scripts/merge_shards.py -d csvs/confounddataset")
 
 noblocks = pd.read_csv("csvs/confounddataset/excluded-docs.noblocks.lite.all_shards.csv.gz").rename(columns={"score": "noblocks"})
 blocks = pd.read_csv("csvs/confounddataset/excluded-docs.blocks.lite.all_shards.csv.gz").rename(columns={"score": "blocks"})
+
+excluded = set([i.strip() for i in open("/Users/abha4861/dolma/data/interim/R2/cleaning/verified_excluded_urls.txt")])
 
 #                             
 #                             
@@ -26,6 +28,9 @@ blocks = pd.read_csv("csvs/confounddataset/excluded-docs.blocks.lite.all_shards.
 
 
 ATT = noblocks.merge(blocks, on=['doc_id', 'method', 'membership'])
+
+ATT = ATT[ATT['doc_id'].isin(excluded)].copy()
+
 ATT["delta"] = ATT["blocks"] - ATT["noblocks"]
 ATT = ATT[ATT["membership"] == "member"].copy()
 print(ATT[["method", "delta"]].groupby("method").mean().reset_index())
@@ -45,7 +50,13 @@ print(ATT[["method", "delta"]].groupby("method").mean().reset_index())
 
 noblocks = pd.read_csv("csvs/confounddataset/bothbins.noblocks.lite.all_shards.csv.gz").rename(columns={"score": "noblocks"})
 blocks = pd.read_csv("csvs/confounddataset/bothbins.blocks.lite.all_shards.csv.gz").rename(columns={"score": "blocks"})
+
+bothbins = "/Users/abha4861/dolma/data/interim/R2/cleaning/verified_bothbins_urls.txt"
+bothbins = set([i.strip() for i in open(bothbins)])
+
 ATU = noblocks.merge(blocks, on=['doc_id', 'method', 'membership'])
+ATU = ATU[ATU['doc_id'].isin(bothbins)].copy()
+
 ATU["delta"] = ATU["blocks"] - ATU["noblocks"]
 ATU = ATU[ATU["membership"] == "member"].copy()
 
