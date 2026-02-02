@@ -168,6 +168,15 @@ class Data:
 
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
 
+            # name_key_mapping["abehandlerorg/cptgptoss_bothbins_20240730_20240730"] = "text"
+            # name_key_mapping["abehandlerorg/cptgptoss_excluded_20240730_20240730"] = "text"
+            if self.name == "abehandlerorg/cptgptoss_bothbins_20240730_20240730":
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds
+
+            if self.name == "abehandlerorg/cptgptoss_excluded_20240730_20240730":
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds
 
             if self.name == "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100":
                 return ds.select(range(n_samples))
