@@ -172,11 +172,23 @@ class Data:
             # name_key_mapping["abehandlerorg/cptgptoss_excluded_20240730_20240730"] = "text"
             if self.name == "abehandlerorg/cptgptoss_bothbins_20240730_20240730":
                 ds = ds.map(lambda x: {"id": x["url"]})
-                return ds
+                SHARD_SIZE = 10
+                shard_id = int(os.environ["SHARD_ID"])
+                start = shard_id * SHARD_SIZE
+                end = (shard_id + 1) * SHARD_SIZE
+                end = min(end, len(ds)) # if end if past len ds then pick end
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/cptgptoss_excluded_20240730_20240730":
                 ds = ds.map(lambda x: {"id": x["url"]})
-                return ds
+                shard_id = int(os.environ["SHARD_ID"])
+                SHARD_SIZE = 10
+                start = shard_id * SHARD_SIZE
+                end = (shard_id + 1) * SHARD_SIZE
+                end = min(end, len(ds)) # if end if past len ds then pick end
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100":
                 return ds.select(range(n_samples))
