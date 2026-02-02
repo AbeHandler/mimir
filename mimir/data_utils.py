@@ -70,6 +70,9 @@ class Data:
                 k = "abehandlerorg/" + _ + "_scm"
                 name_key_mapping[k] = "text"
 
+        name_key_mapping["abehandlerorg/cptgptoss_bothbins_20240730_20240730"] = "text"
+        name_key_mapping["abehandlerorg/cptgptoss_excluded_20240730_20240730"] = "text"
+
         self.name_key_mapping = name_key_mapping
         self.config = config
         self.name = name
