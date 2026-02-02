@@ -1,0 +1,39 @@
+{
+    "base_model": "gpt-oss-20b_cptgptoss-2024-07-30-to-2024-07-30-Y1",
+    "dataset_member": "abehandlerorg/cptgptoss_excluded_20240730_20240730",
+    "experiment_name": "gpt-oss-20b_cptgptoss-2024-07-30-to-2024-07-30-Y1",
+    "dataset_nonmember": "abehandlerorg/cptgptoss_excluded_20240730_20240730",
+    "min_words": 100,
+    "max_words": 200,
+    "max_tokens": 512,
+    "max_data": 376,
+    "load_from_hf": true,
+    "ourdataset": "abehandlerorg/cptgptoss_excluded_20240730_20240730",
+    "output_name": "unified_mia",
+    "specific_source": "Github_ngram_13_<0.8_truncated",
+    "n_samples": 376,
+    "chunk_size": 1,
+    "blackbox_attacks": ["loss","min_k", "zlib"],
+    "ref_config": {
+        "models": [
+            "stabilityai/stablelm-base-alpha-3b-v2"
+        ]
+    },
+    "neighborhood_config": {
+        "model": "t5-small",
+        "n_perturbation_list": [
+            5
+        ],
+        "pct_words_masked": 0.3,
+        "span_length": 2,
+        "dump_cache": false,
+        "load_from_cache": false
+    },
+    "env_config": {
+        "results": "results_new",
+        "device": "cuda:0",
+        "device_aux": "cuda:1"
+    },
+    "dump_cache": false,
+    "load_from_cache": true
+}
