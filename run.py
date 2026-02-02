@@ -697,6 +697,7 @@ def main(config: ExperimentConfig):
         config=config,
         is_train=True,
         n_samples=n_samples,
+        batch_size=config.batch_size,
         nonmember_prefix = nonmember_prefix,
         ids=ids_member  # 👈 add this
     )
@@ -710,6 +711,7 @@ def main(config: ExperimentConfig):
         config=config,
         is_train=False,
         n_samples=n_samples,
+        batch_size=config.batch_size,
         nonmember_prefix = nonmember_prefix,
         ids=ids_nonmember  # 👈 add this
     )
