@@ -13,7 +13,7 @@
     "specific_source": "Github_ngram_13_<0.8_truncated",
     "n_samples": 376,
     "chunk_size": 1,
-    "batch_size": 10,
+    "batch_size": 5,
     "blackbox_attacks": ["loss","min_k", "zlib"],
     "ref_config": {
         "models": [
