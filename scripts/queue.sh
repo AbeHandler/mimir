@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-./scripts/run_config_shards.sh bothbins.blocks.dcpdd.json
+./scripts/run_config_shards.sh 0
 
-./scripts/run_config_shards.sh bothbins.noblocks.dcpdd.json
+./scripts/run_config_shards.sh 0
 
 ./scripts/run_config_gpt_oss.sh gptoss.20b.2024-07-30-to-2024-07-30-Y1.excluded.lite.json 97
 
