@@ -36,6 +36,29 @@ ATT = ATT[ATT["membership"] == "member"].copy()
 print(ATT[["method", "delta"]].groupby("method").mean().reset_index())
 
 
+#                                                             
+#          88                                 88          88  
+#          88                                 88          88  
+#          88                                 88          88  
+#  ,adPPYb,88  ,adPPYba, 8b,dPPYba,   ,adPPYb,88  ,adPPYb,88  
+# a8"    `Y88 a8"     "" 88P'    "8a a8"    `Y88 a8"    `Y88  
+# 8b       88 8b         88       d8 8b       88 8b       88  
+# "8a,   ,d88 "8a,   ,aa 88b,   ,a8" "8a,   ,d88 "8a,   ,d88  
+#  `"8bbdP"Y8  `"Ybbd8"' 88`YbbdP"'   `"8bbdP"Y8  `"8bbdP"Y8  
+#                        88                                   
+#                        88                                   
+
+noblocks = pd.read_csv("csvs/confounddataset/excluded-docs.noblocks.dcpdd.all_shards.csv.gz").rename(columns={"score": "noblocks"})
+blocks = pd.read_csv("csvs/confounddataset/excluded-docs.blocks.dcpdd.all_shards.csv.gz").rename(columns={"score": "blocks"})
+excluded = set([i.strip() for i in open("/Users/abha4861/dolma/data/interim/R2/cleaning/verified_excluded_urls.txt")])
+ATT = noblocks.merge(blocks, on=['doc_id', 'method', 'membership'])
+ATT = ATT[ATT['doc_id'].isin(excluded)].copy()
+ATT["delta"] = ATT["blocks"] - ATT["noblocks"]
+ATT = ATT[ATT["membership"] == "member"].copy()
+dcp = ATT[ATT["method"] != "loss"].copy()
+print(dcp[["method", "delta"]].groupby("method").mean().reset_index())
+
+
 #                                 
 #                                 
 #              ,d                 
