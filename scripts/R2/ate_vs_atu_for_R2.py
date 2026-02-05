@@ -85,6 +85,17 @@ ATU = ATU[ATU["membership"] == "member"].copy()
 
 print(ATU[["method", "delta"]].groupby("method").mean().reset_index())
 
+noblocks = pd.read_csv("csvs/confounddataset/bothbins.noblocks.dcpdd.all_shards.csv.gz").rename(columns={"score": "noblocks"})
+blocks = pd.read_csv("csvs/confounddataset/bothbins.blocks.dcpdd.all_shards.csv.gz").rename(columns={"score": "blocks"})
+bothbins = set([i.strip() for i in open("/Users/abha4861/dolma/data/interim/R2/cleaning/verified_bothbins_urls.txt")])
+ATU = noblocks.merge(blocks, on=['doc_id', 'method', 'membership'])
+ATU = ATU[ATU['doc_id'].isin(bothbins)].copy()
+ATU["delta"] = ATU["blocks"] - ATU["noblocks"]
+ATU = ATU[ATU["membership"] == "member"].copy()
+dcp = ATU[ATU["method"] != "loss"].copy()
+print(dcp[["method", "delta"]].groupby("method").mean().reset_index())
+
+import sys; sys.exit(0)
 
 #
 #
