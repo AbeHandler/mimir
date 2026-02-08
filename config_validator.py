@@ -46,6 +46,20 @@ def validate_config(config_path: str) -> bool:
 
     filename = config_file.name
 
+    # Validate Y0/Y1 suffix matches between filename and base_model
+    if "Y0" in filename and "Y0" not in base_model:
+        print(f"❌ Validation failed!")
+        print(f"   Config: {filename}")
+        print(f"   base_model: {base_model}")
+        print(f"   Expected: Filename contains 'Y0' but base_model does not")
+        return False
+    elif "Y1" in filename and "Y1" not in base_model:
+        print(f"❌ Validation failed!")
+        print(f"   Config: {filename}")
+        print(f"   base_model: {base_model}")
+        print(f"   Expected: Filename contains 'Y1' but base_model does not")
+        return False
+
     # Validate filename matches base_model
     if "noblocksbin" in base_model:
         if ".noblocks." not in filename:
