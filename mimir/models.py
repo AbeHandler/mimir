@@ -218,8 +218,16 @@ class Model(nn.Module):
             elif "llama" in self.name or "alpaca" in self.name:
                 # TODO: This should be smth specified in config in case user has
                 # llama is too big, gotta use device map
+                # balanced_low_0 spreads model across cuda:0 and cuda:1
+                # Use cuda:2 (Blackwell) for inference if available, else cuda:1
                 model = transformers.AutoModelForCausalLM.from_pretrained(self.name, **model_kwargs, device_map="balanced_low_0", cache_dir=self.cache_dir)
-                self.device = 'cuda:1'
+                # Check if cuda:2 is available for Blackwell GPU
+                if torch.cuda.device_count() >= 3:
+                    self.device = 'cuda:2'  # Use Blackwell GPU for inference
+                    print(f"Using cuda:2 (Blackwell GPU) for inference")
+                else:
+                    self.device = 'cuda:1'
+                    print(f"Using cuda:1 for inference ({torch.cuda.device_count()} GPUs available)")
             elif "stablelm" in self.name.lower():  # models requiring custom code
                 model = transformers.AutoModelForCausalLM.from_pretrained(
                     self.name, **model_kwargs, trust_remote_code=True, device_map=device_map, cache_dir=self.cache_dir)
