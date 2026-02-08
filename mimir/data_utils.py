@@ -56,7 +56,6 @@ class Data:
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
                                            "abehandlerorg/copywritetraps": "text",
-                                           "abehandlerorg/llamatmp6check": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_treated_run1": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_treated_run3": "text",
@@ -72,6 +71,9 @@ class Data:
 
         name_key_mapping["abehandlerorg/cptgptoss_bothbins_20240730_20240730"] = "text"
         name_key_mapping["abehandlerorg/cptgptoss_excluded_20240730_20240730"] = "text"
+
+        name_key_mapping["abehandlerorg/cptllama_excluded_20240130_20240130"] = "text"
+        name_key_mapping["abehandlerorg/cptllama_bothbins_20240130_20240130"] = "text"
 
         self.name_key_mapping = name_key_mapping
         self.config = config
@@ -190,6 +192,14 @@ class Data:
                 ds = ds.map(lambda x: {"id": x["url"]})
                 return ds.select(range(start, end))
 
+            if self.name == "abehandlerorg/cptllama_excluded_20240130_20240130":
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds
+
+            if self.name == "abehandlerorg/cptllama_bothbins_20240130_20240130":
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds
+
             if self.name == "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100":
                 return ds.select(range(n_samples))
 
@@ -284,8 +294,6 @@ class Data:
                 ds = ds.map(lambda x: {"text": x["text"].strip('"')})
                 return ds
 
-            if self.name == "abehandlerorg/llamatmp6check":
-                return ds
 
             if self.name == "abehandlerorg/copyrighttrapszeros":
                 ds = ds.map(lambda x: {"text": x["text"].strip('"')})
@@ -303,18 +311,6 @@ class Data:
             dropped = orig_len - ds.num_rows
             if dropped > 0:
                 print(f"Warning: {dropped} examples had no URL and were dropped")
-
-            if self.name == "abehandlerorg/olmobypublisherdev":
-                # these publishers were chosen randomly in the process
-                # described in dolma/Snakefile
-                # here we filter the dataset when running mimir for the olmobypublisherdev
-                # to avoid running GPU on samples we don't actually need for the ten publisher 
-                with open("configs/ten_publishers.txt") as f:
-                    publishers = set([line.strip() for line in f if line.strip()])
-                ds = ds.filter(
-                    lambda ex: normalize_domain(ex["url"]) in publishers,
-                    batched=False  # set True + batch_size for speed if you like
-                )
 
             return ds.select(range(n_samples))
             
