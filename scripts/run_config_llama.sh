@@ -65,6 +65,14 @@ fi
 
 # Extract config name for build_output.py (remove .json suffix)
 CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
+FINAL_CSV="${CONFIG_BASENAME}.csv"
+
+# Check if final CSV already exists in csvs/
+if [ -f "csvs/$FINAL_CSV" ]; then
+    echo "✅ Final CSV already exists: csvs/$FINAL_CSV"
+    echo "Skipping processing."
+    exit 0
+fi
 
 echo "Using GPUs 0,1 for Llama model (device_map uses 0-1, inference on cuda:1)"
 
@@ -75,4 +83,14 @@ if [ -n "$BISECTION_QUERIES_PER_TOKEN" ]; then
 else
     export CUDA_VISIBLE_DEVICES=0,1 && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
     time conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
+fi
+
+# Move final CSV to csvs/ directory
+if [ -f "$FINAL_CSV" ]; then
+    mkdir -p csvs
+    mv "$FINAL_CSV" "csvs/$FINAL_CSV"
+    echo "✅ Moved final CSV to: csvs/$FINAL_CSV"
+else
+    echo "❌ Error: Expected output file not found: $FINAL_CSV"
+    exit 1
 fi
