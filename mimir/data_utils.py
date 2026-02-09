@@ -200,7 +200,7 @@ class Data:
                 # Clip text to 25K characters to prevent OOM errors during inference.
                 # Long texts (>25K chars) cause memory spikes when computing logits,
                 # even with batch_size=1. Sample #977 had 152K chars and crashed at 22.34GB.
-                # 25K chars is still very long for a news article (typical articles are <10K).
+                # 99% of articles are <25K chars, so this only affects rare edge cases.
                 ds = ds.map(lambda x: {
                     "id": x["url"],
                     "text": x["text"][:25000] if len(x["text"]) > 25000 else x["text"]
