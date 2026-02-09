@@ -6,7 +6,7 @@
     "min_words": 100,
     "max_words": 200,
     "max_tokens": 512,
-    "batch_size": 10,
+    "batch_size": 1,
     "max_data": 1803,
     "load_from_hf": true,
     "ourdataset": "abehandlerorg/cptllama_excluded_20240130_20240130",
