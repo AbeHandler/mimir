@@ -32,8 +32,11 @@ ATT = noblocks.merge(blocks, on=['doc_id', 'method', 'membership'])
 ATT = ATT[ATT['doc_id'].isin(excluded)].copy()
 
 ATT["delta"] = ATT["blocks"] - ATT["noblocks"]
-ATT = ATT[ATT["membership"] == "member"].copy()
+ATT = ATT[ATT["membership"] == "member"].copy().sample(n=50_000, random_state=42)
+
+
 print(ATT[["method", "delta"]].groupby("method").mean().reset_index())
+
 
 
 #                                                             
@@ -69,7 +72,9 @@ print(dcp[["method", "delta"]].groupby("method").mean().reset_index())
 # 88,    ,88   88,   "8a,   ,a88  
 # `"8bbdP"Y8   "Y888  `"YbbdP'Y8  
 #                                 
-#                                 
+#                               
+
+print("[*] ATU")  
 
 noblocks = pd.read_csv("csvs/confounddataset/bothbins.noblocks.lite.all_shards.csv.gz").rename(columns={"score": "noblocks"})
 blocks = pd.read_csv("csvs/confounddataset/bothbins.blocks.lite.all_shards.csv.gz").rename(columns={"score": "blocks"})
@@ -81,7 +86,7 @@ ATU = noblocks.merge(blocks, on=['doc_id', 'method', 'membership'])
 ATU = ATU[ATU['doc_id'].isin(bothbins)].copy()
 
 ATU["delta"] = ATU["blocks"] - ATU["noblocks"]
-ATU = ATU[ATU["membership"] == "member"].copy()
+ATU = ATU[ATU["membership"] == "member"].copy().sample(n=50_000, random_state=42)
 
 print(ATU[["method", "delta"]].groupby("method").mean().reset_index())
 
