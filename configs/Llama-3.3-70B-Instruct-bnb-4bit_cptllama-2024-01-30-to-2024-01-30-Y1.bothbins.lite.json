@@ -1,5 +1,5 @@
 {
-    "base_model": "abehandlerorg/Llama-3.1-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1",
+    "base_model": "abehandlerorg/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1",
     "dataset_member": "abehandlerorg/cptllama_bothbins_20240130_20240130",
     "experiment_name": "abehandlerorg/cptllama_bothbins_20240130_20240130-Y1",
     "dataset_nonmember": "abehandlerorg/cptllama_bothbins_20240130_20240130",
