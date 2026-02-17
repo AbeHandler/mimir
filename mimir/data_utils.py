@@ -194,7 +194,11 @@ class Data:
 
             if self.name == "abehandlerorg/cptllama_excluded_20240130_20240130":
                 ds = ds.map(lambda x: {"id": x["url"]})
-                return ds
+
+                if "SHARD_ID" in os.environ:
+                    return select_shard(ds, shard_size=100)
+                else:
+                    return ds
 
             if self.name == "abehandlerorg/cptllama_bothbins_20240130_20240130":
                 # Clip text to 25K characters to prevent OOM errors during inference.
@@ -203,9 +207,13 @@ class Data:
                 # 99% of articles are <25K chars, so this only affects rare edge cases.
                 ds = ds.map(lambda x: {
                     "id": x["url"],
-                    "text": x["text"][:20000] if len(x["text"]) > 20000 else x["text"]
+                    "text": x["text"][:25000] if len(x["text"]) > 25000 else x["text"]
                 })
-                return ds
+
+                if "SHARD_ID" in os.environ:
+                    return select_shard(ds, shard_size=100)
+                else:
+                    return ds
 
             if self.name == "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_neighbors_top100":
                 return ds.select(range(n_samples))
@@ -492,6 +500,17 @@ class Data:
         else:
             filename = self.name
         return filename
+
+
+def select_shard(ds, shard_size: int = 5000, shard_env_var="SHARD_ID"):
+    """
+    Slice dataset into a shard based on SHARD_ID env var.
+    Adds an 'id' column from the 'url' field.
+    """
+    shard_id = int(os.environ[shard_env_var])
+    start = shard_id * shard_size
+    end = min((shard_id + 1) * shard_size, len(ds))
+    return ds.select(range(start, end))
 
 
 def strip_newlines(text):

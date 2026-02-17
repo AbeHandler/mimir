@@ -15,13 +15,15 @@ set -e
 #     * GPU 1: Inference operations (typically where first layer resides)
 #
 # Usage:
-#   ./scripts/run_config_llama.sh <config_filename>
+#   ./scripts/run_config_llama.sh <config_filename> [shard_id]
 #
 # Arguments:
 #   config_filename - Name of config file in configs/ directory
+#   shard_id        - (Optional) Shard ID to pass as SHARD_ID env var to run.py
 #
 # Example:
 #   ./scripts/run_config_llama.sh Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.excluded.lite.json
+#   ./scripts/run_config_llama.sh Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.excluded.lite.json 3
 #
 # Notes:
 #   - Config file must exist in the configs/ directory
@@ -39,6 +41,17 @@ fi
 
 CONFIG_FILENAME="$1"
 CONFIG_FILE="configs/$CONFIG_FILENAME"
+CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
+
+# Export SHARD_ID if provided (run.py reads it from env)
+if [ -n "$2" ]; then
+    export SHARD_ID="$2"
+    echo "Running with SHARD_ID=$SHARD_ID"
+fi
+
+OUTPUT_CSV="${CONFIG_BASENAME}.csv"
+OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.shard_${SHARD_ID}.csv"
+OUTPUT_DIR="csvs"
 
 # Check if config file exists
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -55,23 +68,18 @@ if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
     echo "Running bisection with K=$BISECTION_QUERIES_PER_TOKEN"
 fi
 
+# Early exit if shard output already exists
+if [ -n "$SHARD_ID" ] && [ -f "$OUTPUT_DIR/$OUTPUT_CSV_SHARD" ]; then
+    echo "Output shard already exists, skipping: $OUTPUT_DIR/$OUTPUT_CSV_SHARD"
+    exit 0
+fi
+
 # Validate config file
 echo "Validating config file..."
 python config_validator.py "$CONFIG_FILE"
 if [ $? -ne 0 ]; then
     echo "Error: Config validation failed"
     exit 1
-fi
-
-# Extract config name for build_output.py (remove .json suffix)
-CONFIG_BASENAME=$(basename "$CONFIG_FILENAME" .json)
-FINAL_CSV="${CONFIG_BASENAME}.csv"
-
-# Check if final CSV already exists in csvs/
-if [ -f "csvs/$FINAL_CSV" ]; then
-    echo "✅ Final CSV already exists: csvs/$FINAL_CSV"
-    echo "Skipping processing."
-    exit 0
 fi
 
 echo "Using GPUs 0,1 for Llama model (device_map uses 0-1, inference on cuda:1)"
@@ -85,12 +93,24 @@ else
     time conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
 fi
 
-# Move final CSV to csvs/ directory
-if [ -f "$FINAL_CSV" ]; then
-    mkdir -p csvs
-    mv "$FINAL_CSV" "csvs/$FINAL_CSV"
-    echo "✅ Moved final CSV to: csvs/$FINAL_CSV"
-else
-    echo "❌ Error: Expected output file not found: $FINAL_CSV"
+# Check output file exists and is fresh
+if [ ! -f "$OUTPUT_CSV" ]; then
+    echo "❌ Error: Expected output file not found: $OUTPUT_CSV"
     exit 1
+fi
+
+FILE_AGE=$(( $(date +%s) - $(stat -c %Y "$OUTPUT_CSV") ))
+if [ "$FILE_AGE" -gt 60 ]; then
+    echo "ERROR: Output file is older than 60 seconds (age: ${FILE_AGE}s): $OUTPUT_CSV"
+    exit 1
+fi
+
+# Rename to shard filename if SHARD_ID set, then move to output dir
+mkdir -p "$OUTPUT_DIR"
+if [ -n "$SHARD_ID" ]; then
+    mv "$OUTPUT_CSV" "$OUTPUT_DIR/$OUTPUT_CSV_SHARD"
+    echo "✅ Output: $OUTPUT_DIR/$OUTPUT_CSV_SHARD"
+else
+    mv "$OUTPUT_CSV" "$OUTPUT_DIR/$OUTPUT_CSV"
+    echo "✅ Output: $OUTPUT_DIR/$OUTPUT_CSV"
 fi
