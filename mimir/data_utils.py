@@ -203,7 +203,7 @@ class Data:
                 # 99% of articles are <25K chars, so this only affects rare edge cases.
                 ds = ds.map(lambda x: {
                     "id": x["url"],
-                    "text": x["text"][:25000] if len(x["text"]) > 25000 else x["text"]
+                    "text": x["text"][:20000] if len(x["text"]) > 20000 else x["text"]
                 })
                 return ds
 
