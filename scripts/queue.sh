@@ -2,10 +2,10 @@
 
 
 for SHARD_ID in $(seq 1 15); do
-    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.bothbins.lite.json '$SHARD_ID'
-    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.bothbins.lite.json '$SHARD_ID'
-    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.excluded.lite.json '$SHARD_ID'
-    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.lite.json '$SHARD_ID'
+    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.bothbins.lite.json "$SHARD_ID"
+    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.bothbins.lite.json "$SHARD_ID"
+    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.excluded.lite.json "$SHARD_ID"
+    ./scripts/run_config_llama.sh Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.lite.json "$SHARD_ID"
 done
 
 
