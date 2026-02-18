@@ -68,6 +68,12 @@ if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
     echo "Running bisection with K=$BISECTION_QUERIES_PER_TOKEN"
 fi
 
+# Skip shard 8 for bothbins
+if [[ "$CONFIG_FILENAME" == *bothbins* && "$SHARD_ID" == "8" ]]; then
+    echo "Skipping shard 8 for bothbins: $CONFIG_FILENAME"
+    exit 0
+fi
+
 # Early exit if shard output already exists
 if [ -n "$SHARD_ID" ] && [ -f "$OUTPUT_DIR/$OUTPUT_CSV_SHARD" ]; then
     echo "Output shard already exists, skipping: $OUTPUT_DIR/$OUTPUT_CSV_SHARD"
