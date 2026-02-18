@@ -33,6 +33,10 @@ from urllib.parse import urlparse
 
 from logger_setup import logger
 
+# only on the blackwell server
+if torch.__version__ == "2.12.0.dev20260218+cu128"
+    torch.set_float32_matmul_precision('high')
+
 def normalize_domain(url):
     url = url.strip('"')
     netloc = urlparse(url).netloc.lower()
