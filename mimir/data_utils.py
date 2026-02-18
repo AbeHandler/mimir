@@ -239,6 +239,7 @@ class Data:
                 return ds.select(range(n_samples))
 
             if self.name.startswith("abehandlerorg/pythia-"):
+                ds = ds.filter(lambda example: len(example["text"]) > 100)
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/matching_neighbors":
