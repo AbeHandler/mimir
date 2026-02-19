@@ -39,6 +39,7 @@ def _load_ccnews_jan2022() -> "datasets.Dataset":
     Mirrors the logic in scripts/R2/inthewild/hf_ds_maker.py but returns a
     HuggingFace Dataset directly instead of writing a parquet file.
     """
+    import gzip
     import json
     from pathlib import Path
 
@@ -53,7 +54,7 @@ def _load_ccnews_jan2022() -> "datasets.Dataset":
         raise FileNotFoundError(f"Neighbor log not found: {log_path}")
 
     query_urls = set()
-    with open(log_path) as fh:
+    with gzip.open(log_path, "rt") as fh:
         for line in fh:
             line = line.strip()
             if not line:
