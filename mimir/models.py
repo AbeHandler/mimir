@@ -201,20 +201,30 @@ class Model(nn.Module):
             elif "gpt-oss" in self.name or "gpt_oss" in self.name:
                 # gpt-oss models require trust_remote_code, load from local path
                 # NOTE: Requires unsloth conda environment to be active (has gpt_oss model code)
-                local_path = os.environ.get('MODEL_PATH')
-                if local_path is None:
-                    raise ValueError("MODEL_PATH environment variable must be set for gpt-oss models")
-                if not os.path.exists(local_path):
-                    raise FileNotFoundError(f"Model path does not exist: {local_path}")
-                if not os.path.isdir(local_path):
-                    raise NotADirectoryError(f"Model path is not a directory: {local_path}")
-                model = transformers.AutoModelForCausalLM.from_pretrained(
-                    local_path,
-                    device_map="balanced_low_0",
-                    trust_remote_code=True,
-                    local_files_only=True
-                )
-                self.device = 'cuda:1'
+                if self.name == "openai/gpt-oss-20b":
+                    # Base HF model — load directly, no local path needed
+                    model = transformers.AutoModelForCausalLM.from_pretrained(
+                        self.name,
+                        device_map="balanced_low_0",
+                        trust_remote_code=True,
+                        cache_dir=self.cache_dir
+                    )
+                    self.device = 'cuda:1'
+                else:
+                    local_path = os.environ.get('MODEL_PATH')
+                    if local_path is None:
+                        raise ValueError("MODEL_PATH environment variable must be set for gpt-oss models")
+                    if not os.path.exists(local_path):
+                        raise FileNotFoundError(f"Model path does not exist: {local_path}")
+                    if not os.path.isdir(local_path):
+                        raise NotADirectoryError(f"Model path is not a directory: {local_path}")
+                    model = transformers.AutoModelForCausalLM.from_pretrained(
+                        local_path,
+                        device_map="balanced_low_0",
+                        trust_remote_code=True,
+                        local_files_only=True
+                    )
+                    self.device = 'cuda:1'
             elif "llama" in self.name or "alpaca" in self.name:
                 # TODO: This should be smth specified in config in case user has
                 # llama is too big, gotta use device map
@@ -255,6 +265,9 @@ class Model(nn.Module):
             print("[DEBUG] Using GPT-2 tokenizer for datablations...")
             tokenizer = transformers.AutoTokenizer.from_pretrained(
                 "gpt2", **optional_tok_kwargs, cache_dir=self.cache_dir)
+        elif self.name == "openai/gpt-oss-20b":
+            tokenizer = transformers.AutoTokenizer.from_pretrained(
+                self.name, **optional_tok_kwargs, trust_remote_code=True, cache_dir=self.cache_dir)
         elif "gpt-oss" in self.name or "gpt_oss" in self.name:
             print("[DEBUG] Using tokenizer from local path for gpt-oss models...")
             local_path = os.environ.get('MODEL_PATH')
