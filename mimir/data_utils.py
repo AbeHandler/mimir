@@ -43,7 +43,7 @@ def _load_ccnews_jan2022() -> "datasets.Dataset":
     from pathlib import Path
 
     jsonl_path = os.path.expanduser(
-        "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jsonl"
+        "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jsonl.gz"
     )
     jsonl_url_field = "query_url"
     hf_url_field = "url"
