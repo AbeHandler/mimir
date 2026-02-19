@@ -8,7 +8,9 @@ Usage:
 import argparse
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 
 JSONL_PATH = "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jsonl"
@@ -72,6 +74,12 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     merged.to_csv(out, index=False)
     print(f"Saved merged data -> {out}")
+
+    plot_path = out.parent / "gptoss_mimir_lt050_vs_score.png"
+    sns.scatterplot(x="lt_0.50", y="score", data=merged)
+    plt.savefig(plot_path)
+    plt.close()
+    print(f"Saved plot -> {plot_path}")
 
 
 if __name__ == "__main__":
