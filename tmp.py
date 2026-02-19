@@ -1,10 +1,13 @@
 """
-Join mimir results CSV with the analyze_neighbor_log jsonl on url.
+Join mimir results CSV shards with the analyze_neighbor_log jsonl on url.
 
 Usage:
-    python tmp.py --csv path/to/results.csv
+    python tmp.py --csv-dir csvs/gptoss
+    python tmp.py --csv-dir csvs/gptoss --pattern "*.lite.shard_*.csv"
 """
 import argparse
+from pathlib import Path
+
 import pandas as pd
 
 
@@ -13,8 +16,21 @@ JSONL_PATH = "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jso
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", required=True, help="Path to mimir results CSV")
+    parser.add_argument("--csv-dir", required=True, help="Directory containing shard CSVs")
+    parser.add_argument(
+        "--pattern",
+        default="*.csv",
+        help="Glob pattern for shard files (default: *.csv)",
+    )
     return parser.parse_args()
+
+
+def load_shards(csv_dir: str, pattern: str) -> pd.DataFrame:
+    paths = sorted(Path(csv_dir).glob(pattern))
+    if not paths:
+        raise FileNotFoundError(f"No files matching '{pattern}' in {csv_dir}")
+    print(f"Loading {len(paths)} shard(s) from {csv_dir}")
+    return pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
 
 
 def load_neighbor_log(path: str) -> pd.DataFrame:
@@ -24,7 +40,7 @@ def load_neighbor_log(path: str) -> pd.DataFrame:
 def main():
     args = parse_args()
 
-    results_df = pd.read_csv(args.csv)
+    results_df = load_shards(args.csv_dir, args.pattern)
     neighbor_df = load_neighbor_log(JSONL_PATH)
 
     # filter to member rows scored by loss, drop dupes
