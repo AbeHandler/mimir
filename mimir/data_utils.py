@@ -9,6 +9,19 @@ from mimir.config import ExperimentConfig
 from nltk.tokenize import WhitespaceTokenizer
 from urllib.parse import urlparse
 from collections import defaultdict
+from huggingface_hub import list_datasets as hf_list_datasets
+
+
+def pythia_kluge(name_key_mapping: dict) -> dict:
+    """Add all abehandlerorg/pythia-* HF datasets to name_key_mapping with value "text".
+
+    Example:
+        >>> pythia_kluge(name_key_mapping)
+    """
+    for ds in hf_list_datasets(author="abehandlerorg", search="pythia"):
+        if ds.id.startswith("abehandlerorg/pythia-"):
+            name_key_mapping[ds.id] = "text"
+    return name_key_mapping
 
 
 def normalize_domain(url):
@@ -74,6 +87,9 @@ class Data:
 
         name_key_mapping["abehandlerorg/cptllama_excluded_20240130_20240130"] = "text"
         name_key_mapping["abehandlerorg/cptllama_bothbins_20240130_20240130"] = "text"
+
+        # needed for pythia experiments on blackwell machine
+        name_key_mapping = pythia_kluge(name_key_mapping)
 
         self.name_key_mapping = name_key_mapping
         self.config = config
@@ -220,6 +236,10 @@ class Data:
 
             if "sutva" in self.name and "pair" in self.name:
                 ds = ds.map(lambda x: {"id": x["url"]})
+                return ds.select(range(n_samples))
+
+            if self.name.startswith("abehandlerorg/pythia-"):
+                ds = ds.filter(lambda example: len(example["text"]) > 100)
                 return ds.select(range(n_samples))
 
             if self.name == "abehandlerorg/matching_neighbors":
