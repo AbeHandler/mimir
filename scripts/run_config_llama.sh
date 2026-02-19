@@ -69,8 +69,8 @@ if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
 fi
 
 # Skip shard 8 for bothbins
-if [[ "$CONFIG_FILENAME" == *bothbins* && "$SHARD_ID" == "8" ]]; then
-    echo "Skipping shard 8 for bothbins: $CONFIG_FILENAME"
+if [[ "$CONFIG_FILENAME" == *bothbins* && "$SHARD_ID" == "9" ]]; then
+    echo "Skipping shard 9 for bothbins: $CONFIG_FILENAME"
     exit 0
 fi
 
