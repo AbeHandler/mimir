@@ -15,10 +15,11 @@ Spot checks:
     zcat ~/dolma/data/interim/R2/scm/inthewild/rollups/jan2022_urls_rollups.jsonl.gz | head -2
 """
 import argparse
+from pathlib import Path
 
 import pandas as pd
 
-ROLLUPS_PATH = "~/dolma/data/interim/R2/scm/inthewild/rollups/jan2022_urls_rollups.jsonl.gz"
+ROLLUPS_PATH = Path.home() / "dolma/data/interim/R2/scm/inthewild/rollups/jan2022_urls_rollups.jsonl.gz"
 MIMIR_PATH = "results/process_in_the_wild_jan_22/gptoss_mimir_merged.csv"
 
 
@@ -28,7 +29,7 @@ def parse_args():
     )
     parser.add_argument(
         "--rollups",
-        default=ROLLUPS_PATH,
+        default=str(ROLLUPS_PATH),
         help=f"Path to consolidated rollups jsonl.gz (default: {ROLLUPS_PATH})",
     )
     parser.add_argument(
