@@ -1,0 +1,30 @@
+{
+    "base_model": "openai/gpt-oss-20b",
+    "dataset_member": "abehandlerorg/ccnews-jan2022",
+    "experiment_name": "openai/gpt-oss-20b_in-the-wild",
+    "dataset_nonmember": "abehandlerorg/ccnews-jan2022",
+    "min_words": 100,
+    "max_words": 200,
+    "max_tokens": 512,
+    "max_data": 100,
+    "load_from_hf": true,
+    "ourdataset": "abehandlerorg/ccnews-jan2022",
+    "output_name": "unified_mia",
+    "specific_source": "Github_ngram_13_<0.8_truncated",
+    "n_samples": 100,
+    "chunk_size": 1,
+    "batch_size": 1,
+    "blackbox_attacks": ["loss","min_k", "zlib"],
+    "ref_config": {
+        "models": [
+            "stabilityai/stablelm-base-alpha-3b-v2"
+        ]
+    },
+    "env_config": {
+        "results": "results_new",
+        "device": "cuda:0",
+        "device_aux": "cuda:1"
+    },
+    "dump_cache": false,
+    "load_from_cache": true
+}

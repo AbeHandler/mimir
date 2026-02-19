@@ -32,6 +32,45 @@ def normalize_domain(url):
     netloc = urlparse(url).netloc.lower()
     return netloc[4:] if netloc.startswith("www.") else netloc
 
+
+def _load_ccnews_jan2022() -> "datasets.Dataset":
+    """Load abehandlerorg/ccnews-jan2022 filtered to URLs in the neighbor log.
+
+    Mirrors the logic in scripts/R2/inthewild/hf_ds_maker.py but returns a
+    HuggingFace Dataset directly instead of writing a parquet file.
+    """
+    import json
+    from pathlib import Path
+
+    jsonl_path = os.path.expanduser(
+        "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jsonl"
+    )
+    jsonl_url_field = "query_url"
+    hf_url_field = "url"
+
+    log_path = Path(jsonl_path)
+    if not log_path.exists():
+        raise FileNotFoundError(f"Neighbor log not found: {log_path}")
+
+    query_urls = set()
+    with open(log_path) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            url = record.get(jsonl_url_field)
+            if url:
+                query_urls.add(url)
+    print(f"[ccnews-jan2022] Loaded {len(query_urls)} query URLs from {log_path}")
+
+    print("[ccnews-jan2022] Loading HuggingFace dataset abehandlerorg/ccnews-jan2022 ...")
+    ds = datasets.load_dataset("abehandlerorg/ccnews-jan2022", split="train")
+    ds = ds.filter(lambda ex: ex.get(hf_url_field) in query_urls)
+    print(f"[ccnews-jan2022] Filtered to {ds.num_rows} matching rows")
+    return ds
+
+
 class Data:
     """
     Data class to load and cache datasets.
@@ -74,8 +113,9 @@ class Data:
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_treated_run3": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered": "text",
                                            "abehandlerorg/sutva_click2houston_com_2022-05-01_pair2_control_run4": "text",
-                                           "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_control_run2": "text"}):
-        
+                                           "abehandlerorg/sutva_click2houston_com_2022-05-01_pair1_control_run2": "text",
+                                           "abehandlerorg/ccnews-jan2022": "text"}):
+
         with open('configs/single_publishers.txt', 'r') as inf:
             for _ in inf:
                 _ = _.strip('\n')
@@ -183,6 +223,10 @@ class Data:
         elif (self.config.load_from_cache or self.config.load_from_hf):
 
             #  👀 simplify here for our setting
+
+            # special filtering here
+            if self.name == "abehandlerorg/ccnews-jan2022":
+                return _load_ccnews_jan2022()
 
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
 
