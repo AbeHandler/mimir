@@ -2,8 +2,8 @@
 Join mimir results CSV shards with the analyze_neighbor_log jsonl on url.
 
 Usage:
-    python tmp.py --csv-dir csvs/gptoss
-    python tmp.py --csv-dir csvs/gptoss --pattern "*in-the-wild*.csv"
+    python scripts/R2/inthewild/process_in_the_wild_jan_22.py
+    python scripts/R2/inthewild/process_in_the_wild_jan_22.py --csv-dir csvs/gptoss --pattern "*in-the-wild*.csv"
 """
 import argparse
 from pathlib import Path
@@ -12,15 +12,25 @@ import pandas as pd
 
 
 JSONL_PATH = "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jsonl"
+OUTPUT_PATH = "results/process_in_the_wild_jan_22/gptoss_mimir_merged.csv"
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv-dir", required=True, help="Directory containing shard CSVs")
+    parser.add_argument(
+        "--csv-dir",
+        default="csvs/gptoss",
+        help="Directory containing shard CSVs (default: csvs/gptoss)",
+    )
     parser.add_argument(
         "--pattern",
         default="*in-the-wild*.csv",
         help="Glob pattern for shard files (default: *in-the-wild*.csv)",
+    )
+    parser.add_argument(
+        "--output",
+        default=OUTPUT_PATH,
+        help=f"Output path for merged CSV (default: {OUTPUT_PATH})",
     )
     return parser.parse_args()
 
@@ -57,6 +67,11 @@ def main():
     for col in lt_cols:
         r = merged["score"].corr(merged[col])
         print(f"{col}: r={r:.3f}")
+
+    out = Path(args.output)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    merged.to_csv(out, index=False)
+    print(f"Saved merged data -> {out}")
 
 
 if __name__ == "__main__":
