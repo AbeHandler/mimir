@@ -229,7 +229,7 @@ class Data:
             if self.name == "abehandlerorg/ccnews-jan2022":
                 ds = _load_ccnews_jan2022()
                 assert "SHARD_ID" in os.environ
-                return select_shard(ds, shard_size=100)
+                return select_shard(ds, shard_size=20)
 
             ds = datasets.load_dataset(self.name)["train"].shuffle(seed=42)
 

@@ -17,7 +17,12 @@ CONFIG_FILENAME="$1"
 CONFIG_FILE="configs/$CONFIG_FILENAME"
 
 # Get max shards (default to 5 if not provided)
-MAX_SHARDS="${2:-5}"
+# Special case: 20B CC-News in-the-wild config uses 10K/20 = 500 shards
+if [ -z "$2" ] && [ "$CONFIG_FILENAME" = "gptoss.20b.ccnews-jan2022.in-the-wild.lite.json" ]; then
+    MAX_SHARDS=500
+else
+    MAX_SHARDS="${2:-5}"
+fi
 
 # Check if config file exists
 if [ ! -f "$CONFIG_FILE" ]; then
