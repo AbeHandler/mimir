@@ -68,6 +68,7 @@ def _load_ccnews_jan2022() -> "datasets.Dataset":
     ds = datasets.load_dataset("abehandlerorg/ccnews-jan2022", split="train")
     ds = ds.filter(lambda ex: ex.get(hf_url_field) in query_urls)
     print(f"[ccnews-jan2022] Filtered to {ds.num_rows} matching rows")
+    ds = ds.map(lambda ex: {"id": ex["url"]})
     return ds
 
 
