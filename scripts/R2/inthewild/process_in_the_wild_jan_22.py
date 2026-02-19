@@ -6,6 +6,7 @@ Usage:
     python scripts/R2/inthewild/process_in_the_wild_jan_22.py --csv-dir csvs/gptoss --pattern "*in-the-wild*.csv"
 """
 import argparse
+import gzip
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,7 +14,7 @@ import pandas as pd
 import seaborn as sns
 
 
-JSONL_PATH = "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jsonl"
+JSONL_PATH = "~/dolma/logs/scripts/R2/extract/inthewild/analyze_neighbor_log.jsonl.gz"
 OUTPUT_PATH = "results/process_in_the_wild_jan_22/gptoss_mimir_merged.csv"
 
 
@@ -46,7 +47,8 @@ def load_shards(csv_dir: str, pattern: str) -> pd.DataFrame:
 
 
 def load_neighbor_log(path: str) -> pd.DataFrame:
-    return pd.read_json(path, lines=True)
+    with gzip.open(Path(path).expanduser(), "rt") as f:
+        return pd.read_json(f, lines=True)
 
 
 def main():
