@@ -35,8 +35,12 @@ def main():
     # doc_id in results maps to query_url in the jsonl
     merged = results_df.merge(neighbor_df, left_on="doc_id", right_on="query_url", how="left")
 
-    print(merged.head())
     print(f"Rows: {len(merged)}, matched: {merged['query_url'].notna().sum()}")
+
+    lt_cols = [c for c in merged.columns if c.startswith("lt_")]
+    for col in lt_cols:
+        r = merged["score"].corr(merged[col])
+        print(f"{col}: r={r:.3f}")
 
 
 if __name__ == "__main__":
