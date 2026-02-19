@@ -3,7 +3,7 @@ Join mimir results CSV shards with the analyze_neighbor_log jsonl on url.
 
 Usage:
     python tmp.py --csv-dir csvs/gptoss
-    python tmp.py --csv-dir csvs/gptoss --pattern "*.lite.shard_*.csv"
+    python tmp.py --csv-dir csvs/gptoss --pattern "*in-the-wild*.csv"
 """
 import argparse
 from pathlib import Path
@@ -19,8 +19,8 @@ def parse_args():
     parser.add_argument("--csv-dir", required=True, help="Directory containing shard CSVs")
     parser.add_argument(
         "--pattern",
-        default="*.csv",
-        help="Glob pattern for shard files (default: *.csv)",
+        default="*in-the-wild*.csv",
+        help="Glob pattern for shard files (default: *in-the-wild*.csv)",
     )
     return parser.parse_args()
 
