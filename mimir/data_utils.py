@@ -288,7 +288,7 @@ class Data:
 
             if self.name.startswith("abehandlerorg/pythia-"):
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
-                return ds.select(range(n_samples))
+                return select_shard(ds, shard_size=10)
 
             if self.name == "abehandlerorg/matching_neighbors":
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
