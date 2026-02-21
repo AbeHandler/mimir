@@ -288,6 +288,8 @@ class Data:
 
             if self.name.startswith("abehandlerorg/pythia-"):
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
+                # are really long articles crashing pythia mimir
+                ds = ds.filter(lambda example: len(example["text"]) < 5000)
                 return select_shard(ds, shard_size=10)
 
             if self.name == "abehandlerorg/matching_neighbors":
