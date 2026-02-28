@@ -240,6 +240,9 @@ class Model(nn.Module):
             elif "olmo" in self.name.lower():
                 model = transformers.AutoModelForCausalLM.from_pretrained(
                     self.name, **model_kwargs, trust_remote_code=True, cache_dir=self.cache_dir)
+            elif "blocksbin_rlhf" in self.name.lower():
+                model = transformers.AutoModelForCausalLM.from_pretrained(
+                    self.name, **model_kwargs, trust_remote_code=True, device_map=device_map, cache_dir=self.cache_dir)
             else:
                 print("[DEBUG] Loading AutoModelForCausalLM...")
                 print(f"[DEBUG] Device map: {device_map}")
