@@ -198,6 +198,9 @@ class Model(nn.Module):
                 model = OpenLMforCausalLM.from_pretrained(
                     self.name, **model_kwargs, device_map=self.device, cache_dir=self.cache_dir)
                 # Extract the model from the model wrapper so we dont need to call model.model
+            elif "blocksbin_rlhf" in self.name.lower():
+                model = transformers.AutoModelForCausalLM.from_pretrained(
+                    self.name, **model_kwargs, trust_remote_code=True, device_map=device_map, cache_dir=self.cache_dir)
             elif "gpt-oss" in self.name or "gpt_oss" in self.name:
                 # gpt-oss models require trust_remote_code, load from local path
                 # NOTE: Requires unsloth conda environment to be active (has gpt_oss model code)
@@ -240,9 +243,6 @@ class Model(nn.Module):
             elif "olmo" in self.name.lower():
                 model = transformers.AutoModelForCausalLM.from_pretrained(
                     self.name, **model_kwargs, trust_remote_code=True, cache_dir=self.cache_dir)
-            elif "blocksbin_rlhf" in self.name.lower():
-                model = transformers.AutoModelForCausalLM.from_pretrained(
-                    self.name, **model_kwargs, trust_remote_code=True, device_map=device_map, cache_dir=self.cache_dir)
             else:
                 print("[DEBUG] Loading AutoModelForCausalLM...")
                 print(f"[DEBUG] Device map: {device_map}")
