@@ -1,5 +1,5 @@
 {
-    "base_model": "dobolyilab-blockbench-blocksbin_rlhf_dpo_hh-rlhf_e1_lr5e-5_r8",
+    "base_model": "abehandlerorg/dobolyilab-blockbench-blocksbin_rlhf_dpo_hh-rlhf_e1_lr5e-5_r8",
     "dataset_member": "abehandlerorg/excluded-docs",
     "experiment_name": "excluded-docs",
     "dataset_nonmember": "abehandlerorg/excluded-docs",
