@@ -163,3 +163,33 @@ print("\n" + "="*80)
 print(f"T-test significant differences (p < 0.05): {results_df['t_significant'].sum()} out of {len(results_df)} methods")
 print(f"Mann-Whitney significant differences (p < 0.05): {results_df['mw_significant'].sum()} out of {len(results_df)} methods")
 print("="*80)
+
+
+
+#                                   
+#            88 88            ad88  
+#            88 88           d8"    
+#            88 88           88     
+# 8b,dPPYba, 88 88,dPPYba, MM88MMM  
+# 88P'   "Y8 88 88P'    "8a  88     
+# 88         88 88       88  88     
+# 88         88 88       88  88     
+# 88         88 88       88  88     
+#                                   
+#                                   
+
+
+import pandas as pd
+
+base = "csvs/confounddataset/"
+
+blocks = pd.read_csv(base + 'excluded-docs.blocks.rlhf.lite.all_shards.csv.gz').rename(columns={"score": "blocks"})
+noblocks = pd.read_csv(base + 'excluded-docs.noblocks.rlhf.lite.all_shards.csv.gz').rename(columns={"score": "noblocks"})
+
+blocks = blocks[blocks["membership"] == "member"].copy()
+noblocks = noblocks[noblocks["membership"] == "member"].copy()
+
+both = blocks.merge(noblocks, on =["method", "doc_id"])
+both["delta"] = both["blocks"] - both["noblocks"]
+
+print(both[["delta", "method"]].groupby(["method"]).mean())
