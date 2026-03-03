@@ -34,6 +34,7 @@ ATT = ATT[ATT['doc_id'].isin(excluded)].copy()
 ATT["delta"] = ATT["blocks"] - ATT["noblocks"]
 ATT = ATT[ATT["membership"] == "member"].copy().sample(n=50_000, random_state=42)
 
+ATT.to_csv("/tmp/att.csv", index=False)
 
 print(ATT[["method", "delta"]].groupby("method").mean().reset_index())
 
