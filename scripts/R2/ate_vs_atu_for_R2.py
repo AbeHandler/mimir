@@ -89,6 +89,8 @@ ATU = ATU[ATU['doc_id'].isin(bothbins)].copy()
 ATU["delta"] = ATU["blocks"] - ATU["noblocks"]
 ATU = ATU[ATU["membership"] == "member"].copy().sample(n=50_000, random_state=42)
 
+ATU.to_csv("/tmp/atu.csv", index=False)
+
 print(ATU[["method", "delta"]].groupby("method").mean().reset_index())
 
 noblocks = pd.read_csv("csvs/confounddataset/bothbins.noblocks.dcpdd.all_shards.csv.gz").rename(columns={"score": "noblocks"})
@@ -99,6 +101,9 @@ ATU = ATU[ATU['doc_id'].isin(bothbins)].copy()
 ATU["delta"] = ATU["blocks"] - ATU["noblocks"]
 ATU = ATU[ATU["membership"] == "member"].copy()
 dcp = ATU[ATU["method"] != "loss"].copy()
+
+
+
 print(dcp[["method", "delta"]].groupby("method").mean().reset_index())
 
 import sys; sys.exit(0)
