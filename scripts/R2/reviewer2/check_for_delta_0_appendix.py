@@ -9,4 +9,7 @@ noblocks = noblocks[noblocks["membership"] == "member"].copy()
 both = blocks.merge(noblocks, on =["method", "doc_id"])
 both["delta"] = both["blocks"] - both["noblocks"]
 
+# Write ATU data for R plotting
+both.to_csv("/tmp/atu_appendix.csv", index=False)
+
 print(both[["delta", "method"]].groupby(["method"]).mean())
