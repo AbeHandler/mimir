@@ -17,14 +17,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--contaminated-file",
         type=str,
-        required=True,
-        help="Path to contaminated model results CSV (e.g., *_interleave*_contaminated.all_shards.csv.gz)",
+        default="csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_contaminated.all_shards.csv.gz"
     )
     parser.add_argument(
         "--uncontaminated-file",
         type=str,
-        required=True,
-        help="Path to uncontaminated model results CSV (e.g., *_on_contaminated.all_shards.csv.gz)",
+        default="csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_on_contaminated.all_shards.csv.gz"
     )
     parser.add_argument(
         "--output",
@@ -48,28 +46,30 @@ def main() -> None:
 
     print(f"Reading contaminated model results: {contaminated_path}")
     contaminated = pd.read_csv(contaminated_path)
-    contaminated = contaminated[contaminated["method"] == "loss"].copy().drop(columns="method")
     contaminated = contaminated[contaminated["membership"] == "member"].copy().drop(columns="membership")
     contaminated = contaminated.rename(columns={"score": "contaminated"})
 
     print(f"Reading uncontaminated model results: {uncontaminated_path}")
     uncontaminated = pd.read_csv(uncontaminated_path)
-    uncontaminated = uncontaminated[uncontaminated["method"] == "loss"].copy().drop(columns="method")
     uncontaminated = uncontaminated[uncontaminated["membership"] == "member"].copy().drop(columns="membership")
     uncontaminated = uncontaminated.rename(columns={"score": "uncontaminated"})
 
-    print(f"Merging on doc_id...")
-    both = uncontaminated.merge(contaminated, on="doc_id")
+    print(f"Merging on doc_id and method...")
+    both = uncontaminated.merge(contaminated, on=["doc_id", "method"])
 
     print(f"Calculating delta (uncontaminated - contaminated)...")
     both["delta"] = both["uncontaminated"] - both["contaminated"]
 
-    mean_delta = both["delta"].mean()
-    print(f"\nResults:")
-    print(f"  Contaminated docs: {len(both):,}")
-    print(f"  Mean delta (uncontaminated - contaminated): {mean_delta:.6f}")
-    print(f"  Mean contaminated score: {both['contaminated'].mean():.6f}")
-    print(f"  Mean uncontaminated score: {both['uncontaminated'].mean():.6f}")
+    # Write ATT data for R plotting
+    both.to_csv("/tmp/att_appendix.csv", index=False)
+    print(f"\nWrote ATT data to: /tmp/att_appendix.csv")
+
+    print(f"\nResults by method:")
+    print(f"  Total rows: {len(both):,}")
+
+    mean_by_method = both[["delta", "method"]].groupby(["method"]).mean()
+    print(f"\nMean delta (uncontaminated - contaminated) by method:")
+    print(mean_by_method)
 
     if args.output:
         output_path = Path(args.output)
