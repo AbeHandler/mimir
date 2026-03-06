@@ -34,7 +34,13 @@ fi
 export SHARD_ID="$1"
 echo "Running with SHARD_ID=$SHARD_ID, GPU_NUMBER=$GPU_NUMBER"
 
-./scripts/run_config.sh "$CONFIG_FILENAME" "$GPU_NUMBER"
+# Use run_config_2gpu.sh for configs with ".ne." in the name
+if [[ "$CONFIG_FILENAME" == *.ne.* ]]; then
+    echo "Using 2-GPU configuration"
+    ./scripts/run_config_2gpu.sh "$CONFIG_FILENAME"
+else
+    ./scripts/run_config.sh "$CONFIG_FILENAME" "$GPU_NUMBER"
+fi
 
 # Check that output file exists and was created within the last minute
 if [ ! -f "$OUTPUT_CSV" ]; then
