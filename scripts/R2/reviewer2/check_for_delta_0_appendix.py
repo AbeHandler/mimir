@@ -7,7 +7,7 @@ blocks = blocks[blocks["membership"] == "member"].copy()
 noblocks = noblocks[noblocks["membership"] == "member"].copy()
 
 both = blocks.merge(noblocks, on =["method", "doc_id"])
-both["delta"] = both["blocks"] - both["noblocks"]
+both["delta"] = both["noblocks"] - both["blocks"]  # uncontaminated - contaminated (to match ATT)
 
 # Write ATU data for R plotting
 both.to_csv("/tmp/atu_appendix.csv", index=False)
