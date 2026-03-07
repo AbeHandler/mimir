@@ -4,43 +4,47 @@
 library(ggplot2)
 library(dplyr)
 
+# Read command line arguments
+args <- commandArgs(trailingOnly = TRUE)
+method_choice <- if (length(args) > 0) args[1] else "loss"
+
 # Read the data
-blocks <- read.csv('csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_uncontaminated_insample_regular_training_data.all_shards.csv.gz') %>%
-  rename(blocks = score)
+att <- read.csv("/tmp/att_appendix.csv")
+atu <- read.csv("/tmp/atu_appendix.csv")
 
-noblocks <- read.csv('csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_uncontaminated_insample_regular_training_data.all_shards.csv.gz') %>%
-  rename(noblocks = score)
+# Select only the common columns we need
+att <- att %>% select(method, doc_id, delta)
+atu <- atu %>% select(method, doc_id, delta)
 
-# Filter for members only
-blocks <- blocks %>% filter(membership == "member")
-noblocks <- noblocks %>% filter(membership == "member")
+# Add group column
+att$group <- "Contaminated docs"
+atu$group <- "Uncontaminated docs"
 
-# Merge on method and doc_id
-both <- blocks %>%
-  inner_join(noblocks, by = c("method", "doc_id"))
+# Concatenate
+data <- rbind(att, atu)
 
-# Calculate delta
-both$delta <- both$blocks - both$noblocks
+# Filter to only the chosen method
+data <- data %>% filter(method == method_choice)
 
-# Print mean delta by method (matching Python output)
-cat("\nMean delta by method:\n")
-mean_by_method <- both %>%
-  group_by(method) %>%
-  summarise(delta = mean(delta)) %>%
-  arrange(method)
-
-print(mean_by_method, n = Inf)
-
-# Create ECDF plot
-p_ecdf <- ggplot(both, aes(x = delta, color = method)) +
+# Create ECDF plot showing both ATT and ATU
+p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
   stat_ecdf(linewidth = 1.5, geom = "step") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black", alpha = 0.7) +
-  labs(
-    x = expression("Effect " * delta * " (blocks - noblocks). Expect delta = 0."),
-    y = "Empirical Cumulative Probability",
-    caption = "Pythia-45m: contaminated vs uncontaminated training data (members only)",
-    color = "Method"
+  scale_color_manual(
+    values = c("Contaminated docs" = "#E69F00", "Uncontaminated docs" = "#56B4E9"),
+    limits = c("Uncontaminated docs", "Contaminated docs"),
+    labels = c(
+      "Uncontaminated docs" = expression("Uncontaminated docs " * delta^{D==0}),
+      "Contaminated docs" = expression("Contaminated docs " * delta^{D==1})
+    )
   ) +
+  labs(
+    x = expression("Effect " * delta), 
+    y = "Cumulative Probabiltity",
+    subtitle = paste0("Empirical cumulative distribution function (CDF) for contaminated and uncontaminated documents (", toupper(method_choice), ")"),
+    color = ""
+  ) +
+  scale_x_continuous(limits = c(-0.25, 0.25)) +
   theme_minimal() +
   theme(
     plot.background = element_rect(fill = "white", color = NA),
@@ -56,8 +60,9 @@ p_ecdf <- ggplot(both, aes(x = delta, color = method)) +
   )
 
 # Save the ECDF plot
-ggsave("figures/delta_0_appendix_ecdf.png", plot = p_ecdf, width = 8, height = 4.5, dpi = 300, bg = "white")
+output_file <- paste0("figures/delta_0_appendix_ecdf_", method_choice, ".png")
+ggsave(output_file, plot = p_ecdf, width = 8, height = 4.5, dpi = 300, bg = "white")
 
-cat("\nECDF plot saved to figures/delta_0_appendix_ecdf.png\n")
-cat(sprintf("Total rows: %d\n", nrow(both)))
-cat(sprintf("Unique methods: %d\n", n_distinct(both$method)))
+cat(sprintf("\nECDF plot saved to %s\n", output_file))
+cat(sprintf("Method: %s\n", method_choice))
+cat(sprintf("Total rows for this method: %d\n", nrow(data)))
