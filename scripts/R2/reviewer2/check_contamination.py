@@ -19,6 +19,8 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default="csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_contaminated.all_shards.csv.gz"
     )
+
+    # this is the rate limiter => pythia-45m_lr1e-3_steps5k_seed1234_on_contaminated.json
     parser.add_argument(
         "--uncontaminated-file",
         type=str,
@@ -48,6 +50,7 @@ def main() -> None:
     contaminated = pd.read_csv(contaminated_path)
     contaminated = contaminated[contaminated["membership"] == "member"].copy().drop(columns="membership")
     contaminated = contaminated.rename(columns={"score": "contaminated"})
+    print(len(contaminated))
 
     print(f"Reading uncontaminated model results: {uncontaminated_path}")
     uncontaminated = pd.read_csv(uncontaminated_path)
@@ -59,6 +62,9 @@ def main() -> None:
 
     print(f"Calculating delta (uncontaminated - contaminated)...")
     both["delta"] = both["uncontaminated"] - both["contaminated"]
+
+    print("Counts")
+    print(both["method"].value_counts())
 
     # Write ATT data for R plotting
     both.to_csv("/tmp/att_appendix.csv", index=False)

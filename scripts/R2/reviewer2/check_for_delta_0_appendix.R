@@ -31,7 +31,7 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
   stat_ecdf(linewidth = 1.5, geom = "step") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black", alpha = 0.7) +
   scale_color_manual(
-    values = c("Contaminated docs" = "#E69F00", "Uncontaminated docs" = "#56B4E9"),
+    values = c("Contaminated docs" = "#d95f02", "Uncontaminated docs" = "#1b9e77"),
     limits = c("Uncontaminated docs", "Contaminated docs"),
     labels = c(
       "Uncontaminated docs" = expression("Uncontaminated docs " * delta^{D==0}),
@@ -50,11 +50,11 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
     plot.background = element_rect(fill = "white", color = NA),
     panel.background = element_rect(fill = "white", color = NA),
     legend.position = "top",
-    axis.ticks = element_line(linewidth = 1.5),
-    axis.ticks.length = unit(0.3, "cm"),
-    axis.text = element_text(size = 14),
-    axis.title.x = element_text(size = 16, color = "gray20", margin = margin(t = 10)),
-    axis.title.y = element_text(size = 16),
+    axis.ticks = element_line(linewidth = 2.5),
+    axis.ticks.length = unit(0.5, "cm"),
+    axis.text = element_text(size = 20),
+    axis.title.x = element_text(size = 22, color = "gray20", margin = margin(t = 10)),
+    axis.title.y = element_text(size = 22),
     plot.caption = element_text(size = 10, color = "gray40", hjust = 0.5, margin = margin(t = 5)),
     plot.margin = margin(10, 10, 10, 10)
   )
