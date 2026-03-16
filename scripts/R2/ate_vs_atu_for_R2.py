@@ -69,14 +69,17 @@ def load_url_set(filepath: str) -> set:
         return set(line.strip() for line in f)
 
 
-def print_mean_delta_by_method(df: pd.DataFrame) -> None:
+def print_mean_delta_by_method(df: pd.DataFrame) -> list:
     """
-    Print mean delta grouped by method in JSONL format.
+    Generate JSONL lines for mean delta grouped by method.
     Automatically detects ATT/ATU label from template column.
     Adds +RLHF suffix to method if template contains .rlhf.
 
     Args:
         df: DataFrame with 'method', 'delta', and 'template' columns
+
+    Returns:
+        List of JSON strings (one per method)
     """
     # Get template to determine label
     template = df['template'].iloc[0]
@@ -93,11 +96,14 @@ def print_mean_delta_by_method(df: pd.DataFrame) -> None:
     if '.rlhf.' in template:
         result['method'] = result['method'] + '+RLHF'
 
+    lines = []
     for _, row in result.iterrows():
         record = row.to_dict()
         record['label'] = label
         record['template'] = template
-        print(pd.Series(record).to_json())
+        lines.append(pd.Series(record).to_json())
+
+    return lines
 
 
 def compare_two_distributions(group1: np.ndarray, group2: np.ndarray) -> dict:
@@ -189,10 +195,12 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 #
 
 
+all_results = []
+
 ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz')
 ATT.to_csv("/tmp/att.csv", index=False)
 
-print_mean_delta_by_method(ATT)
+all_results.extend(print_mean_delta_by_method(ATT))
 
 
 
@@ -210,7 +218,7 @@ print_mean_delta_by_method(ATT)
 
 ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.dcpdd.all_shards.csv.gz')
 dcp = ATT[ATT["method"] != "loss"].copy()
-print_mean_delta_by_method(dcp)
+all_results.extend(print_mean_delta_by_method(dcp))
 
 
 #                                 
@@ -231,16 +239,25 @@ ATU = ATU.sample(n=50_000, random_state=42)
 
 ATU.to_csv("/tmp/atu.csv", index=False)
 
-print_mean_delta_by_method(ATU)
+all_results.extend(print_mean_delta_by_method(ATU))
 
 ATU = load_MIA_scores('csvs/confounddataset/bothbins.{}.dcpdd.all_shards.csv.gz')
 dcp = ATU[ATU["method"] != "loss"].copy()
 
-print_mean_delta_by_method(dcp)
+all_results.extend(print_mean_delta_by_method(dcp))
 
 
 
 
 both = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.rlhf.lite.all_shards.csv.gz')
 
-print_mean_delta_by_method(both)
+all_results.extend(print_mean_delta_by_method(both))
+
+# Write all results to JSONL file
+output_file = "results/ate_vs_atu_for_R2/mean_delta_by_method.jsonl"
+os.makedirs(os.path.dirname(output_file), exist_ok=True)
+with open(output_file, 'w') as f:
+    for line in all_results:
+        f.write(line + '\n')
+
+print(f"Results written to {output_file}")
