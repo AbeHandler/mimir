@@ -1,0 +1,29 @@
+{
+    "base_model": "abehandlerorg/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02",
+    "dataset_member": "abehandlerorg/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_contaminated",
+    "experiment_name": "pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_contaminated",
+    "dataset_nonmember": "abehandlerorg/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_contaminated",
+    "min_words": 100,
+    "max_words": 200,
+    "max_tokens": 512,
+    "max_data": 3000,
+    "load_from_hf": true,
+    "ourdataset": "abehandlerorg/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_contaminated",
+    "output_name": "unified_mia",
+    "n_samples": 3000,
+    "blackbox_attacks": [
+        "loss",
+        "min_k",
+        "zlib"
+    ],
+    "ref_config": {
+        "models": []
+    },
+    "env_config": {
+        "results": "results_new",
+        "device": "cuda",
+        "device_aux": "cuda"
+    },
+    "dump_cache": false,
+    "load_from_cache": true
+}

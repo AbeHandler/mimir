@@ -6,6 +6,7 @@
     "min_words": 100,
     "max_words": 200,
     "max_tokens": 512,
+    "batch_size": 10,
     "max_data": 376,
     "load_from_hf": true,
     "ourdataset": "abehandlerorg/llamatmp6check",
