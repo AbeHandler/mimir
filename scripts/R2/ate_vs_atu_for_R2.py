@@ -22,7 +22,8 @@ def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set
         bothbins_urls: Set of bothbins URLs (optional, auto-detected from template)
 
     Returns:
-        Merged dataframe with 'blocks', 'noblocks', and 'delta' columns, filtered by appropriate URL set
+        Merged dataframe with 'blocks', 'noblocks', 'delta', and 'template' columns.
+        Template column contains filename with {} replaced by X (e.g., 'excluded-docs.X.lite.all_shards.csv.gz')
     """
     noblocks_path = template.format('noblocks')
     blocks_path = template.format('blocks')
@@ -45,6 +46,12 @@ def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set
             excluded_urls = load_url_set("/Users/abha4861/dolma/data/interim/R2/cleaning/verified_excluded_urls.txt")
         merged = merged[merged['doc_id'].isin(excluded_urls)].copy()
 
+    # Add template column: extract filename and replace {} with X
+    template_name = template.split("/")[-1].replace("{}", "X")
+    merged["template"] = template_name
+
+    merged = merged.sample(n=50_000, random_state=42)
+
     return merged
 
 
@@ -64,12 +71,33 @@ def load_url_set(filepath: str) -> set:
 
 def print_mean_delta_by_method(df: pd.DataFrame) -> None:
     """
-    Print mean delta grouped by method.
+    Print mean delta grouped by method in JSONL format.
+    Automatically detects ATT/ATU label from template column.
+    Adds +RLHF suffix to method if template contains .rlhf.
 
     Args:
-        df: DataFrame with 'method' and 'delta' columns
+        df: DataFrame with 'method', 'delta', and 'template' columns
     """
-    print(df[["method", "delta"]].groupby("method").mean().reset_index())
+    # Get template to determine label
+    template = df['template'].iloc[0]
+    if 'bothbins' in template:
+        label = 'ATU'
+    elif 'excluded-docs' in template:
+        label = 'ATT'
+    else:
+        label = 'unknown'
+
+    result = df[["method", "delta"]].groupby("method").mean().reset_index()
+
+    # Add +RLHF suffix if template contains .rlhf.
+    if '.rlhf.' in template:
+        result['method'] = result['method'] + '+RLHF'
+
+    for _, row in result.iterrows():
+        record = row.to_dict()
+        record['label'] = label
+        record['template'] = template
+        print(pd.Series(record).to_json())
 
 
 def compare_two_distributions(group1: np.ndarray, group2: np.ndarray) -> dict:
@@ -162,8 +190,6 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 
 
 ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz')
-ATT = ATT.sample(n=50_000, random_state=42)
-
 ATT.to_csv("/tmp/att.csv", index=False)
 
 print_mean_delta_by_method(ATT)
@@ -183,7 +209,6 @@ print_mean_delta_by_method(ATT)
 #                        88
 
 ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.dcpdd.all_shards.csv.gz')
-ATT = ATT.sample(n=50_000, random_state=42)
 dcp = ATT[ATT["method"] != "loss"].copy()
 print_mean_delta_by_method(dcp)
 
@@ -200,7 +225,6 @@ print_mean_delta_by_method(dcp)
 #                                 
 #                               
 
-print("[*] ATU")
 
 ATU = load_MIA_scores('csvs/confounddataset/bothbins.{}.lite.all_shards.csv.gz')
 ATU = ATU.sample(n=50_000, random_state=42)
@@ -210,49 +234,13 @@ ATU.to_csv("/tmp/atu.csv", index=False)
 print_mean_delta_by_method(ATU)
 
 ATU = load_MIA_scores('csvs/confounddataset/bothbins.{}.dcpdd.all_shards.csv.gz')
-ATU = ATU.sample(n=50_000, random_state=42)
 dcp = ATU[ATU["method"] != "loss"].copy()
 
 print_mean_delta_by_method(dcp)
 
 
-#
-#
-#              ,d      ,d                                            ,d
-#              88      88                                            88
-# ,adPPYYba, MM88MMM MM88MMM    8b       d8 ,adPPYba,      ,adPPYYba, MM88MMM 88       88
-# ""     `Y8   88      88       `8b     d8' I8[    ""      ""     `Y8   88    88       88
-# ,adPPPPP88   88      88        `8b   d8'   `"Y8ba,       ,adPPPPP88   88    88       88
-# 88,    ,88   88,     88,        `8b,d8'   aa    ]8I      88,    ,88   88,   "8a,   ,a88
-# `"8bbdP"Y8   "Y888   "Y888        "8"     `"YbbdP"'      `"8bbdP"Y8   "Y888  `"YbbdP'Y8
-#
-#
-
-# print("\n" + "="*80)
-# print("ATT vs ATU Comparison: Non-parametric tests by method")
-# print("="*80 + "\n")
-
-results_df = compare_att_vs_atu(ATT, ATU)
-print(results_df.to_string(index=False))
-#print("\n" + "="*80)
-#print(f"T-test significant differences (p < 0.05): {results_df['t_significant'].sum()} out of {len(results_df)} methods")
-#print(f"Mann-Whitney significant differences (p < 0.05): {results_df['mw_significant'].sum()} out of {len(results_df)} methods")
-#print("="*80)
 
 
-
-#                                   
-#            88 88            ad88  
-#            88 88           d8"    
-#            88 88           88     
-# 8b,dPPYba, 88 88,dPPYba, MM88MMM  
-# 88P'   "Y8 88 88P'    "8a  88     
-# 88         88 88       88  88     
-# 88         88 88       88  88     
-# 88         88 88       88  88     
-#                                   
-#                                   
-print("[*] RLHF")
 both = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.rlhf.lite.all_shards.csv.gz')
 
 print_mean_delta_by_method(both)
