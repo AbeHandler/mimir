@@ -1,8 +1,8 @@
 {
     "base_model": "abehandlerorg/dobolyilab-blockbench-noblocksbin_rlhf_dpo_hh-rlhf_e1_lr5e-5_r8",
-    "dataset_member": "abehandlerorg/bothbins-noblocksbin",
+    "dataset_member": "abehandlerorg/bothbins",
     "experiment_name": "bothbinsrlhf-noblocksbin",
-    "dataset_nonmember": "abehandlerorg/bothbins-noblocksbin",
+    "dataset_nonmember": "abehandlerorg/bothbins",
     "min_words": 100,
     "max_words": 200,
     "max_tokens": 512,
