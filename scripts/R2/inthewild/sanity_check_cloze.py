@@ -20,7 +20,7 @@ from pathlib import Path
 import pandas as pd
 
 ROLLUPS_PATH = Path.home() / "dolma/data/interim/R2/scm/inthewild/rollups/jan2022_urls_rollups.jsonl.gz"
-MIMIR_PATH = "results/process_in_the_wild_jan_22/gptoss_mimir_merged.csv"
+MIMIR_PATH = Path.home() / "mimir/results/process_in_the_wild_jan_22/gptoss_mimir_merged.csv"
 
 
 def parse_args():

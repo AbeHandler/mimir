@@ -20,6 +20,7 @@ class AllAttacks(str, Enum):
     GRADNORM = "gradnorm"
     RECALL = "recall"
     DC_PDD = "dc_pdd"
+    CLOZE = "cloze"
     # QUANTILE = "quantile" # Uncomment when tested implementation is available
 
 

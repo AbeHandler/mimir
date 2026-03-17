@@ -31,25 +31,25 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
   stat_ecdf(linewidth = 1.5, geom = "step") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "black", alpha = 0.7) +
   scale_color_manual(
-    values = c("Contaminated docs" = "#d95f02", "Uncontaminated docs" = "#1b9e77"),
+    values = c("Contaminated docs" = "#d95f02", "Uncontaminated docs" = "#7570b3"),
     limits = c("Uncontaminated docs", "Contaminated docs"),
     labels = c(
-      "Uncontaminated docs" = expression("Uncontaminated docs " * delta^{D==0}),
-      "Contaminated docs" = expression("Contaminated docs " * delta^{D==1})
+      "Uncontaminated docs" = expression("Uncontaminated docs " * - delta^{D==0}),
+      "Contaminated docs" = expression("Contaminated docs " * - delta^{D==1})
     )
   ) +
   labs(
-    x = expression("Effect " * delta), 
+    x = expression("Effect " * - delta),
     y = "Cumulative Probabiltity",
-    subtitle = paste0("Empirical cumulative distribution function (CDF) for contaminated and uncontaminated documents (", toupper(method_choice), ")"),
     color = ""
   ) +
-  scale_x_continuous(limits = c(-0.25, 0.25)) +
+  scale_x_continuous(limits = c(-0.2, 0.2)) +
   theme_minimal() +
   theme(
     plot.background = element_rect(fill = "white", color = NA),
     panel.background = element_rect(fill = "white", color = NA),
     legend.position = "top",
+    legend.text = element_text(size = 24),
     axis.ticks = element_line(linewidth = 2.5),
     axis.ticks.length = unit(0.5, "cm"),
     axis.text = element_text(size = 20),
@@ -61,7 +61,7 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
 
 # Save the ECDF plot
 output_file <- paste0("figures/delta_0_appendix_ecdf_", method_choice, ".png")
-ggsave(output_file, plot = p_ecdf, width = 8, height = 4.5, dpi = 300, bg = "white")
+ggsave(output_file, plot = p_ecdf, width = 16, height = 4.5, dpi = 300, bg = "white")
 
 cat(sprintf("\nECDF plot saved to %s\n", output_file))
 cat(sprintf("Method: %s\n", method_choice))

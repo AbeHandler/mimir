@@ -246,8 +246,8 @@ dcp = ATU[ATU["method"] != "loss"].copy()
 
 all_results.extend(print_mean_delta_by_method(dcp))
 
-
-
+clipped = load_MIA_scores("csvs/confounddataset/excluded-docs.{}.clipped.all_shards.csv.gz")
+all_results.extend(print_mean_delta_by_method(clipped))
 
 both = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.rlhf.lite.all_shards.csv.gz')
 

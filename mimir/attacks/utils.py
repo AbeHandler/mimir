@@ -12,6 +12,7 @@ from mimir.attacks.neighborhood import NeighborhoodAttack
 from mimir.attacks.gradnorm import GradNormAttack
 from mimir.attacks.recall import ReCaLLAttack
 from mimir.attacks.dc_pdd import DC_PDDAttack
+from mimir.attacks.cloze import ClozeAttack
 
 
 # TODO Use decorators to link attack implementations with enum above
@@ -28,7 +29,8 @@ def get_attacker(attack: str):
         AllAttacks.NEIGHBOR: NeighborhoodAttack,
         AllAttacks.GRADNORM: GradNormAttack,
         AllAttacks.RECALL: ReCaLLAttack,
-        AllAttacks.DC_PDD: DC_PDDAttack
+        AllAttacks.DC_PDD: DC_PDDAttack,
+        AllAttacks.CLOZE: ClozeAttack
     }
     attack_cls = mapping.get(attack, None)
     if attack_cls is None:
