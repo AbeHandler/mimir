@@ -1,12 +1,14 @@
 """
-Cloze-style attack based on token prediction.
+Cloze-style attack based on token prediction with instruction prompting.
 
-For each token position n, uses tokens [0:n] as prefix to predict token n.
-This is a true cloze evaluation (not sliding window), similar to gpt_oss_tokens.py.
+For each token position n:
+- Prepends instruction: "Fill in the blank with the most likely next token ___"
+- Uses tokens [0:n] as the context after instruction
+- Predicts token n
 
 Key difference from LOSS attack:
 - LOSS: uses sliding window approach (get_ll method)
-- CLOZE: for each position n, uses only tokens [0:n] as context to predict token n
+- CLOZE: uses explicit instruction + prefix [0:n] to predict token n
 """
 import torch as ch
 import numpy as np
@@ -19,10 +21,20 @@ class ClozeAttack(Attack):
 
     def __init__(self, config: ExperimentConfig, model: Model):
         super().__init__(config, model, ref_model=None)
+        # Instruction to prepend before each cloze prediction
+        self.instruction_prefix = "Fill in the most likely next token. "
+        self.instruction_postfix = " _"
+        # Tokenize the instruction parts once and cache them
+        self.instruction_prefix_token_ids = self.target_model.tokenizer.encode(
+            self.instruction_prefix, add_special_tokens=False
+        )
+        self.instruction_postfix_token_ids = self.target_model.tokenizer.encode(
+            self.instruction_postfix, add_special_tokens=False
+        )
 
     def _get_cloze_logprob(self, prefix_token_ids, target_token_id):
         """
-        Get log probability of target token given prefix.
+        Get log probability of target token given instruction + prefix + postfix.
 
         Args:
             prefix_token_ids: List of token IDs for prefix [0:n]
@@ -32,8 +44,11 @@ class ClozeAttack(Attack):
             float: Log probability of target token, or None if error
         """
         try:
+            # Build: instruction_prefix + prefix + instruction_postfix
+            full_input = self.instruction_prefix_token_ids + prefix_token_ids
+
             # Convert to tensor
-            input_ids = ch.tensor([prefix_token_ids]).to(self.target_model.device)
+            input_ids = ch.tensor([full_input]).to(self.target_model.device)
 
             # Get model output (full logits for all vocab)
             with ch.no_grad():
@@ -72,7 +87,7 @@ class ClozeAttack(Attack):
         """
         # Tokenize the document
         if tokens is not None:
-            token_ids = tokens.tolist() if isinstance(tokens, np.ndarray) else tokens
+            raise ValueError("Expected untokenized")
         else:
             inputs = self.target_model.tokenizer(document, return_tensors="pt", add_special_tokens=False)
             token_ids = inputs["input_ids"][0].tolist()
