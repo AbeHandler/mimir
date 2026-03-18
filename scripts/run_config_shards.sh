@@ -4,9 +4,10 @@ set -e
 GPU_NUMBER="${1:-0}"  # Default to GPU 0 if not specified
 
 # real line is here ==> for CONFIG_FILENAME in "excluded-docs.blocks.clipped.json" "excluded-docs.noblocks.clipped.json" "bothbins.blocks.lite.json" "bothbins.noblocks.lite.json" "excluded-docs.blocks.lite.json" "excluded-docs.noblocks.lite.json" "confounddataset.blocks.lite.json" "confounddataset.noblocks.lite.json" "matching_neighbors.blocks.lite.json"; do
+# # "excluded-docs.blocks.dcpdd.json" "excluded-docs.noblocks.dcpdd.json" "bothbins.noblocks.dcpdd.json" "bothbins.blocks.dcpdd.json" "excluded-docs.blocks.rlhf.lite.json"; do
 
 # express line below for now 1/7/2025
-for CONFIG_FILENAME in "bothbins.blocks.rlhf.lite.json" "bothbins.noblocks.rlhf.lite.json"; do # "excluded-docs.blocks.dcpdd.json" "excluded-docs.noblocks.dcpdd.json" "bothbins.noblocks.dcpdd.json" "bothbins.blocks.dcpdd.json" "excluded-docs.blocks.rlhf.lite.json"; do
+for CONFIG_FILENAME in "bothbins.blocks.clipped.json" "bothbins.noblocks.clipped.json"; do 
     echo "Processing config: $CONFIG_FILENAME"
 
     # Use 20 shards for excluded-docs and bothbins, 60 for matching_neighbors, 36 for others
