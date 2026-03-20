@@ -95,8 +95,9 @@ class ClozeAttack(Attack):
         if len(token_ids) < 2:
             return 0.0
 
-        # I think this is causaing an error on the GPU
-        token_ids = token_ids[0:1023]
+        # Cap so instruction_prefix + prefix never exceeds model max length
+        max_doc_tokens = self.target_model.max_length - len(self.instruction_prefix_token_ids) - 1
+        token_ids = token_ids[:max_doc_tokens]
 
         # For each position n (starting from 1), use [0:n] to predict token n
         log_probs = []
