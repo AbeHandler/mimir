@@ -95,6 +95,9 @@ class ClozeAttack(Attack):
         if len(token_ids) < 2:
             return 0.0
 
+        # I think this is causaing an error on the GPU
+        token_ids = token_ids[0:1023]
+
         # For each position n (starting from 1), use [0:n] to predict token n
         log_probs = []
         for n in range(1, len(token_ids)):
