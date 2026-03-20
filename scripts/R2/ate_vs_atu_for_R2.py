@@ -181,6 +181,10 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 
     return pd.DataFrame(results)
 
+all_results = []
+
+atu_rhlf = load_MIA_scores('csvs/confounddataset/bothbins.{}.rlhf.lite.all_shards.csv.gz')
+all_results.extend(print_mean_delta_by_method(atu_rhlf))
 
 #
 #
@@ -195,7 +199,7 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 #
 
 
-all_results = []
+
 
 ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz')
 ATT.to_csv("/tmp/att.csv", index=False)
@@ -220,6 +224,25 @@ ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.dcpdd.all_shards.cs
 dcp = ATT[ATT["method"] != "loss"].copy()
 all_results.extend(print_mean_delta_by_method(dcp))
 
+#                                                                        
+#           88        88                                             88  
+#           88        ""                                             88  
+#           88                                                       88  
+# ,adPPYba, 88   ,d8  88 8b,dPPYba,  8b,dPPYba,   ,adPPYba,  ,adPPYb,88  
+# I8[    "" 88 ,a8"   88 88P'    "8a 88P'    "8a a8P_____88 a8"    `Y88  
+#  `"Y8ba,  8888[     88 88       d8 88       d8 8PP""""""" 8b       88  
+# aa    ]8I 88`"Yba,  88 88b,   ,a8" 88b,   ,a8" "8b,   ,aa "8a,   ,d88  
+# `"YbbdP"' 88   `Y8a 88 88`YbbdP"'  88`YbbdP"'   `"Ybbd8"'  `"8bbdP"Y8  
+#                        88          88                                  
+#                        88          88                                  
+
+ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.clipped.all_shards.csv.gz')
+skipped = ATT[ATT["method"] != "loss"].copy()
+all_results.extend(print_mean_delta_by_method(skipped))
+
+ATU = load_MIA_scores('csvs/confounddataset/bothbins.{}.clipped.all_shards.csv.gz')
+skipped = ATU[ATU["method"] != "loss"].copy()
+all_results.extend(print_mean_delta_by_method(skipped))
 
 #                                 
 #                                 
