@@ -1,0 +1,14 @@
+{
+    "experiment_name": "test_diff_sets",
+    "base_model": "EleutherAI/gpt-neo-125m",
+    "dataset_member": "abehandlerorg/dataset_a",
+    "dataset_nonmember": "abehandlerorg/dataset_b",
+    "output_name": "unified_mia",
+    "n_samples": 100,
+    "blackbox_attacks": ["loss"],
+    "env_config": {
+        "results": "results_new",
+        "device": "cuda:0",
+        "device_aux": "cuda:0"
+    }
+}
