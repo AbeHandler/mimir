@@ -41,6 +41,14 @@ CONFIG_FILENAME="$1"
 GPU_NUMBER="${2:-0}"  # Default to GPU 0 if not specified
 CONFIG_FILE="configs/$CONFIG_FILENAME"
 
+# Auto-detect conda env: if already running in mimirblackwell, use that
+if [[ "$CONDA_DEFAULT_ENV" == "mimirblackwell" ]]; then
+    MIMIR_ENV="mimirblackwell"
+else
+    MIMIR_ENV="mimir"
+fi
+echo "Using conda env: $MIMIR_ENV"
+
 # Check if config file exists
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Error: Config file does not exist: $CONFIG_FILE"
@@ -71,9 +79,9 @@ echo "Using GPU $GPU_NUMBER"
 
 # Pass BISECTION_QUERIES_PER_TOKEN to both conda run commands if set
 if [ -n "$BISECTION_QUERIES_PER_TOKEN" ]; then
-    export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
+    export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n "$MIMIR_ENV" python run.py --config "$CONFIG_FILE"
     time BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
 else
-    export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir python run.py --config "$CONFIG_FILE"
+    export CUDA_VISIBLE_DEVICES=$GPU_NUMBER && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n "$MIMIR_ENV" python run.py --config "$CONFIG_FILE"
     time conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
 fi
