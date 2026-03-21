@@ -707,19 +707,26 @@ def main(config: ExperimentConfig):
         ids=ids_member  # 👈 add this
     )
     # Collect scores for non-members
-    nonmember_preds, nonmember_samples, ids_nonmembers, token_probs_nonmembers = get_mia_scores(
-        data_nonmembers,
-        attackers_dict,
-        data_obj_nonmem,
-        target_model=base_model,
-        ref_models=ref_models,
-        config=config,
-        is_train=False,
-        n_samples=n_samples,
-        batch_size=config.batch_size,
-        nonmember_prefix = nonmember_prefix,
-        ids=ids_nonmember  # 👈 add this
-    )
+    if config.dataset_member == config.dataset_nonmember:
+        print("🚨🚨 SKIP_NONMEMBERS: dataset_member == dataset_nonmember, reusing member scores")
+        nonmember_preds = member_preds
+        nonmember_samples = member_samples
+        ids_nonmembers = ids_members
+        token_probs_nonmembers = token_probs_members
+    else:
+        nonmember_preds, nonmember_samples, ids_nonmembers, token_probs_nonmembers = get_mia_scores(
+            data_nonmembers,
+            attackers_dict,
+            data_obj_nonmem,
+            target_model=base_model,
+            ref_models=ref_models,
+            config=config,
+            is_train=False,
+            n_samples=n_samples,
+            batch_size=config.batch_size,
+            nonmember_prefix = nonmember_prefix,
+            ids=ids_nonmember  # 👈 add this
+        )
     blackbox_outputs = compute_metrics_from_scores(
         member_preds,
         nonmember_preds,
