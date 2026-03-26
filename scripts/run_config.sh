@@ -45,7 +45,7 @@ CONFIG_FILE="configs/$CONFIG_FILENAME"
 if [[ "$CONDA_DEFAULT_ENV" == "mimirblackwell" ]]; then
     MIMIR_ENV="mimirblackwell"
 else
-    MIMIR_ENV="mimir"
+    MIMIR_ENV="mimir2"
 fi
 echo "Using conda env: $MIMIR_ENV"
 
