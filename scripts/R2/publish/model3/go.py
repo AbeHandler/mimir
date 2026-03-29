@@ -135,20 +135,13 @@ def _compare_treated_vs_control(treated_df, control_df, method):
     c = control_df[(control_df["method"] == method) & (control_df["membership"] == "member")].rename(columns={"score": "unblocked"})
     merged = t.merge(c, on=["doc_id"])
     merged["delta"] = merged["blocked"] - merged["unblocked"]
-    merged["pct_change"] = merged["delta"] / merged["unblocked"].abs()
-
-    mean_blocked = merged["blocked"].mean()
-    mean_unblocked = merged["unblocked"].mean()
-    mean_delta = merged["delta"].mean()
-    mean_pct = merged["pct_change"].mean()
 
     return {
         "method": method,
         "n": len(merged),
-        "mean_blocked": mean_blocked,
-        "mean_unblocked": mean_unblocked,
-        "mean_delta": mean_delta,
-        "mean_pct_change": mean_pct,
+        "mean_blocked": merged["blocked"].mean(),
+        "mean_unblocked": merged["unblocked"].mean(),
+        "mean_delta": merged["delta"].mean(),
     }
 
 
@@ -165,21 +158,26 @@ def analyze():
 
     _validate_analyze()
 
+    results = []
     for treated_cfg, control_cfg in PAIRS:
         treated = _load_scores(treated_cfg)
         control = _load_scores(control_cfg)
 
-        treated_label = Path(treated_cfg).stem.split("_pair")[0].split("sutva_")[-1]
-        print(f"\n{'=' * 70}")
-        print(f"Treated: {Path(treated_cfg).stem[:70]}")
-        print(f"Control: {Path(control_cfg).stem[:70]}")
-        print(f"{'=' * 70}")
-
         r = _compare_treated_vs_control(treated, control, "dc_pdd")
+        results.append(r)
+
+        print(f"\n  Treated: {Path(treated_cfg).stem[:70]}")
+        print(f"  Control: {Path(control_cfg).stem[:70]}")
         print(f"  blocked={r['mean_blocked']:.4f}  "
               f"unblocked={r['mean_unblocked']:.4f}  "
-              f"delta={r['mean_delta']:+.4f}  "
-              f"pct={r['mean_pct_change']:+.1%}  n={r['n']:,}")
+              f"delta={r['mean_delta']:+.4f}  n={r['n']:,}")
+
+    # pct change in delta across pairs
+    d1 = results[0]["mean_delta"]
+    d2 = results[1]["mean_delta"]
+    pct_change = (d2 - d1) / abs(d1)
+    print(f"\n  delta pair1={d1:+.4f}  delta pair2={d2:+.4f}  "
+          f"pct_change={pct_change:+.1%}")
 
 
 def flush():
