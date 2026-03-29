@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+./scripts/run_config.sh sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.dc_pdd.json
+./scripts/run_config.sh sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.dc_pdd.json
+./scripts/run_config.sh sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.dc_pdd.json
