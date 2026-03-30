@@ -21,7 +21,7 @@ echo "Step 3: Creating ECDF plots for each method..."
 # Loop through common MIA methods
 for method in loss min_k zlib; do
     echo "  Generating plot for method: $method"
-    Rscript scripts/R2/reviewer2/check_for_delta_0_appendix.R $method
+    Rscript scripts/R2/reviewer2/check_for_delta_0_appendix.R $method "$MAX_STEPS" "$SEED"
 done
 
 echo ""

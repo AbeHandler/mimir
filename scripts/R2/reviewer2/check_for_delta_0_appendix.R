@@ -4,13 +4,16 @@
 library(ggplot2)
 library(dplyr)
 
-# Read command line arguments
+# Read command line arguments: method, max_steps, seed
 args <- commandArgs(trailingOnly = TRUE)
 method_choice <- if (length(args) > 0) args[1] else "loss"
+max_steps <- if (length(args) > 1) args[2] else "5000"
+seed <- if (length(args) > 2) args[3] else "1234"
+steps_k <- paste0(as.integer(max_steps) %/% 1000, "k")
 
 # Read the data
-att <- read.csv("/tmp/att_appendix.csv")
-atu <- read.csv("/tmp/atu_appendix.csv")
+att <- read.csv(sprintf("/tmp/att_appendix_steps%s_seed%s.csv", steps_k, seed))
+atu <- read.csv(sprintf("/tmp/atu_appendix_steps%s_seed%s.csv", steps_k, seed))
 
 # Select only the common columns we need
 att <- att %>% select(method, doc_id, delta)
@@ -60,7 +63,7 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
   )
 
 # Save the ECDF plot
-output_file <- paste0("figures/delta_0_appendix_ecdf_", method_choice, ".png")
+output_file <- sprintf("figures/delta_0_appendix_ecdf_%s_steps%s_seed%s.png", method_choice, steps_k, seed)
 ggsave(output_file, plot = p_ecdf, width = 16, height = 4.5, dpi = 300, bg = "white")
 
 cat(sprintf("\nECDF plot saved to %s\n", output_file))

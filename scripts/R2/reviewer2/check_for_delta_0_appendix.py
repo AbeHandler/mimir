@@ -27,7 +27,7 @@ both = contaminated.merge(uncontaminated, on =["method", "doc_id"])
 both["delta"] = both["uncontaminated"] - both["contaminated"]  # uncontaminated - contaminated (to match ATT)
 
 # Write ATU data for R plotting
-both.to_csv("/tmp/atu_appendix.csv", index=False)
+both.to_csv(f"/tmp/atu_appendix_steps{steps_k}_seed{args.seed}.csv", index=False)
 
 print("Mean delta by method:")
 print(both[["delta", "method"]].groupby(["method"]).mean())
