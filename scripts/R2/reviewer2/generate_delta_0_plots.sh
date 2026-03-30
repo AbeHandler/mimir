@@ -7,7 +7,7 @@ python scripts/R2/reviewer2/check_for_delta_0_appendix.py
 
 echo ""
 echo "Step 2: Generating ATT data..."
-python scripts/R2/reviewer2/check_contamination.py
+python scripts/R2/reviewer2/check_for_delta_1_appendix.py
 
 echo ""
 echo "Step 3: Creating ECDF plots for each method..."

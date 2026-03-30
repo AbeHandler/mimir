@@ -14,17 +14,18 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compare loss scores between contaminated and uncontaminated models"
     )
+    parser.add_argument("--max-steps", type=int, default=5000)
+    parser.add_argument("--seed", type=int, default=1234)
     parser.add_argument(
         "--contaminated-file",
         type=str,
-        default="csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_contaminated.all_shards.csv.gz"
+        default=None,
     )
-
     # this is the rate limiter => pythia-45m_lr1e-3_steps5k_seed1234_on_contaminated.json
     parser.add_argument(
         "--uncontaminated-file",
         type=str,
-        default="csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_on_contaminated.all_shards.csv.gz"
+        default=None,
     )
     parser.add_argument(
         "--output",
@@ -32,7 +33,13 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional output CSV file for merged results with delta scores",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    steps_k = f"{args.max_steps // 1000}k"
+    if args.contaminated_file is None:
+        args.contaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_contaminated.all_shards.csv.gz"
+    if args.uncontaminated_file is None:
+        args.uncontaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_on_contaminated.all_shards.csv.gz"
+    return args
 
 
 def main() -> None:

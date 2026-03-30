@@ -1,8 +1,21 @@
+import argparse
+
 import pandas as pd
 from scipy.stats import wilcoxon
 
-contaminated = pd.read_csv('csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_interleave0.02_uncontaminated_insample_regular_training_data.all_shards.csv.gz').rename(columns={"score": "contaminated"})
-uncontaminated = pd.read_csv('csvs/confounddataset/pythia-45m_lr1e-3_steps5k_seed1234_uncontaminated_insample_regular_training_data.all_shards.csv.gz').rename(columns={"score": "uncontaminated"})
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser()
+    p.add_argument("--max-steps", type=int, default=5000)
+    p.add_argument("--seed", type=int, default=1234)
+    return p.parse_args()
+
+
+args = parse_args()
+steps_k = f"{args.max_steps // 1000}k"
+
+contaminated = pd.read_csv(f'csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_uncontaminated_insample_regular_training_data.all_shards.csv.gz').rename(columns={"score": "contaminated"})
+uncontaminated = pd.read_csv(f'csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_uncontaminated_insample_regular_training_data.all_shards.csv.gz').rename(columns={"score": "uncontaminated"})
 
 contaminated = contaminated[contaminated["membership"] == "member"].copy()
 uncontaminated = uncontaminated[uncontaminated["membership"] == "member"].copy()
