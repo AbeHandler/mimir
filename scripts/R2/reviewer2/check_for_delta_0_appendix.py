@@ -13,9 +13,10 @@ def parse_args() -> argparse.Namespace:
 
 args = parse_args()
 steps_k = f"{args.max_steps // 1000}k"
+seed_suffix = "" if args.seed == 1234 else f"_seed{args.seed}"
 
-contaminated = pd.read_csv(f'csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_uncontaminated_insample_regular_training_data.all_shards.csv.gz').rename(columns={"score": "contaminated"})
-uncontaminated = pd.read_csv(f'csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_uncontaminated_insample_regular_training_data.all_shards.csv.gz').rename(columns={"score": "uncontaminated"})
+contaminated = pd.read_csv(f'csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_uncontaminated_insample_regular_training_data{seed_suffix}.all_shards.csv.gz').rename(columns={"score": "contaminated"})
+uncontaminated = pd.read_csv(f'csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_uncontaminated_insample_regular_training_data{seed_suffix}.all_shards.csv.gz').rename(columns={"score": "uncontaminated"})
 
 contaminated = contaminated[contaminated["membership"] == "member"].copy()
 uncontaminated = uncontaminated[uncontaminated["membership"] == "member"].copy()

@@ -35,10 +35,11 @@ def parse_args() -> argparse.Namespace:
     )
     args = parser.parse_args()
     steps_k = f"{args.max_steps // 1000}k"
+    seed_suffix = "" if args.seed == 1234 else f"_seed{args.seed}"
     if args.contaminated_file is None:
-        args.contaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_contaminated.all_shards.csv.gz"
+        args.contaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_contaminated{seed_suffix}.all_shards.csv.gz"
     if args.uncontaminated_file is None:
-        args.uncontaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_on_contaminated.all_shards.csv.gz"
+        args.uncontaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_on_contaminated{seed_suffix}.all_shards.csv.gz"
     return args
 
 
