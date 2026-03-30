@@ -75,8 +75,10 @@ def main() -> None:
     print(both["method"].value_counts())
 
     # Write ATT data for R plotting
-    both.to_csv("/tmp/att_appendix.csv", index=False)
-    print(f"\nWrote ATT data to: /tmp/att_appendix.csv")
+    steps_k = f"{args.max_steps // 1000}k"
+    att_path = f"/tmp/att_appendix_steps{steps_k}_seed{args.seed}.csv"
+    both.to_csv(att_path, index=False)
+    print(f"\nWrote ATT data to: {att_path}")
 
     print(f"\nResults by method:")
     print(f"  Total rows: {len(both):,}")
