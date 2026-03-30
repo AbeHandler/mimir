@@ -13,7 +13,7 @@ python scripts/R2/reviewer2/check_for_delta_0_appendix.py --max-steps "$MAX_STEP
 
 echo ""
 echo "Step 2: Generating ATT data..."
-python scripts/R2/reviewer2/check_for_delta_1_appendix.py --max-steps "$MAX_STEPS" --seed "$SEED"
+python scripts/R2/reviewer2/check_for_delta_1_appendix_seed_names.py --max-steps "$MAX_STEPS" --seed "$SEED"
 
 echo ""
 echo "Step 3: Creating ECDF plots for each method..."
