@@ -44,6 +44,8 @@ CONFIG_FILE="configs/$CONFIG_FILENAME"
 # Auto-detect conda env: if already running in mimirblackwell, use that
 if [[ "$CONDA_DEFAULT_ENV" == "mimirblackwell" ]]; then
     MIMIR_ENV="mimirblackwell"
+elif [[ "$(hostname)" == *blackwell* ]]; then
+    MIMIR_ENV="mimir"
 else
     MIMIR_ENV="mimir2"
 fi
