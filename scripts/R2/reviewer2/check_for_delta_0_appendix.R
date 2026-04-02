@@ -42,12 +42,12 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
     values = c("Contaminated docs" = "#d95f02", "Uncontaminated docs" = "#7570b3"),
     limits = c("Uncontaminated docs", "Contaminated docs"),
     labels = c(
-      "Uncontaminated docs" = expression("Uncontaminated docs " * - delta^{D==0}),
-      "Contaminated docs" = expression("Contaminated docs " * - delta^{D==1})
+      "Uncontaminated docs" = expression("Uncontaminated docs " * delta[i]^{D==0}),
+      "Contaminated docs" = expression("Contaminated docs " * delta[i]^{D==1})
     )
   ) +
   labs(
-    x = expression("Effect " * - delta),
+    x = expression("Document-level effect " * delta[i]),
     y = "Cumulative Probabiltity",
     color = ""
   ) +
