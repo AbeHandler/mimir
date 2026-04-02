@@ -12,8 +12,13 @@ seed <- if (length(args) > 2) args[3] else "1234"
 steps_k <- paste0(as.integer(max_steps) %/% 1000, "k")
 
 # Read the data
-att <- read.csv(sprintf("/tmp/att_appendix_steps%s_seed%s.csv", steps_k, seed))
-atu <- read.csv(sprintf("/tmp/atu_appendix_steps%s_seed%s.csv", steps_k, seed))
+if (seed == "all") {
+  att <- read.csv("/tmp/att_appendix_all.csv")
+  atu <- read.csv("/tmp/atu_appendix_all.csv")
+} else {
+  att <- read.csv(sprintf("/tmp/att_appendix_steps%s_seed%s.csv", steps_k, seed))
+  atu <- read.csv(sprintf("/tmp/atu_appendix_steps%s_seed%s.csv", steps_k, seed))
+}
 
 # Select only the common columns we need
 att <- att %>% select(method, doc_id, delta)
