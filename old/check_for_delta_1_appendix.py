@@ -39,7 +39,7 @@ def parse_args() -> argparse.Namespace:
     if args.contaminated_file is None:
         args.contaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_contaminated{seed_suffix}.all_shards.csv.gz"
     if args.uncontaminated_file is None:
-        args.uncontaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_on_contaminated_oos{seed_suffix}.all_shards.csv.gz"
+        args.uncontaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_on_contaminated{seed_suffix}.all_shards.csv.gz"
     return args
 
 
@@ -62,7 +62,7 @@ def main() -> None:
 
     print(f"Reading uncontaminated model results: {uncontaminated_path}")
     uncontaminated = pd.read_csv(uncontaminated_path)
-    uncontaminated = uncontaminated[uncontaminated["membership"] == "nonmember"].copy().drop(columns="membership")
+    uncontaminated = uncontaminated[uncontaminated["membership"] == "member"].copy().drop(columns="membership")
     uncontaminated = uncontaminated.rename(columns={"score": "uncontaminated"})
 
     print(f"Merging on doc_id and method...")
@@ -75,10 +75,8 @@ def main() -> None:
     print(both["method"].value_counts())
 
     # Write ATT data for R plotting
-    steps_k = f"{args.max_steps // 1000}k"
-    att_path = f"/tmp/att_appendix_steps{steps_k}_seed{args.seed}.csv"
-    both.to_csv(att_path, index=False)
-    print(f"\nWrote ATT data to: {att_path}")
+    both.to_csv("/tmp/att_appendix.csv", index=False)
+    print(f"\nWrote ATT data to: /tmp/att_appendix.csv")
 
     print(f"\nResults by method:")
     print(f"  Total rows: {len(both):,}")

@@ -5,9 +5,11 @@ Usage:
   python check_contamination.py --contaminated-file <file> --uncontaminated-file <file>
 """
 import argparse
+import json
 from pathlib import Path
 
 import pandas as pd
+from scipy.stats import wilcoxon
 
 
 def parse_args() -> argparse.Namespace:
@@ -39,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     if args.contaminated_file is None:
         args.contaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_interleave0.02_contaminated{seed_suffix}.all_shards.csv.gz"
     if args.uncontaminated_file is None:
-        args.uncontaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_on_contaminated{seed_suffix}.all_shards.csv.gz"
+        args.uncontaminated_file = f"csvs/confounddataset/pythia-45m_lr1e-3_steps{steps_k}_seed{args.seed}_on_contaminated_oos{seed_suffix}.all_shards.csv.gz"
     return args
 
 
@@ -62,7 +64,7 @@ def main() -> None:
 
     print(f"Reading uncontaminated model results: {uncontaminated_path}")
     uncontaminated = pd.read_csv(uncontaminated_path)
-    uncontaminated = uncontaminated[uncontaminated["membership"] == "member"].copy().drop(columns="membership")
+    uncontaminated = uncontaminated[uncontaminated["membership"] == "nonmember"].copy().drop(columns="membership")
     uncontaminated = uncontaminated.rename(columns={"score": "uncontaminated"})
 
     print(f"Merging on doc_id and method...")
@@ -75,15 +77,34 @@ def main() -> None:
     print(both["method"].value_counts())
 
     # Write ATT data for R plotting
-    both.to_csv("/tmp/att_appendix.csv", index=False)
-    print(f"\nWrote ATT data to: /tmp/att_appendix.csv")
+    steps_k = f"{args.max_steps // 1000}k"
+    att_path = f"/tmp/att_appendix_steps{steps_k}_seed{args.seed}.csv"
+    both.to_csv(att_path, index=False)
+    print(f"\nWrote ATT data to: {att_path}")
 
     print(f"\nResults by method:")
     print(f"  Total rows: {len(both):,}")
 
+    results = {}
     mean_by_method = both[["delta", "method"]].groupby(["method"]).mean()
     print(f"\nMean delta (uncontaminated - contaminated) by method:")
     print(mean_by_method)
+
+    for method in both["method"].unique():
+        method_data = both[both["method"] == method]["delta"]
+        stat, p_value = wilcoxon(method_data)
+        results[method] = {
+            "n": len(method_data),
+            "mean_delta": method_data.mean(),
+            "median_delta": method_data.median(),
+            "test_statistic": stat,
+            "p_value": p_value,
+        }
+
+    output_json = f"/tmp/delta_1_steps{steps_k}_seed{args.seed}.json"
+    with open(output_json, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"\nResults saved to {output_json}")
 
     if args.output:
         output_path = Path(args.output)

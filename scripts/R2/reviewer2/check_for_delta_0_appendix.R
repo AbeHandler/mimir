@@ -48,7 +48,7 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
   ) +
   labs(
     x = expression("Document-level effect " * delta[i]),
-    y = "Cumulative Probabiltity",
+    y = "Cumulative Probability",
     color = ""
   ) +
   scale_x_continuous(limits = c(-0.2, 0.2)) +
@@ -56,13 +56,13 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
   theme(
     plot.background = element_rect(fill = "white", color = NA),
     panel.background = element_rect(fill = "white", color = NA),
-    legend.position = "top",
+    legend.position = "right",
     legend.text = element_text(size = 24),
     axis.ticks = element_line(linewidth = 2.5),
     axis.ticks.length = unit(0.5, "cm"),
-    axis.text = element_text(size = 20),
-    axis.title.x = element_text(size = 22, color = "gray20", margin = margin(t = 10)),
-    axis.title.y = element_text(size = 22),
+    axis.text = element_text(size = 26),
+    axis.title.x = element_text(size = 28, color = "gray20", margin = margin(t = 10)),
+    axis.title.y = element_text(size = 28, margin = margin(r = 10), vjust = 0, hjust = 1),
     plot.caption = element_text(size = 10, color = "gray40", hjust = 0.5, margin = margin(t = 5)),
     plot.margin = margin(10, 10, 10, 10)
   )
