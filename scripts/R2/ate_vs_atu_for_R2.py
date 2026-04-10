@@ -22,6 +22,33 @@ def _load_shards(pattern_template, skip_shards, score_col):
     return df.rename(columns={"score": score_col})
 
 
+def _load_gptoss_condition(dataset):
+    """Load Y0/Y1 shards for one gptoss dataset condition, merge, and compute delta."""
+    import glob as globmod
+    base = "csvs/gptoss/gptoss/gptoss.20b.2024-07-30-to-2024-07-30"
+
+    y0_files = sorted(globmod.glob(f"{base}-Y0.{dataset}.lite.shard_*.csv"))
+    y1_files = sorted(globmod.glob(f"{base}-Y1.{dataset}.lite.shard_*.csv"))
+
+    y0 = pd.concat([pd.read_csv(f) for f in y0_files])
+    y0 = y0[y0["membership"] == "member"].drop(columns=["membership"]).rename(columns={"score": "noblocks"})
+
+    y1 = pd.concat([pd.read_csv(f) for f in y1_files])
+    y1 = y1[y1["membership"] == "member"].drop(columns=["membership"]).rename(columns={"score": "blocks"})
+
+    merged = y1.merge(y0, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["method"] = "gptoss-20b-" + merged["method"]
+    return merged
+
+
+def load_gptoss():
+    for dataset in ["bothbins", "excluded"]:
+        merged = _load_gptoss_condition(dataset)
+        print(f'[*] gptoss {dataset}')
+        print(merged[["method", "delta"]].groupby("method").mean())
+
+
 def _load_70b_condition(dataset, skip_shards):
     """Load Y0/Y1 shards for one dataset condition, merge, and compute delta."""
     base = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30"
@@ -69,7 +96,7 @@ def load_llama_7b():
     merge_excluded['method'] = merge_excluded['method'].apply(lambda x: x + "-llama-8b")
     print(merge_excluded)
 
-load_llama_70b()
+load_gptoss()
 import sys; sys.exit(0)
 
 # update the all_shards docs to ensure you get the latest versions
