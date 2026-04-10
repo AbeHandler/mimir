@@ -4,11 +4,13 @@
 import pandas as pd
 from scipy import stats
 import numpy as np
+import json
 import os
+from sigfig import round as sf_round
+
 
 # update the all_shards docs to ensure you get the latest versions
 # os.system("python scripts/merge_shards.py -d csvs/confounddataset")
-
 
 def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set = None) -> pd.DataFrame:
     """
@@ -50,7 +52,8 @@ def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set
     template_name = template.split("/")[-1].replace("{}", "X")
     merged["template"] = template_name
 
-    merged = merged.sample(n=50_000, random_state=42)
+    if len(merged) > 50000: # may happen when stuff is running
+        merged = merged.sample(n=50_000, random_state=42)
 
     return merged
 
@@ -69,7 +72,7 @@ def load_url_set(filepath: str) -> set:
         return set(line.strip() for line in f)
 
 
-def print_mean_delta_by_method(df: pd.DataFrame) -> list:
+def process_scores(df: pd.DataFrame) -> list:
     """
     Generate JSONL lines for mean delta grouped by method.
     Automatically detects ATT/ATU label from template column.
@@ -90,7 +93,11 @@ def print_mean_delta_by_method(df: pd.DataFrame) -> list:
     else:
         label = 'unknown'
 
-    result = df[["method", "delta"]].groupby("method").mean().reset_index()
+    result = df[["method", "delta"]].groupby("method").agg(
+        delta=("delta", "mean"),
+        count=("delta", "count")
+    ).reset_index()
+    result["delta"] = result["delta"].apply(lambda x: sf_round(x, sigfigs=2))
 
     # Add +RLHF suffix if template contains .rlhf.
     if '.rlhf.' in template:
@@ -101,6 +108,8 @@ def print_mean_delta_by_method(df: pd.DataFrame) -> list:
         record = row.to_dict()
         record['label'] = label
         record['template'] = template
+        record["test_case"] = template_to_case[template.split("X.").pop()]
+
         lines.append(pd.Series(record).to_json())
 
     return lines
@@ -181,105 +190,41 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 
     return pd.DataFrame(results)
 
+
+template_to_case = {
+    'rlhf.lite.all_shards.csv.gz': 'PT+rlhf',
+    'clipped.all_shards.csv.gz': 'PT',
+    'lite.all_shards.csv.gz': 'PT',
+    'dcpdd.all_shards.csv.gz': 'PT',
+    "cloze.all_shards.csv.gz": "PT"
+}
+
+template_patterns = [
+    'csvs/confounddataset/{}.{}.rlhf.lite.all_shards.csv.gz',
+    'csvs/confounddataset/{}.{}.clipped.all_shards.csv.gz', # this gets clipped and skipped
+    'csvs/confounddataset/{}.{}.lite.all_shards.csv.gz',
+    'csvs/confounddataset/{}.{}.dcpdd.all_shards.csv.gz',
+    'csvs/confounddataset/{}.{}.cloze.all_shards.csv.gz',
+]
+templates = []
+for base in ['bothbins', 'excluded-docs']:
+    for template in template_patterns:
+        templates.append(template.format(base, '{}'))
+
 all_results = []
 
-atu_rhlf = load_MIA_scores('csvs/confounddataset/bothbins.{}.rlhf.lite.all_shards.csv.gz')
-all_results.extend(print_mean_delta_by_method(atu_rhlf))
+for template in templates:
+    scores = load_MIA_scores(template)
+    if ".dcpdd." in template or ".clipped." in template or ".skipped." in template:
+        scores = scores[scores["method"] != "loss"].copy()
+    all_results.extend(process_scores(scores))
 
-#
-#
-#              ,d      ,d
-#              88      88
-# ,adPPYYba, MM88MMM MM88MMM
-# ""     `Y8   88      88
-# ,adPPPPP88   88      88
-# 88,    ,88   88,     88,
-# `"8bbdP"Y8   "Y888   "Y888
-#
-#
-
-
-
-
-ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz')
-ATT.to_csv("/tmp/att.csv", index=False)
-
-all_results.extend(print_mean_delta_by_method(ATT))
-
-
-
-#                                                             
-#          88                                 88          88  
-#          88                                 88          88  
-#          88                                 88          88  
-#  ,adPPYb,88  ,adPPYba, 8b,dPPYba,   ,adPPYb,88  ,adPPYb,88  
-# a8"    `Y88 a8"     "" 88P'    "8a a8"    `Y88 a8"    `Y88  
-# 8b       88 8b         88       d8 8b       88 8b       88  
-# "8a,   ,d88 "8a,   ,aa 88b,   ,a8" "8a,   ,d88 "8a,   ,d88  
-#  `"8bbdP"Y8  `"Ybbd8"' 88`YbbdP"'   `"8bbdP"Y8  `"8bbdP"Y8  
-#                        88
-#                        88
-
-ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.dcpdd.all_shards.csv.gz')
-dcp = ATT[ATT["method"] != "loss"].copy()
-all_results.extend(print_mean_delta_by_method(dcp))
-
-#                                                                        
-#           88        88                                             88  
-#           88        ""                                             88  
-#           88                                                       88  
-# ,adPPYba, 88   ,d8  88 8b,dPPYba,  8b,dPPYba,   ,adPPYba,  ,adPPYb,88  
-# I8[    "" 88 ,a8"   88 88P'    "8a 88P'    "8a a8P_____88 a8"    `Y88  
-#  `"Y8ba,  8888[     88 88       d8 88       d8 8PP""""""" 8b       88  
-# aa    ]8I 88`"Yba,  88 88b,   ,a8" 88b,   ,a8" "8b,   ,aa "8a,   ,d88  
-# `"YbbdP"' 88   `Y8a 88 88`YbbdP"'  88`YbbdP"'   `"Ybbd8"'  `"8bbdP"Y8  
-#                        88          88                                  
-#                        88          88                                  
-
-ATT = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.clipped.all_shards.csv.gz')
-skipped = ATT[ATT["method"] != "loss"].copy()
-all_results.extend(print_mean_delta_by_method(skipped))
-
-ATU = load_MIA_scores('csvs/confounddataset/bothbins.{}.clipped.all_shards.csv.gz')
-skipped = ATU[ATU["method"] != "loss"].copy()
-all_results.extend(print_mean_delta_by_method(skipped))
-
-#                                 
-#                                 
-#              ,d                 
-#              88                 
-# ,adPPYYba, MM88MMM 88       88  
-# ""     `Y8   88    88       88  
-# ,adPPPPP88   88    88       88  
-# 88,    ,88   88,   "8a,   ,a88  
-# `"8bbdP"Y8   "Y888  `"YbbdP'Y8  
-#                                 
-#                               
-
-
-ATU = load_MIA_scores('csvs/confounddataset/bothbins.{}.lite.all_shards.csv.gz')
-ATU = ATU.sample(n=50_000, random_state=42)
-
-ATU.to_csv("/tmp/atu.csv", index=False)
-
-all_results.extend(print_mean_delta_by_method(ATU))
-
-ATU = load_MIA_scores('csvs/confounddataset/bothbins.{}.dcpdd.all_shards.csv.gz')
-dcp = ATU[ATU["method"] != "loss"].copy()
-
-all_results.extend(print_mean_delta_by_method(dcp))
-
-clipped = load_MIA_scores("csvs/confounddataset/excluded-docs.{}.clipped.all_shards.csv.gz")
-all_results.extend(print_mean_delta_by_method(clipped))
-
-both = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.rlhf.lite.all_shards.csv.gz')
-
-all_results.extend(print_mean_delta_by_method(both))
 
 # Write all results to JSONL file
 output_file = "results/ate_vs_atu_for_R2/mean_delta_by_method.jsonl"
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 with open(output_file, 'w') as f:
+    all_results.sort(key=lambda x: json.loads(x)["test_case"])
     for line in all_results:
         f.write(line + '\n')
 
