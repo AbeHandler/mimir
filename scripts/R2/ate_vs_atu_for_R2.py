@@ -8,6 +8,69 @@ import json
 import os
 from sigfig import round as sf_round
 
+# ['method', 'membership', 'doc_id', 'noblocks', 'blocks', 'delta', 'template']
+
+def _load_shards(pattern_template, skip_shards, score_col):
+    """Load and concat shards, filtering to members only."""
+    dfs = []
+    for n in range(1, 17):
+        if n not in skip_shards:
+            dfs.append(pd.read_csv(pattern_template.format(n)))
+    df = pd.concat(dfs)
+    df = df[df["membership"] == "member"].copy()
+    df = df.drop(columns=["membership"])
+    return df.rename(columns={"score": score_col})
+
+
+def _load_70b_condition(dataset, skip_shards):
+    """Load Y0/Y1 shards for one dataset condition, merge, and compute delta."""
+    base = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30"
+    y0 = _load_shards(f"{base}-Y0.{dataset}.lite.shard_{{}}.csv", skip_shards, "noblocks")
+    y1 = _load_shards(f"{base}-Y1.{dataset}.lite.shard_{{}}.csv", skip_shards, "blocks")
+    merged = y1.merge(y0, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["method"] = "70b-" + merged["method"]
+    return merged
+
+
+def load_llama_70b():
+    conditions = [
+        ("bothbins", {8, 9, 12}),
+        ("excluded", {8, 9, 12, 13, 15, 16}),
+    ]
+    for dataset, skip_shards in conditions:
+        merged = _load_70b_condition(dataset, skip_shards)
+        print(f'[*] {dataset}')
+        print(merged[["method", "delta"]].groupby("method").mean())
+
+
+def load_llama_7b():
+    y0both = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.bothbins.lite.csv')
+    y0both = y0both[y0both["membership"] == "member"].copy().rename(columns={"score": "notblocked"}).drop(columns="membership")
+
+    y1both = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.bothbins.lite.csv')
+    y1both = y1both[y1both["membership"] == "member"].copy().rename(columns={"score": "blocked"}).drop(columns="membership")
+
+    merge_both = y0both.merge(y1both, on =["method", "doc_id"])
+    merge_both["delta"] = merge_both["blocked"] - merge_both["notblocked"]
+    merge_both = merge_both[["method", "delta"]].groupby("method").mean().reset_index()
+    merge_both['method'] = merge_both['method'].apply(lambda x: x + "-llama-8b")
+    print(merge_both)
+
+    y0excluded = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.excluded.lite.csv')
+    y0excluded = y0excluded[y0excluded["membership"] == "member"].copy().rename(columns={"score": "notblocked"}).drop(columns="membership")
+
+    y1excluded = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.lite.csv')
+    y1excluded = y1excluded[y1excluded["membership"] == "member"].copy().rename(columns={"score": "blocked"}).drop(columns="membership")
+    
+    merge_excluded = y0excluded.merge(y1excluded, on =["method", "doc_id"])
+    merge_excluded["delta"] = merge_excluded["blocked"] - merge_excluded["notblocked"]
+    merge_excluded = merge_excluded[["method", "delta"]].groupby("method").mean().reset_index()
+    merge_excluded['method'] = merge_excluded['method'].apply(lambda x: x + "-llama-8b")
+    print(merge_excluded)
+
+load_llama_70b()
+import sys; sys.exit(0)
 
 # update the all_shards docs to ensure you get the latest versions
 # os.system("python scripts/merge_shards.py -d csvs/confounddataset")
@@ -54,7 +117,6 @@ def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set
 
     if len(merged) > 50000: # may happen when stuff is running
         merged = merged.sample(n=50_000, random_state=42)
-
     return merged
 
 
@@ -108,7 +170,10 @@ def process_scores(df: pd.DataFrame) -> list:
         record = row.to_dict()
         record['label'] = label
         record['template'] = template
-        record["test_case"] = template_to_case[template.split("X.").pop()]
+        if "Llama-3.1-8B-Instruct" in template:
+            record["test_case"] = "Llama-3.1-8B-Instruct"
+        else:
+            record["test_case"] = template_to_case[template.split("X.").pop()]
 
         lines.append(pd.Series(record).to_json())
 
@@ -196,7 +261,8 @@ template_to_case = {
     'clipped.all_shards.csv.gz': 'PT',
     'lite.all_shards.csv.gz': 'PT',
     'dcpdd.all_shards.csv.gz': 'PT',
-    "cloze.all_shards.csv.gz": "PT"
+    "cloze.all_shards.csv.gz": "PT",
+    "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-{}.{}.lite.csv": "CPT"
 }
 
 template_patterns = [
@@ -204,7 +270,7 @@ template_patterns = [
     'csvs/confounddataset/{}.{}.clipped.all_shards.csv.gz', # this gets clipped and skipped
     'csvs/confounddataset/{}.{}.lite.all_shards.csv.gz',
     'csvs/confounddataset/{}.{}.dcpdd.all_shards.csv.gz',
-    'csvs/confounddataset/{}.{}.cloze.all_shards.csv.gz',
+    'csvs/confounddataset/{}.{}.cloze.all_shards.csv.gz'
 ]
 templates = []
 for base in ['bothbins', 'excluded-docs']:
