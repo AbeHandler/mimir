@@ -22,33 +22,6 @@ def _load_shards(pattern_template, skip_shards, score_col):
     return df.rename(columns={"score": score_col})
 
 
-def _load_gptoss_condition(dataset):
-    """Load Y0/Y1 shards for one gptoss dataset condition, merge, and compute delta."""
-    import glob as globmod
-    base = "csvs/gptoss/gptoss/gptoss.20b.2024-07-30-to-2024-07-30"
-
-    y0_files = sorted(globmod.glob(f"{base}-Y0.{dataset}.lite.shard_*.csv"))
-    y1_files = sorted(globmod.glob(f"{base}-Y1.{dataset}.lite.shard_*.csv"))
-
-    y0 = pd.concat([pd.read_csv(f) for f in y0_files])
-    y0 = y0[y0["membership"] == "member"].drop(columns=["membership"]).rename(columns={"score": "noblocks"})
-
-    y1 = pd.concat([pd.read_csv(f) for f in y1_files])
-    y1 = y1[y1["membership"] == "member"].drop(columns=["membership"]).rename(columns={"score": "blocks"})
-
-    merged = y1.merge(y0, on=["doc_id", "method"])
-    merged["delta"] = merged["blocks"] - merged["noblocks"]
-    merged["method"] = "gptoss-20b-" + merged["method"]
-    return merged
-
-
-def load_gptoss():
-    for dataset in ["bothbins", "excluded"]:
-        merged = _load_gptoss_condition(dataset)
-        print(f'[*] gptoss {dataset}')
-        print(merged[["method", "delta"]].groupby("method").mean())
-
-
 def _load_70b_condition(dataset, skip_shards):
     """Load Y0/Y1 shards for one dataset condition, merge, and compute delta."""
     base = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30"
@@ -96,8 +69,7 @@ def load_llama_7b():
     merge_excluded['method'] = merge_excluded['method'].apply(lambda x: x + "-llama-8b")
     print(merge_excluded)
 
-load_gptoss()
-import sys; sys.exit(0)
+
 
 # update the all_shards docs to ensure you get the latest versions
 # os.system("python scripts/merge_shards.py -d csvs/confounddataset")
@@ -282,43 +254,46 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 
     return pd.DataFrame(results)
 
+if __name__ == "__main__":
 
-template_to_case = {
-    'rlhf.lite.all_shards.csv.gz': 'PT+rlhf',
-    'clipped.all_shards.csv.gz': 'PT',
-    'lite.all_shards.csv.gz': 'PT',
-    'dcpdd.all_shards.csv.gz': 'PT',
-    "cloze.all_shards.csv.gz": "PT",
-    "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-{}.{}.lite.csv": "CPT"
-}
+    template_to_case = {
+        'rlhf.lite.all_shards.csv.gz': 'PT+rlhf',
+        'rlhf.dcpdd.lite.all_shards.csv.gz': 'PT+rlhf',
+        'clipped.all_shards.csv.gz': 'PT',
+        'lite.all_shards.csv.gz': 'PT',
+        'dcpdd.all_shards.csv.gz': 'PT',
+        "cloze.all_shards.csv.gz": "PT",
+        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-{}.{}.lite.csv": "CPT"
+    }
 
-template_patterns = [
-    'csvs/confounddataset/{}.{}.rlhf.lite.all_shards.csv.gz',
-    'csvs/confounddataset/{}.{}.clipped.all_shards.csv.gz', # this gets clipped and skipped
-    'csvs/confounddataset/{}.{}.lite.all_shards.csv.gz',
-    'csvs/confounddataset/{}.{}.dcpdd.all_shards.csv.gz',
-    'csvs/confounddataset/{}.{}.cloze.all_shards.csv.gz'
-]
-templates = []
-for base in ['bothbins', 'excluded-docs']:
-    for template in template_patterns:
-        templates.append(template.format(base, '{}'))
+    template_patterns = [
+        'csvs/confounddataset/{}.{}.rlhf.lite.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.clipped.all_shards.csv.gz', # this gets clipped and skipped
+        'csvs/confounddataset/{}.{}.lite.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.cloze.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.dcpdd.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.rlhf.dcpdd.lite.all_shards.csv.gz'
+    ]
+    templates = []
+    for base in ['bothbins', 'excluded-docs']:
+        for template in template_patterns:
+            templates.append(template.format(base, '{}'))
 
-all_results = []
+    all_results = []
 
-for template in templates:
-    scores = load_MIA_scores(template)
-    if ".dcpdd." in template or ".clipped." in template or ".skipped." in template:
-        scores = scores[scores["method"] != "loss"].copy()
-    all_results.extend(process_scores(scores))
+    for template in templates:
+        scores = load_MIA_scores(template)
+        if ".dcpdd." in template or ".clipped." in template or ".skipped." in template:
+            scores = scores[scores["method"] != "loss"].copy()
+        all_results.extend(process_scores(scores))
 
 
-# Write all results to JSONL file
-output_file = "results/ate_vs_atu_for_R2/mean_delta_by_method.jsonl"
-os.makedirs(os.path.dirname(output_file), exist_ok=True)
-with open(output_file, 'w') as f:
-    all_results.sort(key=lambda x: json.loads(x)["test_case"])
-    for line in all_results:
-        f.write(line + '\n')
+    # Write all results to JSONL file
+    output_file = "results/ate_vs_atu_for_R2/mean_delta_by_method.jsonl"
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    with open(output_file, 'w') as f:
+        all_results.sort(key=lambda x: json.loads(x)["test_case"])
+        for line in all_results:
+            f.write(line + '\n')
 
-print(f"Results written to {output_file}")
+    print(f"Results written to {output_file}")
