@@ -1,0 +1,5 @@
+outs:
+- md5: 0fe9c26889992016786305684e27bd4f
+  size: 234301458
+  hash: md5
+  path: all_shards.tar.gz
