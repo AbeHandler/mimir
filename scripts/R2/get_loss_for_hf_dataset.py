@@ -6,13 +6,15 @@ Conda env: gptoss
 
 Usage:
     conda activate gptoss
-    CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset \
+    MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache \
+        CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset \
         -dataset abehandlerorg/localnewsinthewild \
         -model openai/gpt-oss-20b \
         -output results/get_loss_for_hf_dataset/localnewsinthewild.jsonl
 
 Defaults match the above, so this also works:
-    CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset
+    MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache \
+        CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset
 """
 import argparse
 import json
