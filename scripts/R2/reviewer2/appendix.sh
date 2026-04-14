@@ -50,3 +50,5 @@ python scripts/R2/reviewer2/average_delta_jsons.py --delta 0
 python scripts/R2/reviewer2/average_delta_jsons.py --delta 1
 
 python scripts/R2/reviewer2/compare_att_vs_atu.py
+
+python scripts/R2/reviewer2/report_auc.py

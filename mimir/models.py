@@ -204,7 +204,7 @@ class Model(nn.Module):
             elif "gpt-oss" in self.name or "gpt_oss" in self.name:
                 # gpt-oss models require trust_remote_code, load from local path
                 # NOTE: Requires unsloth conda environment to be active (has gpt_oss model code)
-                if self.name == "openai/gpt-oss-20b":
+                if self.name == "openai/gpt-oss-20b" and  socket.gethostname() != "blackwell":
                     # Base HF model — load directly, no local path needed
                     model = transformers.AutoModelForCausalLM.from_pretrained(
                         self.name,
@@ -213,6 +213,15 @@ class Model(nn.Module):
                         cache_dir=self.cache_dir
                     )
                     self.device = 'cuda:1'
+                elif self.name == "openai/gpt-oss-20b" and  socket.gethostname() == "blackwell":
+                    model = transformers.AutoModelForCausalLM.from_pretrained(
+                        self.name,
+                        device_map="balanced_low_0",
+                        trust_remote_code=True,
+                        cache_dir=self.cache_dir
+                    )
+                    self.device = 'cuda:0'
+
                 else:
                     local_path = os.environ.get('MODEL_PATH')
                     if local_path is None:
