@@ -2,11 +2,17 @@
 """
 Run the LOSS attack on a HuggingFace dataset and write per-example scores to JSONL.
 
+Conda env: gptoss
+
 Usage:
-    python scripts/R2/get_loss_for_hf_dataset.py \
-        --dataset abehandlerorg/localnewsinthewild \
-        --model openai/gpt-oss-20b \
-        --output results/get_loss_for_hf_dataset/localnewsinthewild.jsonl
+    conda activate gptoss
+    CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset \
+        -dataset abehandlerorg/localnewsinthewild \
+        -model openai/gpt-oss-20b \
+        -output results/get_loss_for_hf_dataset/localnewsinthewild.jsonl
+
+Defaults match the above, so this also works:
+    CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset
 """
 import argparse
 import json
@@ -26,7 +32,7 @@ DEFAULT_MODEL = "openai/gpt-oss-20b"
 DEFAULT_SPLIT = "train"
 DEFAULT_TEXT_COL = "text"
 DEFAULT_OUTPUT = "results/get_loss_for_hf_dataset/localnewsinthewild.jsonl"
-DEFAULT_CACHE_DIR = "/tmp/cache"
+DEFAULT_CACHE_DIR = "/mnt/storage/abe/tmp"
 
 
 def parse_args():
