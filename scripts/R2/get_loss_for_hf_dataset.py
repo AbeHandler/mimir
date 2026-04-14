@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from datasets import Dataset, load_dataset
+from tqdm import tqdm
 
 from mimir.config import EnvironmentConfig, ExperimentConfig
 from mimir.models import LanguageModel
@@ -142,10 +143,10 @@ def main():
     print(f"[output] {output_path}")
     print(f"[dataset] size={len(ds)} already_done={len(done)}")
 
+    todo = [i for i in indices if i not in done]
+    pbar = tqdm(todo, desc="loss", initial=0, total=len(todo))
     with output_path.open("a") as fout:
-        for i in indices:
-            if i in done:
-                continue
+        for i in pbar:
             row = ds[i]
             text = row.get(args.text_col)
             if not text:
@@ -167,7 +168,7 @@ def main():
             fout.write(json.dumps(rec) + "\n")
             fout.flush()
             done.add(i)
-            print(f"[{i}] loss={loss_score:.4f}")
+            pbar.set_postfix(idx=i, loss=f"{loss_score:.4f}")
 
     # Completeness check: only write .done if every input index (respecting -limit) is present.
     expected = set(all_indices if args.limit is None else all_indices[: args.limit])
