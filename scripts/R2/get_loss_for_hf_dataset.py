@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 """
-Run the LOSS attack on a HuggingFace dataset and write per-example scores to JSONL.
+Run the LOSS attack on a HuggingFace dataset (or local .jsonl) and write per-example scores to JSONL.
+
+-dataset may be either an HF hub id or a path to a local .jsonl file (detected by suffix + existence).
 
 Conda env: gptoss
 
-Usage:
+Usage (blackwell):
     conda activate gptoss
-    MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache \
-        CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset \
+    MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache CUDA_VISIBLE_DEVICES=0 \
+        python -m scripts.R2.get_loss_for_hf_dataset \
         -dataset abehandlerorg/localnewsinthewild \
         -model openai/gpt-oss-20b \
-        -output results/get_loss_for_hf_dataset/localnewsinthewild.jsonl
-
-Defaults match the above, so this also works:
-    MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache \
-        CUDA_VISIBLE_DEVICES=2 python -m scripts.R2.get_loss_for_hf_dataset
+        -device cuda:0
 """
 import argparse
 import json
@@ -22,7 +20,7 @@ import random
 from datetime import datetime, timezone
 from pathlib import Path
 
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 
 from mimir.config import EnvironmentConfig, ExperimentConfig
 from mimir.models import LanguageModel
@@ -49,6 +47,21 @@ def parse_args():
     p.add_argument("-limit", type=int, default=None)
     p.add_argument("-seed", type=int, default=42)
     return p.parse_args()
+
+
+def load_input_dataset(dataset, split):
+    """Load an HF hub dataset or a local .jsonl file into an in-memory Dataset."""
+    path = Path(dataset)
+    if path.suffix == ".jsonl" and path.exists():
+        records = []
+        with path.open() as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                records.append(json.loads(line))
+        return Dataset.from_list(records)
+    return load_dataset(dataset, split=split)
 
 
 def build_config(args):
@@ -89,7 +102,7 @@ def main():
     model.load()
     loss_attack = LOSSAttack(config, model)
 
-    ds = load_dataset(args.dataset, split=args.split)
+    ds = load_input_dataset(args.dataset, args.split)
     indices = list(range(len(ds)))
     random.shuffle(indices)
     if args.limit is not None:
