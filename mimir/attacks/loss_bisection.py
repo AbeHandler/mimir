@@ -13,14 +13,13 @@ The attack recovers approximate logprobs using bisection search.
 """
 
 import os
-import pickle
 import torch
 import numpy as np
 from typing import List, Optional
 from mimir.attacks.all_attacks import Attack
 from mimir.models import Model
 from mimir.config import ExperimentConfig
-from src.bisection import recover_token_logprob_difference
+from src.bisection import bisect_logprob_difference
 
 
 class LOSSBisectionAttack(Attack):
@@ -78,72 +77,74 @@ class LOSSBisectionAttack(Attack):
             tokenized = self.target_model.tokenizer(document, return_tensors="pt")
             tokens = tokenized.input_ids[0].cpu().numpy()
 
-        # Get device
         device = self.target_model.device
+        model = self.target_model.model
+        tokenizer = self.target_model.tokenizer
+        vocab_size = model.config.vocab_size
 
-        # Recover logprobs for each token using bisection
+        # Truncate to model's max context (left-truncate to match query_with_bias semantics)
+        max_length = getattr(model.config, 'max_position_embeddings', None)
+        if max_length is None:
+            max_length = getattr(model.config, 'n_positions', 1024)
+        if len(tokens) > max_length:
+            tokens = tokens[-max_length:]
+
+        # One forward pass gives next-token logits at every position.
+        # logits[j] is the distribution after seeing tokens[:j+1], i.e. predicts tokens[j+1].
+        input_ids = torch.as_tensor(tokens, dtype=torch.long, device=device).unsqueeze(0)
+        logits = model(input_ids).logits[0]  # [seq_len, vocab_size]
+
         recovered_logprobs = []
         total_queries = 0
 
-        # Get vocabulary size for bounds checking
-        # Use model vocab size, not tokenizer, since model embeddings may not be resized
-        vocab_size = self.target_model.model.config.vocab_size
+        for i in range(len(tokens) - 1):
+            target_token_id = int(tokens[i + 1])
 
-        for i in range(len(tokens) - 1):  # -1 because we predict next token
-            # Context: tokens[0:i+1]
-            # Target: tokens[i+1]
-            context_tokens = tokens[:i+1]
-            target_token_id = int(tokens[i+1])
-
-            # Validate token ID is within bounds
             if target_token_id < 0 or target_token_id >= vocab_size:
                 print(f"Warning: Token {i} has invalid ID {target_token_id} (vocab size: {vocab_size}), skipping")
                 recovered_logprobs.append(-10.0)
                 continue
 
-            # Decode context (but pass target_token_id directly to avoid round-trip issues)
-            context_text = self.target_model.tokenizer.decode(context_tokens)
+            position_logits = logits[i]  # next-token distribution after tokens[:i+1]
+            top_token_id = int(torch.argmax(position_logits).item())
+            top_token_str = tokenizer.decode([top_token_id])
+            target_token_str = tokenizer.decode([target_token_id])
 
-            # Save debug information before bisection call
-            debug_data = {
-                'document': document,
-                'all_tokens': tokens,
-                'token_index': i,
-                'context_tokens': context_tokens,
-                'target_token_id': target_token_id,
-                'context_text': context_text,
-                'device': str(device),
-                'precision': self.precision,
-                'max_queries': self.queries_per_token,
-                'vocab_size': vocab_size,
-                'model_name': self.target_model.name if hasattr(self.target_model, 'name') else 'unknown',
-            }
-            with open('/tmp/mimirdebug.p', 'wb') as f:
-                pickle.dump(debug_data, f)
+            # Simulate a bias-query against a real API: argmax(logits + bias*one_hot(target)).
+            # Only the target token's logit is perturbed, so the new argmax is
+            # target iff logits[target] + bias >= logits[top], else top.
+            top_logit = position_logits[top_token_id].item()
+            target_logit = position_logits[target_token_id].item()
 
-            # Recover relative logprob using bisection
+            def query_fn(token_id, bias, _top_logit=top_logit, _target_logit=target_logit,
+                         _top_str=top_token_str, _target_str=target_token_str):
+                return _target_str if _target_logit + bias >= _top_logit else _top_str
+
+            # Initial no-bias query (mirrors recover_token_logprob_difference's queries_used=1)
+            queries_used = 1
+            remaining = self.queries_per_token - queries_used
+
             try:
-                relative_logprob, queries_used, _ = recover_token_logprob_difference(
-                    model=self.target_model.model,
-                    tokenizer=self.target_model.tokenizer,
-                    prompt=context_text,
-                    target_token_id=target_token_id,
-                    device=device,
-                    precision=self.precision,
-                    max_queries=self.queries_per_token
-                )
+                if remaining <= 0:
+                    relative_logprob = None
+                    bisection_queries = 0
+                else:
+                    relative_logprob, bisection_queries = bisect_logprob_difference(
+                        query_fn,
+                        target_token_str,
+                        target_token_id,
+                        precision=self.precision,
+                        max_queries=remaining,
+                    )
 
-                total_queries += queries_used
+                total_queries += queries_used + bisection_queries
 
-                # If bisection failed (budget exhausted), use a penalty value
                 if relative_logprob is None:
-                    # Large negative value (poor prediction)
                     relative_logprob = -10.0
 
                 recovered_logprobs.append(relative_logprob)
 
             except Exception as e:
-                # If any error occurs, use penalty value
                 print(f"Warning: Bisection failed for token {i}: {e}")
                 recovered_logprobs.append(-10.0)
 
