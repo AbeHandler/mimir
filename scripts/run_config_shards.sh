@@ -8,7 +8,7 @@ GPU_NUMBER="${1:-0}"  # Default to GPU 0 if not specified
 
 # go back to cloze later=> "excluded-docs.noblocks.cloze.json" "excluded-docs.blocks.cloze.json" "bothbins.noblocks.cloze.json" "bothbins.blocks.cloze.json"
 
-for CONFIG_FILENAME in "bothbins.blocks.rlhf.clipped.json" "bothbins.noblocks.rlhf.clipped.json" "excluded-docs.blocks.rlhf.clipped.json" "excluded-docs.noblocks.rlhf.clipped.json"; do 
+for CONFIG_FILENAME in "excluded-docs.blocks.bisection.json"; do 
     echo "Processing config: $CONFIG_FILENAME"
 
     # Use 20 shards for excluded-docs and bothbins, 60 for matching_neighbors, 36 for others
@@ -18,14 +18,14 @@ for CONFIG_FILENAME in "bothbins.blocks.rlhf.clipped.json" "bothbins.noblocks.rl
     elif [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
         MAX_SHARD=0
     elif [[ "$CONFIG_FILENAME" == excluded-docs.* || "$CONFIG_FILENAME" == bothbins.* ]]; then
-        MAX_SHARD=3
+        MAX_SHARD=19
     else
         MAX_SHARD=36
     fi
 
     # For bisection configs, loop over K values; otherwise run once
     if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
-        for K in 5 10 15 50; do
+        for K in 10; do
             echo "  Running with K=$K"
             export BISECTION_QUERIES_PER_TOKEN=$K
             for SHARD_ID in $(seq 0 $MAX_SHARD); do
