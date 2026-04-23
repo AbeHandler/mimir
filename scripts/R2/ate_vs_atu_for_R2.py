@@ -259,11 +259,13 @@ if __name__ == "__main__":
     template_to_case = {
         'rlhf.lite.all_shards.csv.gz': 'PT+rlhf',
         'rlhf.dcpdd.lite.all_shards.csv.gz': 'PT+rlhf',
+        'rlhf.clipped.all_shards.csv.gz': 'PT+rlhf',
         'clipped.all_shards.csv.gz': 'PT',
         'lite.all_shards.csv.gz': 'PT',
         'dcpdd.all_shards.csv.gz': 'PT',
         "cloze.all_shards.csv.gz": "PT",
-        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-{}.{}.lite.csv": "CPT"
+        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-{}.{}.lite.csv": "CPT",
+         'bisection.k10.all_shards.csv.gz': "PT"
     }
 
     template_patterns = [
@@ -272,7 +274,9 @@ if __name__ == "__main__":
         'csvs/confounddataset/{}.{}.lite.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.cloze.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.dcpdd.all_shards.csv.gz',
-        'csvs/confounddataset/{}.{}.rlhf.dcpdd.lite.all_shards.csv.gz'
+        'csvs/confounddataset/{}.{}.rlhf.dcpdd.lite.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.rlhf.clipped.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.bisection.k10.all_shards.csv.gz'
     ]
     templates = []
     for base in ['bothbins', 'excluded-docs']:
