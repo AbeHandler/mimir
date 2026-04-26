@@ -265,7 +265,8 @@ if __name__ == "__main__":
         'dcpdd.all_shards.csv.gz': 'PT',
         "cloze.all_shards.csv.gz": "PT",
         "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-{}.{}.lite.csv": "CPT",
-         'bisection.k10.all_shards.csv.gz': "PT"
+        'bisection.k10.all_shards.csv.gz': "PT",
+        'rlhf.bisection.k10.all_shards.csv.gz': "PT+rlhf"
     }
 
     template_patterns = [
@@ -276,7 +277,8 @@ if __name__ == "__main__":
         'csvs/confounddataset/{}.{}.dcpdd.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.rlhf.dcpdd.lite.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.rlhf.clipped.all_shards.csv.gz',
-        'csvs/confounddataset/{}.{}.bisection.k10.all_shards.csv.gz'
+        'csvs/confounddataset/{}.{}.bisection.k10.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.rlhf.bisection.k10.all_shards.csv.gz'
     ]
     templates = []
     for base in ['bothbins', 'excluded-docs']:
