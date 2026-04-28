@@ -130,6 +130,9 @@ class Data:
         name_key_mapping["abehandlerorg/cptllama_excluded_20240130_20240130"] = "text"
         name_key_mapping["abehandlerorg/cptllama_bothbins_20240130_20240130"] = "text"
 
+        name_key_mapping["abehandlerorg/cptllama_excluded_20240101_20240115"] = "text"
+        name_key_mapping["abehandlerorg/cptllama_bothbins_20240101_20240115"] = "text"
+
         # needed for pythia experiments on blackwell machine
         name_key_mapping = pythia_kluge(name_key_mapping)
 
