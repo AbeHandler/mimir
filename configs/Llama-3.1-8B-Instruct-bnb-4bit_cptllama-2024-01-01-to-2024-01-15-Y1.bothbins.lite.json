@@ -17,7 +17,8 @@
     "blackbox_attacks": [
         "loss",
         "min_k",
-        "zlib"
+        "zlib",
+        "dc_pdd"
     ],
     "env_config": {
         "results": "results_new",
