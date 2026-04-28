@@ -5,10 +5,14 @@ import pandas as pd
 from scipy import stats
 import numpy as np
 import json
+import pandas as pd
 import os
 from sigfig import round as sf_round
 
-# ['method', 'membership', 'doc_id', 'noblocks', 'blocks', 'delta', 'template']
+# update the all_shards docs to ensure you get the latest versions
+# os.system("python scripts/merge_shards.py -d csvs/confounddataset")
+# update the all_shards docs to ensure you get the latest versions
+# os.system("python scripts/merge_shards.py -d csvs")
 
 def _load_shards(pattern_template, skip_shards, score_col):
     """Load and concat shards, filtering to members only."""
@@ -20,6 +24,26 @@ def _load_shards(pattern_template, skip_shards, score_col):
     df = df[df["membership"] == "member"].copy()
     df = df.drop(columns=["membership"])
     return df.rename(columns={"score": score_col})
+
+
+
+
+def compute_delta_8B(fileclass: str) -> pd.DataFrame:
+    y0_path = f'csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.{fileclass}.lite.all_shards.csv.gz'
+    y0 = pd.read_csv(y0_path)
+    y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+
+    y1_path = f'csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y1.{fileclass}.lite.all_shards.csv.gz'
+    y1 = pd.read_csv(y1_path)
+    y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+
+    merged = y0.merge(y1, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["template"] = f"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.{fileclass}.lite.all_shards.csv.gz"
+    return merged
+
+
+
 
 
 def _load_70b_condition(dataset, skip_shards):
@@ -44,35 +68,6 @@ def load_llama_70b():
         print(merged[["method", "delta"]].groupby("method").mean())
 
 
-def load_llama_7b():
-    y0both = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.bothbins.lite.csv')
-    y0both = y0both[y0both["membership"] == "member"].copy().rename(columns={"score": "notblocked"}).drop(columns="membership")
-
-    y1both = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.bothbins.lite.csv')
-    y1both = y1both[y1both["membership"] == "member"].copy().rename(columns={"score": "blocked"}).drop(columns="membership")
-
-    merge_both = y0both.merge(y1both, on =["method", "doc_id"])
-    merge_both["delta"] = merge_both["blocked"] - merge_both["notblocked"]
-    merge_both = merge_both[["method", "delta"]].groupby("method").mean().reset_index()
-    merge_both['method'] = merge_both['method'].apply(lambda x: x + "-llama-8b")
-    print(merge_both)
-
-    y0excluded = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.excluded.lite.csv')
-    y0excluded = y0excluded[y0excluded["membership"] == "member"].copy().rename(columns={"score": "notblocked"}).drop(columns="membership")
-
-    y1excluded = pd.read_csv('csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.lite.csv')
-    y1excluded = y1excluded[y1excluded["membership"] == "member"].copy().rename(columns={"score": "blocked"}).drop(columns="membership")
-    
-    merge_excluded = y0excluded.merge(y1excluded, on =["method", "doc_id"])
-    merge_excluded["delta"] = merge_excluded["blocked"] - merge_excluded["notblocked"]
-    merge_excluded = merge_excluded[["method", "delta"]].groupby("method").mean().reset_index()
-    merge_excluded['method'] = merge_excluded['method'].apply(lambda x: x + "-llama-8b")
-    print(merge_excluded)
-
-
-
-# update the all_shards docs to ensure you get the latest versions
-# os.system("python scripts/merge_shards.py -d csvs/confounddataset")
 
 def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set = None) -> pd.DataFrame:
     """
@@ -149,7 +144,7 @@ def process_scores(df: pd.DataFrame) -> list:
     template = df['template'].iloc[0]
     if 'bothbins' in template:
         label = 'ATU'
-    elif 'excluded-docs' in template:
+    elif 'excluded' in template:
         label = 'ATT'
     else:
         label = 'unknown'
@@ -170,7 +165,7 @@ def process_scores(df: pd.DataFrame) -> list:
         record['label'] = label
         record['template'] = template
         if "Llama-3.1-8B-Instruct" in template:
-            record["test_case"] = "Llama-3.1-8B-Instruct"
+            record["test_case"] = "CPT-8B"
         else:
             record["test_case"] = template_to_case[template.split("X.").pop()]
 
@@ -264,7 +259,8 @@ if __name__ == "__main__":
         'lite.all_shards.csv.gz': 'PT',
         'dcpdd.all_shards.csv.gz': 'PT',
         "cloze.all_shards.csv.gz": "PT",
-        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-{}.{}.lite.csv": "CPT",
+        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.bothbins.lite.all_shards.csv.gz": "CPT-8B",
+        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.excluded.lite.all_shards.csv.gz": "CPT-8B",
         'bisection.k10.all_shards.csv.gz': "PT",
         'rlhf.bisection.k10.all_shards.csv.gz': "PT+rlhf"
     }
@@ -292,6 +288,11 @@ if __name__ == "__main__":
         if ".dcpdd." in template or ".clipped." in template or ".skipped." in template:
             scores = scores[scores["method"] != "loss"].copy()
         all_results.extend(process_scores(scores))
+
+    # 8B test case
+    for fileclass in ["bothbins", "excluded"]:
+        df = compute_delta_8B(fileclass)
+        all_results.extend(process_scores(df))
 
 
     # Write all results to JSONL file
