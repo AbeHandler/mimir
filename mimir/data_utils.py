@@ -256,6 +256,16 @@ class Data:
                 ds = ds.map(lambda x: {"id": x["url"]})
                 return ds.select(range(start, end))
 
+            if "20240101_20240115" in self.name and cptllama in self.name:
+                ds = ds.map(lambda x: {
+                    "id": x["url"],
+                    "text": x["text"][:25000] if len(x["text"]) > 25000 else x["text"]
+                })
+                if "SHARD_ID" in os.environ:
+                    return select_shard(ds, shard_size=100)
+                else:
+                    return ds
+
             if self.name == "abehandlerorg/cptllama_excluded_20240130_20240130":
                 ds = ds.map(lambda x: {"id": x["url"]})
 
