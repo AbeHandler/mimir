@@ -30,9 +30,21 @@ CONFIGS=(
 
 for CONFIG_FILENAME in "${CONFIGS[@]}"; do
     echo "Processing config: $CONFIG_FILENAME"
-    for SHARD_ID in $(seq 1 9); do
-        ./scripts/run_config_llama.sh "$CONFIG_FILENAME" "$SHARD_ID"
-    done
+
+    if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
+        for K in 10; do
+            echo "  Running with K=$K"
+            export BISECTION_QUERIES_PER_TOKEN=$K
+            for SHARD_ID in $(seq 1 9); do
+                ./scripts/run_config_llama.sh "$CONFIG_FILENAME" "$SHARD_ID"
+            done
+        done
+        unset BISECTION_QUERIES_PER_TOKEN
+    else
+        for SHARD_ID in $(seq 1 9); do
+            ./scripts/run_config_llama.sh "$CONFIG_FILENAME" "$SHARD_ID"
+        done
+    fi
 done
 
 
