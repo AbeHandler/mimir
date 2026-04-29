@@ -1,0 +1,28 @@
+{
+    "base_model": "abehandlerorg/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0",
+    "dataset_member": "abehandlerorg/cptllama_bothbins_20240101_20240115",
+    "experiment_name": "abehandlerorg/cptllama_bothbins_20240101_20240115-Y0-bisection",
+    "dataset_nonmember": "abehandlerorg/cptllama_bothbins_20240101_20240115",
+    "min_words": 100,
+    "max_words": 200,
+    "max_tokens": 512,
+    "batch_size": 1,
+    "max_data": 16432,
+    "load_from_hf": true,
+    "ourdataset": "abehandlerorg/cptllama_bothbins_20240101_20240115",
+    "output_name": "abehandlerorg/cptllama_bothbins_20240101_20240115-Y0-bisection",
+    "specific_source": "Github_ngram_13_<0.8_truncated",
+    "n_samples": 16432,
+    "chunk_size": 1,
+    "blackbox_attacks": [
+        "loss",
+        "loss_bisection"
+    ],
+    "env_config": {
+        "results": "results_new",
+        "device": "cuda:0",
+        "device_aux": "cuda:1"
+    },
+    "dump_cache": false,
+    "load_from_cache": true
+}
