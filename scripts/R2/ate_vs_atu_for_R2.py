@@ -44,6 +44,26 @@ def compute_delta_8B(fileclass: str) -> pd.DataFrame:
 
 
 
+def compute_delta_70B_dcpdd(fileclass: str) -> pd.DataFrame:
+    '''
+    csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.bothbins.dcpdd.lite.all_shards.csv.gz
+    csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.excluded.dcpdd.lite.all_shards.csv.gz
+    csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.bothbins.dcpdd.lite.all_shards.csv.gz
+    csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.dcpdd.lite.all_shards.csv.gz
+    '''
+    y0_path = f'csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.{fileclass}.dcpdd.lite.all_shards.csv.gz'
+    y0 = pd.read_csv(y0_path)
+    y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+
+    y1_path = f'csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.{fileclass}.dcpdd.lite.all_shards.csv.gz'
+    y1 = pd.read_csv(y1_path)
+    y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+
+    merged = y0.merge(y1, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["template"] = f"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.{fileclass}.lite.all_shards.csv.gz"
+    merged = merged[merged["method"] == 'dc_pdd'].copy()
+    return merged
 
 
 def _load_70b_condition(dataset, skip_shards):
@@ -250,6 +270,10 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
     return pd.DataFrame(results)
 
 if __name__ == "__main__":
+
+    for base in ['bothbins', 'excluded']:
+        r = compute_delta_70B_dcpdd(base)
+        print(r, r["delta"].mean())
 
     template_to_case = {
         'rlhf.lite.all_shards.csv.gz': 'PT+rlhf',
