@@ -14,7 +14,7 @@ CONFIGS=(
 
 for CONFIG_FILENAME in "${CONFIGS[@]}"; do
     echo "Processing config: $CONFIG_FILENAME"
-    for SHARD_ID in $(seq 1 3); do
+    for SHARD_ID in $(seq 1 9); do
         ./scripts/run_config_llama.sh "$CONFIG_FILENAME" "$SHARD_ID"
     done
 done
