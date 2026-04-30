@@ -8,14 +8,16 @@ GPU_NUMBER="${1:-0}"  # Default to GPU 0 if not specified
 
 # go back to cloze later=> "excluded-docs.noblocks.cloze.json" "excluded-docs.blocks.cloze.json" "bothbins.noblocks.cloze.json" "bothbins.blocks.cloze.json"
 
-for CONFIG_FILENAME in "bothbins.blocks.rlhf.bisection.json" "bothbins.noblocks.rlhf.bisection.json" "excluded-docs.blocks.rlhf.bisection.json" "excluded-docs.noblocks.rlhf.bisection.json"; do 
+for CONFIG_FILENAME in "bothbins.blocks.rlhf.cloze.json" "bothbins.noblocks.rlhf.cloze.json" "excluded-docs.blocks.rlhf.cloze.json" "excluded-docs.noblocks.rlhf.cloze.json"; do
     echo "Processing config: $CONFIG_FILENAME"
 
     # Use 20 shards for excluded-docs and bothbins, 60 for matching_neighbors, 36 for others
-    # Exception: bisection configs only use 1 shard due to high cost
+    # Exception: bisection and cloze configs only use 1 shard due to high cost
     if [[ "$CONFIG_FILENAME" == matching_neighbors.* ]]; then
         MAX_SHARD=59
     elif [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
+        MAX_SHARD=0
+    elif [[ "$CONFIG_FILENAME" == *"cloze"* ]]; then
         MAX_SHARD=0
     elif [[ "$CONFIG_FILENAME" == excluded-docs.* || "$CONFIG_FILENAME" == bothbins.* ]]; then
         MAX_SHARD=5
