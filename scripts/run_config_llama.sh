@@ -92,7 +92,7 @@ echo "Using GPUs 0,1 for Llama model (device_map uses 0-1, inference on cuda:1)"
 
 # Pass BISECTION_QUERIES_PER_TOKEN to both conda run commands if set
 if [ -n "$BISECTION_QUERIES_PER_TOKEN" ]; then
-    export CUDA_VISIBLE_DEVICES=0,1 && PYTHONFAULTHANDLER=1 CUDA_LAUNCH_BLOCKING=1 BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir2 python -X faulthandler run.py --config "$CONFIG_FILE"
+    export CUDA_VISIBLE_DEVICES=0,1 && BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir2 python run.py --config "$CONFIG_FILE"
     time BISECTION_QUERIES_PER_TOKEN=$BISECTION_QUERIES_PER_TOKEN conda run --live-stream -n analysis python build_output.py --config "$CONFIG_BASENAME"
 else
     export CUDA_VISIBLE_DEVICES=0,1 && MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache conda run --live-stream -n mimir2 python run.py --config "$CONFIG_FILE"
