@@ -66,9 +66,8 @@ if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
         exit 1
     fi
     echo "Running bisection with K=$BISECTION_QUERIES_PER_TOKEN"
-    CONFIG_BASENAME="${CONFIG_BASENAME}.k${BISECTION_QUERIES_PER_TOKEN}"
-    OUTPUT_CSV="${CONFIG_BASENAME}.csv"
-    OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.shard_${SHARD_ID}.csv"
+    OUTPUT_CSV="${CONFIG_BASENAME}.k${BISECTION_QUERIES_PER_TOKEN}.csv"
+    OUTPUT_CSV_SHARD="${CONFIG_BASENAME}.k${BISECTION_QUERIES_PER_TOKEN}.shard_${SHARD_ID}.csv"
 fi
 
 # Skip shard 8 for bothbins
