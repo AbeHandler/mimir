@@ -107,6 +107,8 @@ class Data:
                                            "abehandlerorg/fremonttribune_scm": "text",
                                            "abehandlerorg/nelsoncountygazette_scm": "text",
                                            "abehandlerorg/matching_neighbors": "text",
+                                           "abehandlerorg/cptllama_neighbors_20240101_20240115_card": "text",
+                                           "abehandlerorg/cptllama_neighbors_20240130_20240130_card": "text",
                                            "abehandlerorg/olmobypublisherdev": "text",
                                            'abehandlerorg/sutva_click2houston_com_2022-03-01_pair2_control_run4_filtered': "text",
                                            "abehandlerorg/copywritetraps": "text",
@@ -304,6 +306,16 @@ class Data:
                 # are really long articles crashing pythia mimir
                 ds = ds.filter(lambda example: len(example["text"]) < 5000)
                 return select_shard(ds, shard_size=10)
+
+            if "cptllama_neighbors" in self.name:
+                ds = ds.filter(lambda example: len(example["text"]) > 100)
+                shard_id = int(os.environ["SHARD_ID"])
+                SHARD_SIZE = 5000
+                start = shard_id * SHARD_SIZE
+                end = (shard_id + 1) * SHARD_SIZE
+                end = min(end, len(ds)) # if end if past len ds then pick end
+                ds = ds.map(lambda x: {"id": x["url"]})
+                return ds.select(range(start, end))
 
             if self.name == "abehandlerorg/matching_neighbors":
                 ds = ds.filter(lambda example: len(example["text"]) > 100)
