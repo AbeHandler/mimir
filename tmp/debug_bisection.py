@@ -11,10 +11,7 @@ This script:
 """
 
 import pickle
-import torch
 import numpy as np
-from mimir.models import Model
-from src.bisection import recover_token_logprob_difference
 
 
 def load_debug_data():
@@ -55,6 +52,9 @@ def recreate_bisection_call(model, tokenizer, data):
     Returns:
         The result of recover_token_logprob_difference
     """
+    import torch
+    from src.bisection import recover_token_logprob_difference
+
     device = torch.device(data['device'] if torch.cuda.is_available() and 'cuda' in data['device'] else 'cpu')
 
     print("\nAttempting to recreate bisection call...")

@@ -35,7 +35,7 @@ for CONFIG_FILENAME in "${CONFIGS[@]}"; do
         for K in 10; do
             echo "  Running with K=$K"
             export BISECTION_QUERIES_PER_TOKEN=$K
-            for SHARD_ID in $(seq 1 9); do
+            for SHARD_ID in $(seq 1 3); do
                 ./scripts/run_config_llama.sh "$CONFIG_FILENAME" "$SHARD_ID"
             done
         done

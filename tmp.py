@@ -53,11 +53,10 @@ def main():
 
     print(f"Rows: {len(merged)}, matched: {merged['query_url'].notna().sum()}")
 
-    lt_cols = [c for c in merged.columns if c.startswith("lt_")]
+    lt_cols = [c for c in merged.columns if c.startswith("lt_")][0:8]
     for col in lt_cols:
         r = merged["score"].corr(merged[col])
-        print(f"{col}: r={r:.3f}")
-
+        print(col, r)
 
 if __name__ == "__main__":
     main()
