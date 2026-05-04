@@ -3,7 +3,7 @@ set -e
 
 CONFIGS=(
     "llama8b.neighbors_card.20240101_20240115.lite.json"
-    "llama8b.neighbors_card.20240130_20240130.lite.json"
+    "llama70b.neighbors_card.20240130_20240130.lite.json"
     #"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.bothbins.bisection.lite.json"
     #"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.bothbins.clipped.lite.json"
     #"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.bothbins.lite.json"
@@ -49,6 +49,7 @@ for CONFIG_FILENAME in "${CONFIGS[@]}"; do
     restore_data_utils
 
     if [[ "$CONFIG_FILENAME" == *cloze* ]]; then
+        # need to do change shard size if we are in cloze mode
         sed -i "s/shard_size=100)/shard_size=$CLOZE_SHARD_SIZE)/g" "$DATA_UTILS"
     fi
 
