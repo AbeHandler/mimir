@@ -1,5 +1,5 @@
 {
-    "base_model": "abehandlerorg/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0",
+    "base_model": "abehandlerorg/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y1",
     "dataset_member": "abehandlerorg/cptllama_neighbors_20240101_20240115_card",
     "experiment_name": "llama8b-neighbors_card-20240101_20240115-lite",
     "dataset_nonmember": "abehandlerorg/cptllama_neighbors_20240101_20240115_card",
