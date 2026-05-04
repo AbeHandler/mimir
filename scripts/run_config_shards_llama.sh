@@ -28,12 +28,23 @@ CONFIGS=(
     #"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.bisection.lite.json"
     #"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.clipped.lite.json"
     #"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.dcpdd.lite.json"
-    "llama8b.neighbors_card.20240101_20240115.cloze.json"
-    "llama8b.neighbors_card.20240130_20240130.cloze.json"
+    #"llama8b.neighbors_card.20240101_20240115.cloze.json"
+    #"llama8b.neighbors_card.20240130_20240130.cloze.json"
 )
 
 for CONFIG_FILENAME in "${CONFIGS[@]}"; do
     echo "Processing config: $CONFIG_FILENAME"
+
+    # Per-config shard cap, set by total document count.
+    # neighbors_card.20240101_20240115.lite: ~80k pair URLs → 8000 shards
+    # neighbors_card.20240130_20240130.lite: ~9k pair URLs  → 900 shards
+    if [[ "$CONFIG_FILENAME" == "llama8b.neighbors_card.20240101_20240115.lite.json" ]]; then
+        MAX_SHARD=500  # this can go up to 8k eventually but lets start w/ 1K
+    elif [[ "$CONFIG_FILENAME" == "llama8b.neighbors_card.20240130_20240130.lite.json" ]]; then
+        MAX_SHARD=900   # this is basically everything 
+    else
+        MAX_SHARD=100
+    fi
 
     if [[ "$CONFIG_FILENAME" == *"bisection"* ]]; then
         for K in 10; do
@@ -45,8 +56,9 @@ for CONFIG_FILENAME in "${CONFIGS[@]}"; do
         done
         unset BISECTION_QUERIES_PER_TOKEN
     else
-        for SHARD_ID in $(seq 1 9); do
+        for SHARD_ID in $(seq 1 "$MAX_SHARD"); do
             ./scripts/run_config_llama.sh "$CONFIG_FILENAME" "$SHARD_ID"
+            python scripts/merge_shards.py -d csvs
         done
     fi
 done
