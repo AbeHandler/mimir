@@ -28,12 +28,28 @@ CONFIGS=(
     #"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.bisection.lite.json"
     #"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.clipped.lite.json"
     #"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.excluded.dcpdd.lite.json"
-    #"llama8b.neighbors_card.20240101_20240115.cloze.json"
-    #"llama8b.neighbors_card.20240130_20240130.cloze.json"
+    "llama8b.bothbins.blocks.cloze.json"
+    "llama8b.excluded.noblocks.cloze.json"
+    "llama8b.bothbins.noblocks.cloze.json"
+    "llama8b.excluded.blocks.cloze.json"
 )
+
+CLOZE_SHARD_SIZE=10  # smaller shards for cloze (default in data_utils.py is 100)
+DATA_UTILS=mimir/data_utils.py
+
+restore_data_utils() {
+    git checkout -- "$DATA_UTILS"
+}
+trap restore_data_utils EXIT
 
 for CONFIG_FILENAME in "${CONFIGS[@]}"; do
     echo "Processing config: $CONFIG_FILENAME"
+
+    if [[ "$CONFIG_FILENAME" == *cloze* ]]; then
+        sed -i "s/shard_size=100)/shard_size=$CLOZE_SHARD_SIZE)/g" "$DATA_UTILS"
+    else
+        restore_data_utils
+    fi
 
     # Per-config shard cap, set by total document count.
     # neighbors_card.20240101_20240115.lite: ~80k pair URLs → 8000 shards
