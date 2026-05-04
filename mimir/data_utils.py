@@ -279,6 +279,19 @@ class Data:
                 else:
                     return ds
 
+
+            if self.name == "abehandlerorg/cptllama_neighbors_20240130_20240130_card":
+                ds = ds.map(lambda x: {
+                    "id": x["url"],
+                    "text": x["text"][:4000] if len(x["text"]) > 4000 else x["text"]
+                })
+
+                if "SHARD_ID" in os.environ:
+                    return select_shard(ds, shard_size=100)
+                else:
+                    return ds
+
+
             if self.name == "abehandlerorg/cptllama_bothbins_20240130_20240130":
                 # Clip text to 25K characters to prevent OOM errors during inference.
                 # Long texts (>25K chars) cause memory spikes when computing logits,
