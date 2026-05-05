@@ -57,9 +57,9 @@ for CONFIG_FILENAME in "${CONFIGS[@]}"; do
     # neighbors_card.20240101_20240115.lite: ~80k pair URLs → 8000 shards
     # neighbors_card.20240130_20240130.lite: ~9k pair URLs  → 900 shards
     if [[ "$CONFIG_FILENAME" == "llama8b.neighbors_card.20240101_20240115.lite.json" ]]; then
-        MAX_SHARD=50  # this can go up to 8k eventually but lets start w/ 1K
+        MAX_SHARD=500  # this can go up to 8k eventually but lets start w/ 1K
     elif [[ "$CONFIG_FILENAME" == "llama8b.neighbors_card.20240130_20240130.lite.json" ]]; then
-        MAX_SHARD=50   # this can go up to 900
+        MAX_SHARD=500   # this can go up to 900
     elif [[ "$CONFIG_FILENAME" == *cloze* ]]; then
         MAX_SHARD=2
     else
