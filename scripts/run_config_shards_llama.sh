@@ -4,6 +4,10 @@ set -e
 CONFIGS=(
     "llama8b.neighbors_card.20240101_20240115.lite.json"
     "llama70b.neighbors_card.20240130_20240130.lite.json"
+    "llama70b.bothbins.blocks.cloze.json"
+    "llama70b.excluded.noblocks.cloze.json"
+    "llama70b.bothbins.noblocks.cloze.json"
+    "llama70b.excluded.blocks.cloze.json" 
     #"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.bothbins.bisection.lite.json"
     #"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.bothbins.clipped.lite.json"
     #"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.bothbins.lite.json"
@@ -32,10 +36,6 @@ CONFIGS=(
     "llama8b.excluded.noblocks.cloze.json"
     "llama8b.bothbins.noblocks.cloze.json"
     "llama8b.excluded.blocks.cloze.json"
-    "llama70b.bothbins.blocks.cloze.json"
-    "llama70b.excluded.noblocks.cloze.json"
-    "llama70b.bothbins.noblocks.cloze.json"
-    "llama70b.excluded.blocks.cloze.json"
 )
 
 CLOZE_SHARD_SIZE=10  # smaller shards for cloze (default in data_utils.py is 100)
