@@ -32,6 +32,10 @@ CONFIGS=(
     "llama8b.excluded.noblocks.cloze.json"
     "llama8b.bothbins.noblocks.cloze.json"
     "llama8b.excluded.blocks.cloze.json"
+    "llama70b.bothbins.blocks.cloze.json"
+    "llama70b.excluded.noblocks.cloze.json"
+    "llama70b.bothbins.noblocks.cloze.json"
+    "llama70b.excluded.blocks.cloze.json"
 )
 
 CLOZE_SHARD_SIZE=10  # smaller shards for cloze (default in data_utils.py is 100)
