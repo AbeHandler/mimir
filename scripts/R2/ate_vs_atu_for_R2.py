@@ -28,6 +28,26 @@ def _load_shards(pattern_template, skip_shards, score_col):
 
 
 
+def load_8b_cloze(fileclass: str) -> pd.DataFrame:
+    """Load llama8b cloze blocks/noblocks, merge, compute delta."""
+    noblocks_path = f"csvs/llama8b.{fileclass}.noblocks.cloze.all_shards.csv.gz"
+    blocks_path = f"csvs/llama8b.{fileclass}.blocks.cloze.all_shards.csv.gz"
+
+    noblocks = pd.read_csv(noblocks_path).rename(columns={"score": "noblocks"})
+    blocks = pd.read_csv(blocks_path).rename(columns={"score": "blocks"})
+
+    merged = noblocks.merge(blocks, on=["doc_id", "method", "membership"])
+    merged = merged[merged["membership"] == "member"].copy()
+    merged = merged.drop_duplicates()
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+
+    if fileclass not in ("bothbins", "excluded"):
+        raise ValueError(f"unknown fileclass {fileclass}")
+
+    merged["template"] = f"llama8b.{fileclass}.X.cloze.all_shards.csv.gz"
+    return merged
+
+
 def compute_delta_8B(fileclass: str) -> pd.DataFrame:
     y0_path = f'csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.{fileclass}.lite.all_shards.csv.gz'
     y0 = pd.read_csv(y0_path)
@@ -42,6 +62,36 @@ def compute_delta_8B(fileclass: str) -> pd.DataFrame:
     merged["template"] = f"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.{fileclass}.lite.all_shards.csv.gz"
     return merged
 
+
+
+def compute_delta_8B_clipped(fileclass: str) -> pd.DataFrame:
+    y0_path = f'csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.{fileclass}.clipped.lite.all_shards.csv.gz'
+    y0 = pd.read_csv(y0_path)
+    y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+
+    y1_path = f'csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y1.{fileclass}.clipped.lite.all_shards.csv.gz'
+    y1 = pd.read_csv(y1_path)
+    y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+
+    merged = y0.merge(y1, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["template"] = f"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.{fileclass}.clipped.lite.all_shards.csv.gz"
+    return merged
+
+
+def compute_delta_70B_clipped(fileclass: str) -> pd.DataFrame:
+    y0_path = f'csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.{fileclass}.clipped.lite.all_shards.csv.gz'
+    y0 = pd.read_csv(y0_path)
+    y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+
+    y1_path = f'csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.{fileclass}.clipped.lite.all_shards.csv.gz'
+    y1 = pd.read_csv(y1_path)
+    y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+
+    merged = y0.merge(y1, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["template"] = f"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-X.{fileclass}.clipped.lite.all_shards.csv.gz"
+    return merged
 
 
 def compute_delta_70B_dcpdd(fileclass: str) -> pd.DataFrame:
@@ -63,6 +113,36 @@ def compute_delta_70B_dcpdd(fileclass: str) -> pd.DataFrame:
     merged["delta"] = merged["blocks"] - merged["noblocks"]
     merged["template"] = f"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.{fileclass}.lite.all_shards.csv.gz"
     merged = merged[merged["method"] == 'dc_pdd'].copy()
+    return merged
+
+
+def compute_delta_8B_bisection(fileclass: str) -> pd.DataFrame:
+    y0_path = f'csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y0.{fileclass}.bisection.lite.k10.all_shards.csv.gz'
+    y0 = pd.read_csv(y0_path)
+    y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+
+    y1_path = f'csvs/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y1.{fileclass}.bisection.lite.k10.all_shards.csv.gz'
+    y1 = pd.read_csv(y1_path)
+    y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+
+    merged = y0.merge(y1, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["template"] = f"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.{fileclass}.bisection.lite.k10.all_shards.csv.gz"
+    return merged
+
+
+def compute_delta_70B_bisection(fileclass: str) -> pd.DataFrame:
+    y0_path = f'csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y0.{fileclass}.bisection.lite.k10.all_shards.csv.gz'
+    y0 = pd.read_csv(y0_path)
+    y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+
+    y1_path = f'csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-Y1.{fileclass}.bisection.lite.k10.all_shards.csv.gz'
+    y1 = pd.read_csv(y1_path)
+    y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+
+    merged = y0.merge(y1, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["template"] = f"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-X.{fileclass}.bisection.lite.k10.all_shards.csv.gz"
     return merged
 
 
@@ -186,6 +266,8 @@ def process_scores(df: pd.DataFrame) -> list:
         record['template'] = template
         if "Llama-3.1-8B-Instruct" in template:
             record["test_case"] = "CPT-8B"
+        elif "Llama-3.3-70B-Instruct" in template:
+            record["test_case"] = "CPT-70B"
         else:
             record["test_case"] = template_to_case[template.split("X.").pop()]
 
@@ -273,7 +355,7 @@ if __name__ == "__main__":
 
     for base in ['bothbins', 'excluded']:
         r = compute_delta_70B_dcpdd(base)
-        print(r, r["delta"].mean())
+        print(base, "70b dcpdd", r["delta"].mean())
 
     template_to_case = {
         'rlhf.lite.all_shards.csv.gz': 'PT+rlhf',
@@ -283,8 +365,7 @@ if __name__ == "__main__":
         'lite.all_shards.csv.gz': 'PT',
         'dcpdd.all_shards.csv.gz': 'PT',
         "cloze.all_shards.csv.gz": "PT",
-        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.bothbins.lite.all_shards.csv.gz": "CPT-8B",
-        "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.excluded.lite.all_shards.csv.gz": "CPT-8B",
+        'rlhf.cloze.all_shards.csv.gz': 'PT+rlhf',
         'bisection.k10.all_shards.csv.gz': "PT",
         'rlhf.bisection.k10.all_shards.csv.gz': "PT+rlhf"
     }
@@ -294,6 +375,7 @@ if __name__ == "__main__":
         'csvs/confounddataset/{}.{}.clipped.all_shards.csv.gz', # this gets clipped and skipped
         'csvs/confounddataset/{}.{}.lite.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.cloze.all_shards.csv.gz',
+        'csvs/confounddataset/{}.{}.rlhf.cloze.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.dcpdd.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.rlhf.dcpdd.lite.all_shards.csv.gz',
         'csvs/confounddataset/{}.{}.rlhf.clipped.all_shards.csv.gz',
@@ -316,6 +398,33 @@ if __name__ == "__main__":
     # 8B test case
     for fileclass in ["bothbins", "excluded"]:
         df = compute_delta_8B(fileclass)
+        all_results.extend(process_scores(df))
+
+    # 8B clipped test case
+    for fileclass in ["bothbins", "excluded"]:
+        df = compute_delta_8B_clipped(fileclass)
+        df = df[df["method"] != "loss"].copy()
+        all_results.extend(process_scores(df))
+
+    # 70B clipped test case
+    for fileclass in ["bothbins", "excluded"]:
+        df = compute_delta_70B_clipped(fileclass)
+        df = df[df["method"] != "loss"].copy()
+        all_results.extend(process_scores(df))
+
+    # 8B bisection test case
+    for fileclass in ["bothbins", "excluded"]:
+        df = compute_delta_8B_bisection(fileclass)
+        all_results.extend(process_scores(df))
+
+    # 70B bisection test case
+    for fileclass in ["bothbins", "excluded"]:
+        df = compute_delta_70B_bisection(fileclass)
+        all_results.extend(process_scores(df))
+
+    # llama8b cloze test case
+    for fileclass in ["bothbins", "excluded"]:
+        df = load_8b_cloze(fileclass)
         all_results.extend(process_scores(df))
 
 
