@@ -478,3 +478,31 @@ if __name__ == "__main__":
         for line in sig_lines:
             f.write(line + '\n')
     print(f"Significance results written to {sig_file}")
+
+    # === Studentized permutation test (randomization inference) ===
+    from scripts.R2.randomization_inference import permutation_test_studentized
+
+    perm_lines = []
+    for label, att_df, atu_df in sig_pairs:
+        shared_methods = sorted(set(att_df['method'].unique()) & set(atu_df['method'].unique()))
+        for method in shared_methods:
+            att_deltas = att_df[att_df['method'] == method]['delta'].values
+            atu_deltas = atu_df[atu_df['method'] == method]['delta'].values
+            S_obs, p_value, _ = permutation_test_studentized(
+                att_deltas, atu_deltas, n_permutations=10000
+            )
+            perm_lines.append(json.dumps({
+                "test_case": label,
+                "method": method,
+                "n_att": int(len(att_deltas)),
+                "n_atu": int(len(atu_deltas)),
+                "studentized_stat": float(S_obs),
+                "perm_pvalue": float(p_value),
+                "perm_significant": bool(p_value < 0.05),
+            }))
+
+    perm_file = "results/ate_vs_atu_for_R2/att_vs_atu_permutation.jsonl"
+    with open(perm_file, 'w') as f:
+        for line in perm_lines:
+            f.write(line + '\n')
+    print(f"Permutation results written to {perm_file}")
