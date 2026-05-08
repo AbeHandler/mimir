@@ -437,3 +437,44 @@ if __name__ == "__main__":
             f.write(line + '\n')
 
     print(f"Results written to {output_file}")
+
+    # === Significance testing: ATT vs ATU per test case ===
+    sig_pairs = []  # list of (test_case_label, att_df, atu_df)
+
+    # Confound dataset templates
+    for pattern in template_patterns:
+        att = load_MIA_scores(pattern.format('excluded-docs', '{}'))
+        atu = load_MIA_scores(pattern.format('bothbins', '{}'))
+        if ".dcpdd." in pattern or ".clipped." in pattern or ".skipped." in pattern:
+            att = att[att["method"] != "loss"].copy()
+            atu = atu[atu["method"] != "loss"].copy()
+        sig_pairs.append((pattern, att, atu))
+
+    # Paired loaders (mirror the blocks above)
+    for label, loader, drop_loss in [
+        ("8B",            compute_delta_8B,            False),
+        ("8B_clipped",    compute_delta_8B_clipped,    True),
+        ("70B_clipped",   compute_delta_70B_clipped,   True),
+        ("8B_bisection",  compute_delta_8B_bisection,  False),
+        ("70B_bisection", compute_delta_70B_bisection, False),
+        ("8B_cloze",      load_8b_cloze,               False),
+    ]:
+        att = loader("excluded")
+        atu = loader("bothbins")
+        if drop_loss:
+            att = att[att["method"] != "loss"].copy()
+            atu = atu[atu["method"] != "loss"].copy()
+        sig_pairs.append((label, att, atu))
+
+    sig_lines = []
+    for label, att_df, atu_df in sig_pairs:
+        cmp_df = compare_att_vs_atu(att_df, atu_df)
+        cmp_df["test_case"] = label
+        for _, row in cmp_df.iterrows():
+            sig_lines.append(row.to_json())
+
+    sig_file = "results/ate_vs_atu_for_R2/att_vs_atu_significance.jsonl"
+    with open(sig_file, 'w') as f:
+        for line in sig_lines:
+            f.write(line + '\n')
+    print(f"Significance results written to {sig_file}")
