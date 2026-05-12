@@ -16,6 +16,9 @@ LOSS score:  0.2863
 Usage:
     python test_cloze_vs_loss.py
 """
+import argparse
+import json
+
 import torch
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
@@ -26,7 +29,27 @@ from mimir.models import LanguageModel
 from mimir.attacks.loss import LOSSAttack
 
 
-def create_minimal_config():
+def parse_args():
+    parser = argparse.ArgumentParser(description="Sanity check mimir ids/loss")
+    parser.add_argument(
+        "-base-model",
+        default="dobolyilab/blockbench-blocksbin",
+        help="HF model id to load",
+    )
+    parser.add_argument(
+        "-dataset",
+        default="abehandlerorg/bothbins",
+        help="HF dataset id (train split assumed)",
+    )
+    parser.add_argument(
+        "-output",
+        default="audit.jsonl",
+        help="Output jsonl path",
+    )
+    return parser.parse_args()
+
+
+def create_minimal_config(base_model):
     """Create a minimal config for testing."""
     env_config = EnvironmentConfig(
         device="cuda:0",
@@ -35,7 +58,7 @@ def create_minimal_config():
 
     config = ExperimentConfig(
         experiment_name="test_cloze_vs_loss",
-        base_model="dobolyilab/blockbench-blocksbin",  # Tiny model for M1
+        base_model=base_model,
         dataset_member="dummy",  # Not used in this test
         dataset_nonmember="dummy",  # Not used in this test
         env_config=env_config,
@@ -46,51 +69,52 @@ def create_minimal_config():
 
 
 def main():
+    args = parse_args()
+
     print("=" * 60)
     print("Sanity testing MIMIR output")
     print("=" * 60)
 
-    # Create config
-    config = create_minimal_config()
+    config = create_minimal_config(args.base_model)
     print(f"\nDevice: {config.env_config.device}")
     print(f"Model: {config.base_model}")
 
-    # Load model
     print(f"\nLoading model...")
     model = LanguageModel(config)
     model.load()
 
-    # Initialize attacks
     loss_attack = LOSSAttack(config, model)
 
     from datasets import load_dataset
 
-    ds = load_dataset("abehandlerorg/bothbins")["train"]
+    ds = load_dataset(args.dataset)["train"]
 
     urls = ['https://www.bovnews.com/2022/06/09/updating-the-investment-thesis-box-inc-box-and-capital-one-financial-corporation-cof/']
     urls.append('https://www.news5cleveland.com/news/national/gas-prices-are-falling-at-a-historic-rate-heres-why-experts-say-it-will-continue')
 
     ds = ds.filter(lambda x: x["url"] in urls)
 
-    ds = ds.to_pandas()["text"].iloc[0]
-
-    test_examples = [ds]
+    df = ds.to_pandas()
+    test_examples = list(zip(df["url"].to_list(), df["text"].to_list()))
 
     print("\n" + "=" * 60)
     print("RESULTS")
     print("=" * 60)
 
-    loss_scores = []
+    with open(args.output, "w") as fout:
+        for i, (doc_id, text) in enumerate(test_examples, 1):
+            print(f"\nExample {i}: {text[:50]}...")
 
-    for i, text in enumerate(test_examples, 1):
-        print(f"\nExample {i}: {text[:50]}...")
+            probs = model.get_probabilities(text)
 
-        probs = model.get_probabilities(text)
+            loss_score = loss_attack._attack(text, probs=probs)
 
-        loss_score = loss_attack._attack(text, probs=probs)
+            print(f"  id:          {doc_id}")
+            print(f"  LOSS score:  {loss_score:.4f}")
 
-        print(f"  LOSS score:  {loss_score:.4f}")
+            fout.write(json.dumps({"id": doc_id, "loss": float(loss_score)}) + "\n")
 
+    print(f"\nWrote {len(test_examples)} records to {args.output}")
     print("exit")
 
 if __name__ == "__main__":
