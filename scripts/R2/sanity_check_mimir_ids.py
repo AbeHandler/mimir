@@ -5,7 +5,9 @@ Especially useful for experiment one.
 
 To run this do a git pull on the Mimir repo from Duan et al. 
 
-I see minor deviations running this locally on CPU vs. the numbers coming out of the pipeline but these are minor differences.
+$ cd /tmp/ && git clone git@github.com:iamgroot42/mimir.git && cd mimir && cp ~/mimir/scripts/R2/sanity_check_mimir_ids.py . && export MIMIR_DATA_SOURCE=mimirdata && export MIMIR_CACHE_PATH=mimrcache
+
+- I see minor deviations running this locally on CPU vs. the numbers coming out of the pipeline but these are minor differences.
 
 (mimr) ➜  mimir git:(main) ✗ cat /Users/abha4861/mimir/csvs/confounddataset/bothbins.blocks.lite.shard_17.csv | shuf | grep "loss," | head -1
 loss,member,https://www.shutterstock.com/image-photo/pretty-young-girl-holding-daisy-flower-51854116,0.2879748012241104
@@ -45,7 +47,7 @@ def create_minimal_config():
 
 def main():
     print("=" * 60)
-    print("Testing CLOZE vs LOSS Attack")
+    print("Sanity testing MIMIR output")
     print("=" * 60)
 
     # Create config
@@ -63,11 +65,14 @@ def main():
 
     from datasets import load_dataset
 
-    ds = load_dataset("abehandlerorg/bothbins")
+    ds = load_dataset("abehandlerorg/bothbins")["train"]
 
-    ds = ds.filter(lambda x: x["url"] == 'https://www.shutterstock.com/image-photo/pretty-young-girl-holding-daisy-flower-51854116')
+    urls = ['https://www.bovnews.com/2022/06/09/updating-the-investment-thesis-box-inc-box-and-capital-one-financial-corporation-cof/']
+    urls.append('https://www.news5cleveland.com/news/national/gas-prices-are-falling-at-a-historic-rate-heres-why-experts-say-it-will-continue')
 
-    ds = ds["train"].to_pandas()["text"].iloc[0]
+    ds = ds.filter(lambda x: x["url"] in urls)
+
+    ds = ds.to_pandas()["text"].iloc[0]
 
     test_examples = [ds]
 
@@ -80,14 +85,13 @@ def main():
     for i, text in enumerate(test_examples, 1):
         print(f"\nExample {i}: {text[:50]}...")
 
-        # Get probabilities (needed for both attacks)
         probs = model.get_probabilities(text)
 
-        # Run LOSS attack (uses sliding window)
         loss_score = loss_attack._attack(text, probs=probs)
 
         print(f"  LOSS score:  {loss_score:.4f}")
 
+    print("exit")
 
 if __name__ == "__main__":
     main()
