@@ -29,7 +29,7 @@ from mimir.attacks.loss import LOSSAttack
 def create_minimal_config():
     """Create a minimal config for testing."""
     env_config = EnvironmentConfig(
-        device="cpu",
+        device="cuda:0",
         cache_dir="/tmp/cache",
     )
 
