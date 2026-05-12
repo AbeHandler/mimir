@@ -7,6 +7,8 @@ import numpy as np
 import json
 import pandas as pd
 import os
+import glob
+import re
 from sigfig import round as sf_round
 
 # update the all_shards docs to ensure you get the latest versions
@@ -14,16 +16,49 @@ from sigfig import round as sf_round
 # update the all_shards docs to ensure you get the latest versions
 # os.system("python scripts/merge_shards.py -d csvs")
 
-def _load_shards(pattern_template, skip_shards, score_col):
-    """Load and concat shards, filtering to members only."""
-    dfs = []
-    for n in range(1, 17):
-        if n not in skip_shards:
-            dfs.append(pd.read_csv(pattern_template.format(n)))
-    df = pd.concat(dfs)
-    df = df[df["membership"] == "member"].copy()
-    df = df.drop(columns=["membership"])
-    return df.rename(columns={"score": score_col})
+
+def sync():
+    # https://dash.cloudflare.com/1d736c1e8da83d40f1eda75419d90b86/r2/default/buckets/misqsi
+    # sync needed files to cloudflare
+    path_to = ["/Users/abha4861/mimir/csvs", "/Users/abha4861/mimir/csvs/confounddataset/"]
+    for path in path_to:
+        prefix = path.lstrip("/").rstrip("/")
+        end_point = 'https://1d736c1e8da83d40f1eda75419d90b86.r2.cloudflarestorage.com'
+        sync_csvs = f'''aws s3 sync {path} s3://misqsi/{prefix} --endpoint-url {end_point} --profile r2 --size-only --exclude "*" --include "*all_shards.csv.gz"'''
+        os.system(sync_csvs)
+
+    path = "/Users/abha4861/dolma/data/interim/R2/cleaning/"
+    end_point = 'https://1d736c1e8da83d40f1eda75419d90b86.r2.cloudflarestorage.com'
+    prefix = path.lstrip("/").rstrip("/")
+    sync_csvs = f'''aws s3 sync {path} s3://misqsi/{prefix} --endpoint-url {end_point} --profile r2 --size-only --exclude "*" --include "*verified_*"'''
+    os.system(sync_csvs)
+
+def consolidate_llama_files(
+    base: str = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30",
+    datasets: tuple = ("bothbins", "excluded"),
+    arms: tuple = ("Y0", "Y1"),
+    suffix: str = "lite",
+) -> None:
+    """Consolidate per-shard llama CSVs into one all_shards.csv.gz per (arm, dataset).
+
+    Globs for `{base}-{arm}.{dataset}.{suffix}.shard_*.csv` and writes
+    `{base}-{arm}.{dataset}.{suffix}.all_shards.csv.gz`. Clobbers existing output.
+    """
+    import gzip
+    for arm in arms:
+        for dataset in datasets:
+            stem = f"{base}-{arm}.{dataset}.{suffix}"
+            out_path = f"{stem}.all_shards.csv.gz"
+            shard_paths = sorted(
+                glob.glob(f"{stem}.shard_*.csv"),
+                key=lambda p: int(re.search(r"shard_(\d+)\.csv$", p).group(1)),
+            )
+            if not shard_paths:
+                raise FileNotFoundError(f"no shards found for {stem}")
+            df = pd.concat([pd.read_csv(p) for p in shard_paths], ignore_index=True)
+            with gzip.GzipFile(out_path, mode="wb", mtime=0) as gz:
+                df.to_csv(gz, index=False)
+            print(out_path)
 
 
 
@@ -146,27 +181,19 @@ def compute_delta_70B_bisection(fileclass: str) -> pd.DataFrame:
     return merged
 
 
-def _load_70b_condition(dataset, skip_shards):
-    """Load Y0/Y1 shards for one dataset condition, merge, and compute delta."""
+def load_llama_70b(all_results):
+    """Read pre-consolidated 70B all_shards.csv.gz files and print per-method delta means."""
     base = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30"
-    y0 = _load_shards(f"{base}-Y0.{dataset}.lite.shard_{{}}.csv", skip_shards, "noblocks")
-    y1 = _load_shards(f"{base}-Y1.{dataset}.lite.shard_{{}}.csv", skip_shards, "blocks")
-    merged = y1.merge(y0, on=["doc_id", "method"])
-    merged["delta"] = merged["blocks"] - merged["noblocks"]
-    merged["method"] = "70b-" + merged["method"]
-    return merged
-
-
-def load_llama_70b():
-    conditions = [
-        ("bothbins", {8, 9, 12}),
-        ("excluded", {8, 9, 12, 13, 15, 16}),
-    ]
-    for dataset, skip_shards in conditions:
-        merged = _load_70b_condition(dataset, skip_shards)
-        print(f'[*] {dataset}')
-        print(merged[["method", "delta"]].groupby("method").mean())
-
+    for dataset in ("bothbins", "excluded"):
+        y0 = pd.read_csv(f"{base}-Y0.{dataset}.lite.all_shards.csv.gz")
+        y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+        y1 = pd.read_csv(f"{base}-Y1.{dataset}.lite.all_shards.csv.gz")
+        y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+        merged = y1.merge(y0, on=["doc_id", "method"])
+        merged["delta"] = merged["blocks"] - merged["noblocks"]
+        merged["method"] = "70b-" + merged["method"]
+        merged["template"] = f"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-X.{dataset}.lite.all_shards.csv.gz"
+        all_results.extend(process_scores(merged))
 
 
 def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set = None) -> pd.DataFrame:
@@ -276,6 +303,40 @@ def process_scores(df: pd.DataFrame) -> list:
     return lines
 
 
+def pretty_print_results(all_results: list) -> None:
+    """Print a (test_case, method) -> (att, atu, n_att, n_atu) table from JSONL records.
+
+    Rows colored green if att > atu, red otherwise.
+    """
+    GREEN, RED, RESET = "\033[32m", "\033[31m", "\033[0m"
+    rows = [json.loads(line) for line in all_results]
+    df = pd.DataFrame(rows)
+    pivot = df.pivot_table(
+        index=["test_case", "method"],
+        columns="label",
+        values=["delta", "count"],
+        aggfunc="first",
+    )
+    pivot.columns = [f"{v}_{l.lower()}" for v, l in pivot.columns]
+    pivot = pivot.rename(columns={
+        "delta_att": "att", "delta_atu": "atu",
+        "count_att": "n_att", "count_atu": "n_atu",
+    })
+    pivot = pivot[[c for c in ("att", "atu", "n_att", "n_atu") if c in pivot.columns]].reset_index()
+
+    header = f"{'test_case':<20} {'method':<25} {'att':>12} {'atu':>12} {'n_att':>8} {'n_atu':>8}"
+    print(header)
+    print("-" * len(header))
+    for _, r in pivot.iterrows():
+        att, atu = r.get("att"), r.get("atu")
+        color = GREEN if pd.notna(att) and pd.notna(atu) and att > atu else RED
+        att_s = f"{att:.4g}" if pd.notna(att) else "-"
+        atu_s = f"{atu:.4g}" if pd.notna(atu) else "-"
+        n_att_s = f"{int(r['n_att'])}" if pd.notna(r.get("n_att")) else "-"
+        n_atu_s = f"{int(r['n_atu'])}" if pd.notna(r.get("n_atu")) else "-"
+        print(f"{color}{r['test_case']:<20} {r['method']:<25} {att_s:>12} {atu_s:>12} {n_att_s:>8} {n_atu_s:>8}{RESET}")
+
+
 def compare_two_distributions(group1: np.ndarray, group2: np.ndarray) -> dict:
     """
     Compare two distributions using statistical tests (pure function).
@@ -353,6 +414,9 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 
 if __name__ == "__main__":
 
+    sync()
+    consolidate_llama_files()
+
     for base in ['bothbins', 'excluded']:
         r = compute_delta_70B_dcpdd(base)
         print(base, "70b dcpdd", r["delta"].mean())
@@ -388,6 +452,7 @@ if __name__ == "__main__":
             templates.append(template.format(base, '{}'))
 
     all_results = []
+    load_llama_70b(all_results)
 
     for template in templates:
         scores = load_MIA_scores(template)
@@ -437,6 +502,10 @@ if __name__ == "__main__":
             f.write(line + '\n')
 
     print(f"Results written to {output_file}")
+
+    pretty_print_results(all_results)
+
+    import sys; sys.exit(0)
 
     # === Significance testing: ATT vs ATU per test case ===
     sig_pairs = []  # list of (test_case_label, att_df, atu_df)
