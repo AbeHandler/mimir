@@ -506,3 +506,17 @@ if __name__ == "__main__":
         for line in perm_lines:
             f.write(line + '\n')
     print(f"Permutation results written to {perm_file}")
+
+    # === Dump ATT / ATU per-doc deltas for density.R ===
+    att_dump = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz')
+    att_dump.to_csv("/tmp/att.csv", index=False)
+    print("Wrote /tmp/att.csv")
+
+    atu_dump = load_MIA_scores('csvs/confounddataset/bothbins.{}.lite.all_shards.csv.gz')
+    atu_dump.to_csv("/tmp/atu.csv", index=False)
+    print("Wrote /tmp/atu.csv")
+
+    import subprocess
+    density_script = os.path.join(os.path.dirname(__file__), "..", "..", "density.R")
+    density_script = os.path.abspath(density_script)
+    subprocess.run(["Rscript", density_script], check=True)
