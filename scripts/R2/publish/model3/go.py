@@ -26,16 +26,18 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-NAME = "model3_dc_pdd"
+NAME = "model3"
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-CACHE_DIR = REPO_ROOT / "csvs" / "R2" / "model3"
+CACHE_DIR = REPO_ROOT / "csvs"
 RUN_SCRIPT = REPO_ROOT / "scripts" / "run_config.sh"
 
+METHOD = 'loss'
+
 CONFIGS = [
-    "sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.dc_pdd.json",
-    "sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.dc_pdd.json",
-    "sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.dc_pdd.json",
+    "sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.json",
+    "sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.json",
+    "sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.json",
 ]
 
 
@@ -126,7 +128,9 @@ PAIRS = [
 def _load_scores(cfg_name):
     """Load CSV, return DataFrame with method/membership/doc_id/score."""
     df = pd.read_csv(_cached_csv(cfg_name))
-    return df[df["method"] == "dc_pdd"].copy()
+    out = df[df["method"] == METHOD].copy()
+    assert len(out) > 0
+    return out
 
 
 def _compare_treated_vs_control(treated_df, control_df, method):
@@ -153,31 +157,53 @@ def _validate_analyze():
         raise FileNotFoundError(f"Missing CSVs (run --compute first):\n  {names}")
 
 
+def sync():
+    """Sync the CSVs (which hold the `loss` method scores) and their configs to R2.
+
+    Uses `aws s3 sync --size-only` so reruns are no-ops once files are uploaded.
+    """
+    end_point = "https://1d736c1e8da83d40f1eda75419d90b86.r2.cloudflarestorage.com"
+
+    csv_includes = " ".join(f'--include "{_cached_csv(cfg).name}"' for cfg in CONFIGS)
+    csv_path = str(CACHE_DIR) + "/"
+    csv_prefix = csv_path.lstrip("/").rstrip("/")
+    subprocess.run(
+        f'aws s3 sync {csv_path} s3://misqsi/{csv_prefix} '
+        f'--endpoint-url {end_point} --profile r2 --size-only '
+        f'--exclude "*" {csv_includes}',
+        shell=True, check=True,
+    )
+
+    cfg_includes = " ".join(f'--include "{cfg}"' for cfg in CONFIGS)
+    cfg_path = str(REPO_ROOT / "configs") + "/"
+    cfg_prefix = cfg_path.lstrip("/").rstrip("/")
+    subprocess.run(
+        f'aws s3 sync {cfg_path} s3://misqsi/{cfg_prefix} '
+        f'--endpoint-url {end_point} --profile r2 --size-only '
+        f'--exclude "*" {cfg_includes}',
+        shell=True, check=True,
+    )
+
+
 def analyze():
     """Compare treated vs control MIA scores, paired by doc_id."""
 
     _validate_analyze()
+    sync()
 
     results = []
     for treated_cfg, control_cfg in PAIRS:
         treated = _load_scores(treated_cfg)
         control = _load_scores(control_cfg)
 
-        r = _compare_treated_vs_control(treated, control, "dc_pdd")
+        r = _compare_treated_vs_control(treated, control, "loss")
         results.append(r)
-
-        print(f"\n  Treated: {Path(treated_cfg).stem[:70]}")
-        print(f"  Control: {Path(control_cfg).stem[:70]}")
-        print(f"  blocked={r['mean_blocked']:.4f}  "
-              f"unblocked={r['mean_unblocked']:.4f}  "
-              f"delta={r['mean_delta']:+.4f}  n={r['n']:,}")
 
     # pct change in delta across pairs
     d1 = results[0]["mean_delta"]
     d2 = results[1]["mean_delta"]
     pct_change = (d2 - d1) / abs(d1)
-    print(f"\n  delta pair1={d1:+.4f}  delta pair2={d2:+.4f}  "
-          f"pct_change={pct_change:+.1%}")
+    print(f"pct_change={pct_change:+.1%}")
 
 
 def flush():

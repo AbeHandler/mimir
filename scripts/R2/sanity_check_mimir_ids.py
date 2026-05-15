@@ -46,6 +46,11 @@ def parse_args():
         default="audit.jsonl",
         help="Output jsonl path",
     )
+    parser.add_argument(
+        "-reference-csv",
+        default="/Users/abha4861/mimir/csvs/confounddataset/bothbins.blocks.lite.all_shards.csv.gz",
+        help="Reference csv(.gz) with columns method,membership,doc_id,score to diff against",
+    )
     return parser.parse_args()
 
 
@@ -101,7 +106,7 @@ def main():
     print("RESULTS")
     print("=" * 60)
 
-    with open(args.output, "w") as fout:
+    with open(args.output, "a") as fout:
         for i, (doc_id, text) in enumerate(test_examples, 1):
             print(f"\nExample {i}: {text[:50]}...")
 
@@ -112,7 +117,14 @@ def main():
             print(f"  id:          {doc_id}")
             print(f"  LOSS score:  {loss_score:.4f}")
 
-            fout.write(json.dumps({"id": doc_id, "loss": float(loss_score)}) + "\n")
+            fout.write(json.dumps({
+                "id": doc_id,
+                "loss": float(loss_score),
+                "dataset": args.dataset,
+                "base_model": args.base_model,
+                "attack": "loss",
+                "reference_csv": args.reference_csv,
+            }) + "\n")
 
     print(f"\nWrote {len(test_examples)} records to {args.output}")
     print("exit")
