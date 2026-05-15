@@ -1,7 +1,12 @@
 #!/bin/bash
 set -e
 
-REPO_ROOT=/Users/abha4861/mimir
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/../../../.." && pwd)}"
+cd "${REPO_ROOT}"
+
+export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
+export MIMIR_DATA_SOURCE="${MIMIR_DATA_SOURCE:-mimirdata}"
+export MIMIR_CACHE_PATH="${MIMIR_CACHE_PATH:-mimrcache}"
 
 python ${REPO_ROOT}/scripts/R2/publish/model3/go.py --analyze -repo-root ${REPO_ROOT}
 
