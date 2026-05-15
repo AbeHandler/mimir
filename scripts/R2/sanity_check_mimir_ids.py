@@ -18,6 +18,7 @@ Usage:
 """
 import argparse
 import json
+from pathlib import Path
 
 import torch
 import numpy as np
@@ -50,6 +51,12 @@ def parse_args():
         "-reference-csv",
         default="/Users/abha4861/mimir/csvs/confounddataset/bothbins.blocks.lite.all_shards.csv.gz",
         help="Reference csv(.gz) with columns method,membership,doc_id,score to diff against",
+    )
+    parser.add_argument(
+        "-urls-file",
+        default=str(Path(__file__).resolve().parent / "publish" / "model3"
+                    / "sanity_check_urls.bothbins.txt"),
+        help="Text file with one URL per line; only docs whose url is in this list are scored.",
     )
     return parser.parse_args()
 
@@ -94,10 +101,13 @@ def main():
 
     ds = load_dataset(args.dataset)["train"]
 
-    urls = ['https://www.bovnews.com/2022/06/09/updating-the-investment-thesis-box-inc-box-and-capital-one-financial-corporation-cof/']
-    urls.append('https://www.news5cleveland.com/news/national/gas-prices-are-falling-at-a-historic-rate-heres-why-experts-say-it-will-continue')
+    with open(args.urls_file) as f:
+        urls = [line.strip() for line in f if line.strip()]
+    assert urls, f"no urls loaded from {args.urls_file}"
+    print(f"Loaded {len(urls)} url(s) from {args.urls_file}")
 
-    ds = ds.filter(lambda x: x["url"] in urls)
+    url_set = set(urls)
+    ds = ds.filter(lambda x: x["url"] in url_set)
 
     df = ds.to_pandas()
     test_examples = list(zip(df["url"].to_list(), df["text"].to_list()))
