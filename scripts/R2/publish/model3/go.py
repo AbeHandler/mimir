@@ -49,6 +49,9 @@ def parse_args():
     parser.add_argument("--flush", action="store_true", help="Delete outputs for clean rerun")
     parser.add_argument("--gpu", type=int, default=0, help="GPU number (default: 0)")
     parser.add_argument("--dry-run", action="store_true", help="Report status of all configs")
+    parser.add_argument("-repo-root", dest="repo_root", type=Path,
+                        default=REPO_ROOT,
+                        help=f"Path to the mimir repo root (default: {REPO_ROOT})")
     return parser.parse_args()
 
 
@@ -164,7 +167,12 @@ def sync():
     """
     end_point = "https://1d736c1e8da83d40f1eda75419d90b86.r2.cloudflarestorage.com"
 
-    csv_includes = " ".join(f'--include "{_cached_csv(cfg).name}"' for cfg in CONFIGS)
+    extra = [
+        "sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered_take2.json",
+    ]
+    all_cfgs = CONFIGS + extra
+
+    csv_includes = " ".join(f'--include "{_cached_csv(cfg).name}"' for cfg in all_cfgs)
     csv_path = str(CACHE_DIR) + "/"
     csv_prefix = csv_path.lstrip("/").rstrip("/")
     subprocess.run(
@@ -174,7 +182,7 @@ def sync():
         shell=True, check=True,
     )
 
-    cfg_includes = " ".join(f'--include "{cfg}"' for cfg in CONFIGS)
+    cfg_includes = " ".join(f'--include "{cfg}"' for cfg in all_cfgs)
     cfg_path = str(REPO_ROOT / "configs") + "/"
     cfg_prefix = cfg_path.lstrip("/").rstrip("/")
     subprocess.run(
@@ -218,6 +226,10 @@ def flush():
 
 if __name__ == "__main__":
     args = parse_args()
+
+    REPO_ROOT = args.repo_root.resolve()
+    CACHE_DIR = REPO_ROOT / "csvs"
+    RUN_SCRIPT = REPO_ROOT / "scripts" / "run_config.sh"
 
     if args.dry_run:
         dry_run()
