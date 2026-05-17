@@ -197,7 +197,6 @@ def analyze():
     """Compare treated vs control MIA scores, paired by doc_id."""
 
     _validate_analyze()
-    sync()
 
     results = []
     for treated_cfg, control_cfg in PAIRS:
