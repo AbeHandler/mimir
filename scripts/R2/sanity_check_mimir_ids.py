@@ -20,6 +20,7 @@ import argparse
 import json
 from pathlib import Path
 
+import pandas as pd
 import torch
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
@@ -58,7 +59,24 @@ def parse_args():
                     / "sanity_check_urls.bothbins.txt"),
         help="Text file with one URL per line; only docs whose url is in this list are scored.",
     )
+    parser.add_argument(
+        "-tolerance",
+        type=float,
+        default=1e-3,
+        help="Absolute+relative tolerance for comparing recomputed loss vs reference CSV.",
+    )
     return parser.parse_args()
+
+
+def load_reference_member_loss(reference_csv: str) -> dict:
+    """Read `loss,member,<doc_id>,<score>` rows from the reference CSV.
+
+    Returns {doc_id: score}. Supports .csv and .csv.gz; assumes the columns
+    `method, membership, doc_id, score` (the schema used by `run.py`).
+    """
+    df = pd.read_csv(reference_csv)
+    df = df[(df["method"] == "loss") & (df["membership"] == "member")]
+    return dict(zip(df["doc_id"], df["score"]))
 
 
 def create_minimal_config(base_model):
@@ -116,6 +134,10 @@ def main():
     print("RESULTS")
     print("=" * 60)
 
+    ref_loss = load_reference_member_loss(args.reference_csv)
+    print(f"Loaded {len(ref_loss)} reference (loss,member) rows from {args.reference_csv}")
+
+    mismatches = []
     with open(args.output, "a") as fout:
         for i, (doc_id, text) in enumerate(test_examples, 1):
             print(f"\nExample {i}: {text[:50]}...")
@@ -124,12 +146,28 @@ def main():
 
             loss_score = loss_attack._attack(text, probs=probs)
 
+            ref_score = ref_loss.get(doc_id)
+            if ref_score is None:
+                status = "MISSING_REF"
+            elif np.isclose(loss_score, ref_score,
+                            rtol=args.tolerance, atol=args.tolerance):
+                status = "OK"
+            else:
+                status = "MISMATCH"
+                mismatches.append((doc_id, loss_score, ref_score))
+
             print(f"  id:          {doc_id}")
-            print(f"  LOSS score:  {loss_score:.4f}")
+            print(f"  LOSS score:  {loss_score:.6f}")
+            print(f"  ref score:   "
+                  f"{'n/a' if ref_score is None else f'{ref_score:.6f}'}")
+            print(f"  status:      {status} (tol={args.tolerance:g})")
 
             fout.write(json.dumps({
                 "id": doc_id,
                 "loss": float(loss_score),
+                "ref_loss": None if ref_score is None else float(ref_score),
+                "tolerance": args.tolerance,
+                "status": status,
                 "dataset": args.dataset,
                 "base_model": args.base_model,
                 "attack": "loss",
@@ -137,6 +175,12 @@ def main():
             }) + "\n")
 
     print(f"\nWrote {len(test_examples)} records to {args.output}")
+    if mismatches:
+        raise AssertionError(
+            f"{len(mismatches)} doc(s) disagreed with reference beyond "
+            f"tol={args.tolerance:g}: " +
+            ", ".join(f"{d}: got {g:.6f}, ref {r:.6f}" for d, g, r in mismatches)
+        )
     print("exit")
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/../../../.." && pwd)}"
+REPO_ROOT="/home/abe/mimir" # locally /Users/abha4861/mimir
 cd "${REPO_ROOT}"
 
 export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
