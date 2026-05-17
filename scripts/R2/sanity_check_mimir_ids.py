@@ -157,9 +157,10 @@ def main():
                 mismatches.append((doc_id, loss_score, ref_score))
 
             print(f"  id:          {doc_id}")
-            print(f"  LOSS score:  {loss_score:.6f}")
+            print(f"  LOSS score:  {loss_score:.6f}   (fresh mimir output)")
             print(f"  ref score:   "
-                  f"{'n/a' if ref_score is None else f'{ref_score:.6f}'}")
+                  f"{'n/a' if ref_score is None else f'{ref_score:.6f}'}   "
+                  f"(mimir output in transparency materials)")
             print(f"  status:      {status} (tol={args.tolerance:g})")
 
             fout.write(json.dumps({
@@ -176,10 +177,14 @@ def main():
 
     print(f"\nWrote {len(test_examples)} records to {args.output}")
     if mismatches:
-        raise AssertionError(
+        details = "\n  ".join(
+            f"{d}: LOSS score (fresh mimir output) = {g:.6f}, "
+            f"ref score (mimir output in transparency materials) = {r:.6f}"
+            for d, g, r in mismatches
+        )
+        raise ValueError(
             f"{len(mismatches)} doc(s) disagreed with reference beyond "
-            f"tol={args.tolerance:g}: " +
-            ", ".join(f"{d}: got {g:.6f}, ref {r:.6f}" for d, g, r in mismatches)
+            f"tol={args.tolerance:g}:\n  {details}"
         )
     print("exit")
 
