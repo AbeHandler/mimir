@@ -643,7 +643,11 @@ if __name__ == "__main__":
     atu_dump.to_csv("/tmp/atu.csv", index=False)
     print("Wrote /tmp/atu.csv")
 
+    import shutil
     import subprocess
-    density_script = os.path.join(os.path.dirname(__file__), "..", "..", "density.R")
-    density_script = os.path.abspath(density_script)
-    subprocess.run(["Rscript", density_script], check=True)
+    if shutil.which("Rscript") is None:
+        print("Rscript not found on PATH; skipping density plot.")
+    else:
+        density_script = os.path.join(os.path.dirname(__file__), "..", "..", "density.R")
+        density_script = os.path.abspath(density_script)
+        subprocess.run(["Rscript", density_script], check=True)
