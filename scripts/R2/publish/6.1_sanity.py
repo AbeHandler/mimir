@@ -2,7 +2,12 @@
 """
 
 The point of this script is reproducibility.
-A fresh `iamgroot42/mimir` clone should re-derive the score column of the published CSVs. 
+A fresh `iamgroot42/mimir` clone should re-derive the score column of the published CSVs.
+
+Reference CSVs are pulled on demand from the R2 bucket the paper uses
+(s3://misqsi/...), so there is no dependency on a local `csvs/` tree.
+CSVs are cached at `-cache-dir` (default /tmp/6_1_sanity_csvs) and
+reused across reruns.
 
 # Mimir does not appear active but this script was checked on
 # May 19th, 2026 when the head MIMIR commit is 1b6fd649eeeecc887275a2336c7da808ee58757d
@@ -13,19 +18,54 @@ $ cd mimir && mkdir -p scripts/R2/publish/ # setup dirs
 # copy from local modification of mimir
 $ cp ~/mimir/scripts/R2/publish/6.1_sanity.py scripts/R2/publish/
 
+# AWS profile "r2" must be configured (see ~/.aws/credentials) so the
+# script can pull reference CSVs from cloudflare R2.
 # setting CUDA_VISIBLE here is needed for llama to run
-$ CUDA_VISIBLE_DEVICES=0,1 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache python scripts/R2/publish/6.1_sanity.py
+
+
+$ python scripts/R2/publish/6.1_sanity.py -cache-dir /tmp/61/
+$ CUDA_VISIBLE_DEVICES=0,1 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache python scripts/R2/publish/6.1_sanity.py -cache-dir /tmp/61/
 
 """
 import argparse
 import json
+import os
 import random
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+
+
+R2_ENDPOINT = "https://1d736c1e8da83d40f1eda75419d90b86.r2.cloudflarestorage.com"
+R2_BUCKET = "misqsi"
+R2_BASE_PREFIX = "Users/abha4861/mimir/csvs"
+R2_AWS_PROFILE = os.environ.get("R2_AWS_PROFILE", "r2")
+
+
+def r2_fetch(remote_key: str, dest: Path) -> Path:
+    """Download a single object from R2 into `dest` using aws s3 cp.
+
+    Mirrors the pull pattern in scripts/R2/ate_vs_atu_for_R2.py:pull
+    (same endpoint, bucket, profile). Skips the download if `dest`
+    already exists so reruns are fast.
+    """
+    if dest.exists():
+        return dest
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "aws", "s3", "cp",
+        f"s3://{R2_BUCKET}/{remote_key}", str(dest),
+        "--endpoint-url", R2_ENDPOINT,
+        "--profile", R2_AWS_PROFILE,
+    ]
+    print(f"[6.1_sanity] $ {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
+    return dest
 
 
 def _compat_patch_llama_tokenizer():
@@ -64,9 +104,16 @@ METHODS = ("loss", "zlib", "min_k")
 def parse_args():
     p = argparse.ArgumentParser(description="Section 6.1 mimir-output sanity checks.")
     p.add_argument(
-        "-repo-root",
-        default=str(Path.home() / "mimir"),
-        help="Root of the local mimir repo (holds csvs/).",
+        "-mode",
+        choices=["pull", "run"],
+        default="run",
+        help="pull: just download reference CSVs into -cache-dir and exit. "
+             "run: pull (idempotent) then score. Default: run.",
+    )
+    p.add_argument(
+        "-cache-dir",
+        default=str(Path(tempfile.gettempdir()) / "6_1_sanity_csvs"),
+        help="Local directory to hold reference CSVs pulled from R2.",
     )
     p.add_argument(
         "-tolerance",
@@ -99,42 +146,48 @@ def parse_args():
     return p.parse_args()
 
 
-def build_combos(repo_root: Path):
+def build_combos(cache_dir: Path):
     """PT (blockbench) combos + one CPT-8B Y1 combo.
 
-    Each combo maps a base_model + HF dataset to the corresponding
-    per-treatment all_shards.csv.gz produced by run.py. The 8B test case
-    in ate_vs_atu_for_R2.py is a paired Y1 - Y0 delta; we sanity-check
-    the Y1 ("blocks") side here, which is enough to verify the CSV.
+    Each combo maps a base_model + HF dataset to a remote R2 key for the
+    per-treatment all_shards.csv.gz produced by run.py and a local
+    cache path inside `cache_dir`. The CSV is pulled on demand so the
+    script does not depend on a local `csvs/` tree. The 8B test case in
+    ate_vs_atu_for_R2.py is a paired Y1 - Y0 delta; we sanity-check the
+    Y1 ("blocks") side here, which is enough to verify the CSV.
     """
-    confound = repo_root / "csvs" / "confounddataset"
-    csvs = repo_root / "csvs"
-    return [
+    entries = [
         (
             "PT bothbins blocks",
             "dobolyilab/blockbench-blocksbin",
             "abehandlerorg/bothbins",
-            confound / "bothbins.blocks.lite.all_shards.csv.gz",
+            "confounddataset/bothbins.blocks.lite.all_shards.csv.gz",
         ),
         (
             "PT bothbins noblocks",
             "dobolyilab/blockbench-noblocksbin",
             "abehandlerorg/bothbins",
-            confound / "bothbins.noblocks.lite.all_shards.csv.gz",
+            "confounddataset/bothbins.noblocks.lite.all_shards.csv.gz",
         ),
         (
             "PT excluded-docs blocks",
             "dobolyilab/blockbench-blocksbin",
             "abehandlerorg/excluded-docs",
-            confound / "excluded-docs.blocks.lite.all_shards.csv.gz",
+            "confounddataset/excluded-docs.blocks.lite.all_shards.csv.gz",
         ),
         (
             "CPT-8B bothbins Y1",
             "abehandlerorg/Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y1",
             "abehandlerorg/cptllama_bothbins_20240101_20240115",
-            csvs / "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y1.bothbins.lite.all_shards.csv.gz",
+            "Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-Y1.bothbins.lite.all_shards.csv.gz",
         ),
     ]
+    out = []
+    for label, base_model, dataset, rel_key in entries:
+        remote_key = f"{R2_BASE_PREFIX}/{rel_key}"
+        local_csv = cache_dir / rel_key
+        out.append((label, base_model, dataset, remote_key, local_csv))
+    return out
 
 
 def load_model(base_model: str, device: str):
@@ -194,18 +247,31 @@ def score_row(method: str, attacks: dict, text: str, model) -> float:
     return float(attacks[method]._attack(text, probs=probs))
 
 
-def check_combo(label, base_model, dataset, reference_csv, args, fout) -> list:
+def pull_all(combos) -> None:
+    """Download every combo's reference CSV from R2 into its cache path.
+
+    Idempotent: existing files are kept (r2_fetch short-circuits on
+    existence). Run this once standalone via `-mode pull`, or let
+    `-mode run` invoke it before scoring.
+    """
+    for label, _, _, remote_key, local_csv in combos:
+        print(f"[6.1_sanity] pulling {label}")
+        r2_fetch(remote_key, Path(local_csv))
+
+
+def check_combo(label, base_model, dataset, remote_key, reference_csv, args, fout) -> list:
     """Score the sampled rows and return list of mismatch tuples."""
     print("=" * 70)
     print(f"[6.1 sanity] {label}")
     print(f"  base-model:    {base_model}")
     print(f"  dataset:       {dataset}")
+    print(f"  remote-csv:    s3://{R2_BUCKET}/{remote_key}")
     print(f"  reference-csv: {reference_csv}")
     print("=" * 70)
     if not Path(reference_csv).exists():
         raise FileNotFoundError(
             f"reference csv missing for combo {label!r}: {reference_csv}. "
-            "Pull r2 data (ate_vs_atu_for_R2.py -mode pull) first."
+            "Run with -mode pull first (or re-run with -mode run)."
         )
 
     rng = random.Random(args.seed)
@@ -263,9 +329,19 @@ def check_combo(label, base_model, dataset, reference_csv, args, fout) -> list:
 
 def main():
     args = parse_args()
-    repo_root = Path(args.repo_root).expanduser().resolve()
+    cache_dir = Path(args.cache_dir).expanduser().resolve()
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    print(f"[6.1_sanity] reference CSV cache: {cache_dir}")
 
-    combos = build_combos(repo_root)
+    combos = build_combos(cache_dir)
+
+    if args.mode == "pull":
+        pull_all(combos)
+        print(f"[6.1_sanity] pulled {len(combos)} reference CSV(s) into {cache_dir}")
+        return
+
+    pull_all(combos)
+
     all_mismatches = []
     with open(args.output, "a") as fout:
         for combo in combos:
