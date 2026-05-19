@@ -122,8 +122,8 @@ def main():
     print(f"Using tmp dir: {tmp_dir}")
 
     try:
-        delta()
         pull_from_r2(tmp_dir)
+        delta()        
         analyze(tmp_dir)
     finally:
         if owns_tmp:
