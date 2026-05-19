@@ -24,6 +24,7 @@ CONFIGS = [
     "sutva_click2houston_com_2022-05-01_pair1_treated_run1_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.json",
     "sutva_click2houston_com_2022-05-01_pair2_control_run4_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.json",
     "sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.json",
+    'sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered_take2.json'
 ]
 
 PAIRS = [
@@ -98,6 +99,18 @@ def analyze(tmp_dir: Path):
     print(f"pct_change={pct_change:+.1%}")
 
 
+def delta():
+    '''check that we observe no similar variation from just rerunning mimir. promised in paper'''
+    f1 = '/tmp/model3/sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered.csv'
+    f2 = '/tmp/model3/sutva_click2houston_com_2022-05-01_pair2_treated_run3_sutva_click2houston_com_2022-05-01_pair2_control_run4_filtered_take2.csv'
+    f1 = pd.read_csv(f1)
+    f2 = pd.read_csv(f2)
+
+    both = f1.merge(f2, on=["doc_id", "method", "membership"])
+    assert (both["score_x"] - both["score_y"]).mean() < 1e-6
+
+
+
 def main():
     args = parse_args()
     if args.tmp_dir is not None:
@@ -109,6 +122,7 @@ def main():
     print(f"Using tmp dir: {tmp_dir}")
 
     try:
+        delta()
         pull_from_r2(tmp_dir)
         analyze(tmp_dir)
     finally:
