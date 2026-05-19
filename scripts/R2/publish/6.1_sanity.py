@@ -13,6 +13,9 @@ $ cd mimir && mkdir -p scripts/R2/publish/ # setup dirs
 # copy from local modification of mimir
 $ cp ~/mimir/scripts/R2/publish/6.1_sanity.py scripts/R2/publish/
 
+# setting CUDA_VISIBLE here is needed for llama to run
+$ CUDA_VISIBLE_DEVICES=0,1 MIMIR_DATA_SOURCE=mimirdata MIMIR_CACHE_PATH=mimrcache python scripts/R2/publish/6.1_sanity.py
+
 """
 import argparse
 import json
