@@ -265,6 +265,7 @@ def load_MIA_scores(
     template_name = template.split("/")[-1].replace("{}", "X")
     merged["template"] = template_name
 
+    merged = merged.sort_values(["doc_id", "method"]).reset_index(drop=True)
     if len(merged) > 50000: # may happen when stuff is running
         merged = merged.sample(n=50_000, random_state=42)
     return merged
