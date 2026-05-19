@@ -6,9 +6,12 @@ from scipy import stats
 import numpy as np
 import json
 import pandas as pd
+import argparse
 import os
 import glob
 import re
+import sys
+from pathlib import Path
 from sigfig import round as sf_round
 
 # update the all_shards docs to ensure you get the latest versions
@@ -17,7 +20,7 @@ from sigfig import round as sf_round
 # os.system("python scripts/merge_shards.py -d csvs")
 
 
-def sync():
+def push():
     # https://dash.cloudflare.com/1d736c1e8da83d40f1eda75419d90b86/r2/default/buckets/misqsi
     # sync needed files to cloudflare
     path_to = ["/Users/abha4861/mimir/csvs", "/Users/abha4861/mimir/csvs/confounddataset/"]
@@ -32,6 +35,24 @@ def sync():
     prefix = path.lstrip("/").rstrip("/")
     sync_csvs = f'''aws s3 sync {path} s3://misqsi/{prefix} --endpoint-url {end_point} --profile r2 --size-only --exclude "*" --include "*verified_*"'''
     os.system(sync_csvs)
+
+
+def pull(dir: str = None):
+    # pull from cloudflare the files that push() uploads
+    # local destination is relative to CWD (or `dir` if provided)
+    base = os.path.abspath(dir) if dir else os.getcwd()
+    end_point = 'https://1d736c1e8da83d40f1eda75419d90b86.r2.cloudflarestorage.com'
+
+    pulls = [
+        ("Users/abha4861/mimir/csvs", "csvs", "*all_shards.csv.gz"),
+        ("Users/abha4861/mimir/csvs/confounddataset", "csvs/confounddataset", "*all_shards.csv.gz"),
+        ("Users/abha4861/dolma/data/interim/R2/cleaning", "data/interim/R2/cleaning", "*verified_*"),
+    ]
+    for remote_prefix, local_sub, include in pulls:
+        local = os.path.join(base, local_sub)
+        os.makedirs(local, exist_ok=True)
+        cmd = f'''aws s3 sync s3://misqsi/{remote_prefix} {local} --endpoint-url {end_point} --profile r2 --size-only --exclude "*" --include "{include}"'''
+        os.system(cmd)
 
 def consolidate_llama_files(
     base: str = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30",
@@ -196,7 +217,12 @@ def load_llama_70b(all_results):
         all_results.extend(process_scores(merged))
 
 
-def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set = None) -> pd.DataFrame:
+def load_MIA_scores(
+    template: str,
+    excluded_urls: set = None,
+    bothbins_urls: set = None,
+    path_to_clean: Path = Path("/Users/abha4861/dolma/data/interim/R2/cleaning"),
+) -> pd.DataFrame:
     """
     Load MIA scores for blocks and noblocks treatments, merge, and calculate delta.
     Automatically filters by URL set based on template file name pattern.
@@ -206,11 +232,14 @@ def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set
                  Example: 'csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz'
         excluded_urls: Set of excluded URLs (optional, auto-detected from template)
         bothbins_urls: Set of bothbins URLs (optional, auto-detected from template)
+        path_to_clean: Directory containing verified_bothbins_urls.txt and
+                       verified_excluded_urls.txt. Defaults to the dolma checkout.
 
     Returns:
         Merged dataframe with 'blocks', 'noblocks', 'delta', and 'template' columns.
         Template column contains filename with {} replaced by X (e.g., 'excluded-docs.X.lite.all_shards.csv.gz')
     """
+    path_to_clean = Path(path_to_clean)
     noblocks_path = template.format('noblocks')
     blocks_path = template.format('blocks')
 
@@ -225,11 +254,11 @@ def load_MIA_scores(template: str, excluded_urls: set = None, bothbins_urls: set
     # Auto-detect URL filtering based on template name
     if 'bothbins' in template:
         if bothbins_urls is None:
-            bothbins_urls = load_url_set("/Users/abha4861/dolma/data/interim/R2/cleaning/verified_bothbins_urls.txt")
+            bothbins_urls = load_url_set(path_to_clean / "verified_bothbins_urls.txt")
         merged = merged[merged['doc_id'].isin(bothbins_urls)].copy()
     elif 'excluded-docs' in template:
         if excluded_urls is None:
-            excluded_urls = load_url_set("/Users/abha4861/dolma/data/interim/R2/cleaning/verified_excluded_urls.txt")
+            excluded_urls = load_url_set(path_to_clean / "verified_excluded_urls.txt")
         merged = merged[merged['doc_id'].isin(excluded_urls)].copy()
 
     # Add template column: extract filename and replace {} with X
@@ -412,9 +441,34 @@ def compare_att_vs_atu(att_df: pd.DataFrame, atu_df: pd.DataFrame) -> pd.DataFra
 
     return pd.DataFrame(results)
 
+def parse_args():
+    p = argparse.ArgumentParser(description="ATE vs ATU analysis for R2.")
+    p.add_argument(
+        "-mode",
+        choices=["push", "pull", "run"],
+        default="run",
+        help="push: upload local files to R2; pull: download from R2; run: analysis (default).",
+    )
+    p.add_argument(
+        "-data-dir",
+        default=None,
+        help="Local destination dir for -mode pull (relative to CWD). Defaults to CWD.",
+    )
+    return p.parse_args()
+
+
 if __name__ == "__main__":
 
-    sync()
+    args = parse_args()
+
+    if args.mode == "push":
+        push()
+        sys.exit(0)
+
+    if args.mode == "pull":
+        pull(dir=args.data_dir)
+        sys.exit(0)
+
     consolidate_llama_files()
 
     for base in ['bothbins', 'excluded']:
@@ -504,8 +558,6 @@ if __name__ == "__main__":
     print(f"Results written to {output_file}")
 
     pretty_print_results(all_results)
-
-    import sys; sys.exit(0)
 
     # === Significance testing: ATT vs ATU per test case ===
     sig_pairs = []  # list of (test_case_label, att_df, atu_df)
