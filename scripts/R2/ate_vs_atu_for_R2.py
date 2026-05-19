@@ -454,6 +454,11 @@ def parse_args():
         default=None,
         help="Local destination dir for -mode pull (relative to CWD). Defaults to CWD.",
     )
+    p.add_argument(
+        "-path-to-clean",
+        default="/Users/abha4861/dolma/data/interim/R2/cleaning",
+        help="Directory containing verified_{bothbins,excluded}_urls.txt (used by -mode run).",
+    )
     return p.parse_args()
 
 
@@ -510,7 +515,7 @@ if __name__ == "__main__":
     load_llama_70b(all_results)
 
     for template in templates:
-        scores = load_MIA_scores(template)
+        scores = load_MIA_scores(template, path_to_clean=Path(args.path_to_clean))
         if ".dcpdd." in template or ".clipped." in template or ".skipped." in template:
             scores = scores[scores["method"] != "loss"].copy()
         all_results.extend(process_scores(scores))
@@ -565,8 +570,8 @@ if __name__ == "__main__":
 
     # Confound dataset templates
     for pattern in template_patterns:
-        att = load_MIA_scores(pattern.format('excluded-docs', '{}'))
-        atu = load_MIA_scores(pattern.format('bothbins', '{}'))
+        att = load_MIA_scores(pattern.format('excluded-docs', '{}'), path_to_clean=Path(args.path_to_clean))
+        atu = load_MIA_scores(pattern.format('bothbins', '{}'), path_to_clean=Path(args.path_to_clean))
         if ".dcpdd." in pattern or ".clipped." in pattern or ".skipped." in pattern:
             att = att[att["method"] != "loss"].copy()
             atu = atu[atu["method"] != "loss"].copy()
@@ -630,11 +635,11 @@ if __name__ == "__main__":
     print(f"Permutation results written to {perm_file}")
 
     # === Dump ATT / ATU per-doc deltas for density.R ===
-    att_dump = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz')
+    att_dump = load_MIA_scores('csvs/confounddataset/excluded-docs.{}.lite.all_shards.csv.gz', path_to_clean=Path(args.path_to_clean))
     att_dump.to_csv("/tmp/att.csv", index=False)
     print("Wrote /tmp/att.csv")
 
-    atu_dump = load_MIA_scores('csvs/confounddataset/bothbins.{}.lite.all_shards.csv.gz')
+    atu_dump = load_MIA_scores('csvs/confounddataset/bothbins.{}.lite.all_shards.csv.gz', path_to_clean=Path(args.path_to_clean))
     atu_dump.to_csv("/tmp/atu.csv", index=False)
     print("Wrote /tmp/atu.csv")
 
