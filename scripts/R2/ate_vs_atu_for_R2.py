@@ -462,6 +462,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     if args.mode == "push":
+        consolidate_llama_files() # helpful for the push step. only need to push conslidated
         push()
         sys.exit(0)
 
@@ -469,7 +470,7 @@ if __name__ == "__main__":
         pull(dir=args.data_dir)
         sys.exit(0)
 
-    consolidate_llama_files()
+    
 
     for base in ['bothbins', 'excluded']:
         r = compute_delta_70B_dcpdd(base)
