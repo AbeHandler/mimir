@@ -43,16 +43,16 @@ p <- ggplot(data, aes(x = delta, fill = group, color = group)) +
   scale_fill_manual(
     values = c("treated" = treated_color, "untreated" = untreated_color),
     labels = c(
-      "treated" = "Treated Documents",
-      "untreated" = "Untreated Documents"
+      "treated" = "Blocked Documents",
+      "untreated" = "Unblocked Documents"
     ),
     limits = c("untreated", "treated")
   ) +
   scale_color_manual(
     values = c("treated" = treated_color, "untreated" = untreated_color),
     labels = c(
-      "treated" = "Treated Documents",
-      "untreated" = "Untreated Documents"
+      "treated" = "Blocked Documents",
+      "untreated" = "Unblocked Documents"
     ),
     limits = c("untreated", "treated")
   ) +
@@ -68,6 +68,7 @@ p <- ggplot(data, aes(x = delta, fill = group, color = group)) +
     plot.background = element_rect(fill = "white", color = NA),
     panel.background = element_rect(fill = "white", color = NA),
     legend.position = "top",
+    legend.text = element_text(size = axis_text_size),
     axis.ticks = element_line(linewidth = line_width),
     axis.ticks.length = unit(tick_length, "pt"),
     axis.text = element_text(size = axis_text_size),
@@ -88,8 +89,8 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
   scale_color_manual(
     values = c("treated" = treated_color, "untreated" = untreated_color),
     labels = c(
-      "treated" = "Treated Documents",
-      "untreated" = "Untreated Documents"
+      "treated" = "Blocked Documents",
+      "untreated" = "Unblocked Documents"
     ),
     limits = c("untreated", "treated")
   ) +
@@ -104,6 +105,7 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
     plot.background = element_rect(fill = "white", color = NA),
     panel.background = element_rect(fill = "white", color = NA),
     legend.position = "top",
+    legend.text = element_text(size = axis_text_size),
     axis.ticks = element_line(linewidth = line_width),
     axis.ticks.length = unit(tick_length, "pt"),
     axis.text = element_text(size = axis_text_size),

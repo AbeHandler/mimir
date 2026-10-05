@@ -156,12 +156,11 @@ def main():
                 status = "MISMATCH"
                 mismatches.append((doc_id, loss_score, ref_score))
 
-            print(f"  id:          {doc_id}")
-            print(f"  LOSS score:  {loss_score:.6f}   (fresh mimir output)")
-            print(f"  ref score:   "
-                  f"{'n/a' if ref_score is None else f'{ref_score:.6f}'}   "
-                  f"(mimir output in transparency materials)")
-            print(f"  status:      {status} (tol={args.tolerance:g})")
+            print(f"  id: {doc_id}")
+            print(f"  fresh mimir output: {loss_score:.6f}")
+            print(f"  mimir output in transparency materials: "
+                  f"{'n/a' if ref_score is None else f'{ref_score:.6f}'}")
+            print(f"  status: {status} (tol={args.tolerance:g})")
 
             fout.write(json.dumps({
                 "id": doc_id,
@@ -178,8 +177,8 @@ def main():
     print(f"\nWrote {len(test_examples)} records to {args.output}")
     if mismatches:
         details = "\n  ".join(
-            f"{d}: LOSS score (fresh mimir output) = {g:.6f}, "
-            f"ref score (mimir output in transparency materials) = {r:.6f}"
+            f"{d}: fresh mimir output = {g:.6f}, "
+            f"mimir output in transparency materials = {r:.6f}"
             for d, g, r in mismatches
         )
         raise ValueError(
