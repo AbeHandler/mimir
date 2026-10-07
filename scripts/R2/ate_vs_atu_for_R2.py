@@ -202,18 +202,23 @@ def compute_delta_70B_bisection(fileclass: str) -> pd.DataFrame:
     return merged
 
 
+def compute_delta_70B_lite(fileclass: str) -> pd.DataFrame:
+    base = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30"
+    y0 = pd.read_csv(f"{base}-Y0.{fileclass}.lite.all_shards.csv.gz")
+    y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
+    y1 = pd.read_csv(f"{base}-Y1.{fileclass}.lite.all_shards.csv.gz")
+    y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
+    merged = y0.merge(y1, on=["doc_id", "method"])
+    merged["delta"] = merged["blocks"] - merged["noblocks"]
+    merged["template"] = f"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-X.{fileclass}.lite.all_shards.csv.gz"
+    return merged
+
+
 def load_llama_70b(all_results):
     """Read pre-consolidated 70B all_shards.csv.gz files and print per-method delta means."""
-    base = "csvs/Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30"
     for dataset in ("bothbins", "excluded"):
-        y0 = pd.read_csv(f"{base}-Y0.{dataset}.lite.all_shards.csv.gz")
-        y0 = y0[y0["membership"] == "member"].copy().rename(columns={"score": "noblocks"}).drop(columns=["membership"])
-        y1 = pd.read_csv(f"{base}-Y1.{dataset}.lite.all_shards.csv.gz")
-        y1 = y1[y1["membership"] == "member"].copy().rename(columns={"score": "blocks"}).drop(columns=["membership"])
-        merged = y1.merge(y0, on=["doc_id", "method"])
-        merged["delta"] = merged["blocks"] - merged["noblocks"]
+        merged = compute_delta_70B_lite(dataset)
         merged["method"] = "70b-" + merged["method"]
-        merged["template"] = f"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-X.{dataset}.lite.all_shards.csv.gz"
         all_results.extend(process_scores(merged))
 
 
@@ -587,6 +592,7 @@ if __name__ == "__main__":
         ("70B_bisection", compute_delta_70B_bisection, False),
         ("8B_cloze",      load_8b_cloze,               False),
         ("70B_dcpdd",     compute_delta_70B_dcpdd,     False),
+        ("70B_lite",      compute_delta_70B_lite,      False),
     ]:
         att = loader("excluded")
         atu = loader("bothbins")
