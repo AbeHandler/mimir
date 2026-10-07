@@ -167,7 +167,7 @@ def compute_delta_70B_dcpdd(fileclass: str) -> pd.DataFrame:
 
     merged = y0.merge(y1, on=["doc_id", "method"])
     merged["delta"] = merged["blocks"] - merged["noblocks"]
-    merged["template"] = f"Llama-3.1-8B-Instruct-bnb-4bit_cptllama-2024-01-01-to-2024-01-15-X.{fileclass}.lite.all_shards.csv.gz"
+    merged["template"] = f"Llama-3.3-70B-Instruct-bnb-4bit_cptllama-2024-01-30-to-2024-01-30-X.{fileclass}.dcpdd.lite.all_shards.csv.gz"
     merged = merged[merged["method"] == 'dc_pdd'].copy()
     return merged
 
@@ -586,6 +586,7 @@ if __name__ == "__main__":
         ("8B_bisection",  compute_delta_8B_bisection,  False),
         ("70B_bisection", compute_delta_70B_bisection, False),
         ("8B_cloze",      load_8b_cloze,               False),
+        ("70B_dcpdd",     compute_delta_70B_dcpdd,     False),
     ]:
         att = loader("excluded")
         atu = loader("bothbins")
