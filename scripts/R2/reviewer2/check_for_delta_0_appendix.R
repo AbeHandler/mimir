@@ -51,7 +51,7 @@ p_ecdf <- ggplot(data, aes(x = delta, color = group)) +
     y = "Cumulative Probability",
     color = ""
   ) +
-  scale_x_continuous(limits = c(-0.2, 0.2)) +
+  scale_x_continuous(limits = c(-0.2, 0.2), expand = c(0.025, 0)) +
   theme_minimal() +
   theme(
     plot.background = element_rect(fill = "white", color = NA),
